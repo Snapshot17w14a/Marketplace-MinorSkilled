@@ -1,10 +1,20 @@
 import { StrictMode } from 'react'
 import { createRoot } from 'react-dom/client'
+import { BrowserRouter, Route, Routes } from 'react-router-dom'
 import './index.css'
-import App from './App.tsx'
+import CreateUser from './Pages/CreateUser'
+import Home from './Pages/Home'
 
 createRoot(document.getElementById('root')!).render(
   <StrictMode>
-    <App />
+    <div className='bg-neutral-100 dark:bg-[#1c1c1d] h-[100vh] w-[100vw] block box-border'>
+      <BrowserRouter>
+        <Routes>
+          <Route path='/' element={<Home />}/>
+          <Route path='/register' element={<CreateUser/>}/>
+        </Routes>
+      </BrowserRouter>
+      {/*<CreateUser />*/}
+    </div>
   </StrictMode>,
 )
