@@ -1,6 +1,8 @@
 using back.Database;
 using back.Services;
+using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.IdentityModel.Tokens;
 
 var builder = WebApplication.CreateBuilder(args);
 var config = builder.Configuration;
@@ -12,11 +14,23 @@ builder.Services.AddDbContext<ApplicationDbContext>(options =>
 );
 
 builder.Services.AddControllers();
+
 // Learn more about configuring Swagger/OpenAPI at https://aka.ms/aspnetcore/swashbuckle
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen();
 
-builder.Services.AddScoped<PasswordHashService>();
+builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme).AddJwtBearer(options =>
+{
+    options.TokenValidationParameters = new()
+    {
+        IssuerSigningKey = new SymmetricSecurityKey("VerySecretKeyForAuthenticationDontShareWithAnyone"u8.ToArray()),
+        ValidIssuer = "https://api.mkev.dev",
+        ValidAudience = "https://marketplace.mkev.dev"
+    };
+});
+
+builder.Services.AddSingleton<PasswordHashService>();
+builder.Services.AddSingleton<JWTGeneratorService>();
 
 if (builder.Environment.IsDevelopment())
 {
@@ -46,6 +60,7 @@ if (app.Environment.IsDevelopment())
 
 app.UseHttpsRedirection();
 
+app.UseAuthentication();
 app.UseAuthorization();
 
 app.MapControllers();

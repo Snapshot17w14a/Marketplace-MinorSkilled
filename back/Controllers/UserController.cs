@@ -1,17 +1,20 @@
 ﻿using back.Database;
 using back.Models;
 using back.Services;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 
 namespace back.Controllers
 {
+    [Authorize]
     [Route("api/[controller]/[Action]")]
     [ApiController]
-    public class UserController(ApplicationDbContext context, PasswordHashService passwordHasher) : ControllerBase
+    public class UserController(ApplicationDbContext context, PasswordHashService passwordHasher, JWTGeneratorService jwtGeneratorService) : ControllerBase
     {
         private readonly ApplicationDbContext _context = context;
         private readonly PasswordHashService _passwordHasher = passwordHasher;
+        private readonly JWTGeneratorService _jwtGeneratorService = jwtGeneratorService;
 
         [HttpGet]
         public async Task<IEnumerable<User>> GetUsers() => await _context.Users.ToArrayAsync();
@@ -27,6 +30,7 @@ namespace back.Controllers
             return user;
         }
 
+        [AllowAnonymous]
         [HttpPost]
         public async Task<ActionResult<User>> CreateUser([FromBody] CreateUserRequest requestUser)
         {
@@ -39,7 +43,9 @@ namespace back.Controllers
                     Email = requestUser.Email,
                     Password = _passwordHasher.HashPassword(requestUser.Password),
                     CreatedAt = DateTime.UtcNow,
+                    Identifier = Guid.NewGuid()
                 };
+
                 _context.Users.Add(newUser);
                 await _context.SaveChangesAsync();
                 return CreatedAtAction(nameof(GetUser), new { id = newUser.Id }, requestUser);
@@ -49,6 +55,20 @@ namespace back.Controllers
                 return StatusCode(StatusCodes.Status500InternalServerError, ex.Message);
             }
         }
+
+        [AllowAnonymous]
+        [HttpPost]
+        public ActionResult Login([FromBody] LoginRequest loginRequest)
+        {
+            var user = _context.Users.Where<User>(u => u.Email == loginRequest.Email && _passwordHasher.HashPassword(loginRequest.Password) == u.Password).First();
+
+            if (user == null) return NotFound();
+
+            return Ok(new
+            {
+                access_token = _jwtGeneratorService.GenerateJWToken(user.Identifier, user.Email!)
+            });
+        }
     }
 
     public class CreateUserRequest
@@ -56,5 +76,11 @@ namespace back.Controllers
         public required string Email { get; set; } = null!;
         public required string Password { get; set; } = null!;
         public required string Username { get; set; } = null!;
+    }
+
+    public class LoginRequest
+    {
+        public required string Email { get; set; }
+        public required string Password { get; set; }
     }
 }
