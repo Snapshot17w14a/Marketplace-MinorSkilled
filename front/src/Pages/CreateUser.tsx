@@ -1,17 +1,27 @@
 import { useRef, useState, type FormEvent } from "react";
 import { sendData } from "../BackendClient";
-import { Link } from "react-router-dom";
 import Notification, { type NotificationData } from "../Components/Notification";
+import Button from "../Components/Button";
+import { useNavigate } from "react-router-dom";
 
 export default function CreateUser(){
     const emailRef = useRef<HTMLInputElement>(null);
     const passwordRef = useRef<HTMLInputElement>(null);
     const usernameRef = useRef<HTMLInputElement>(null);
+    const registerButtonRef = useRef<HTMLButtonElement>(null);
+
+    const [registerButtonDisabled, setRegisterDisable] = useState(false);
 
     const [notification, setNotification] = useState<NotificationData | null>(null);
 
+    const navigate = useNavigate();
+
     const handleSubmit = async (event: FormEvent<HTMLFormElement>) => {
         event.preventDefault();
+
+        if (registerButtonRef.current === null) return;
+        registerButtonRef.current.disabled = true;
+        setRegisterDisable(true);
 
         if (!CheckIfUndefined([emailRef, passwordRef, usernameRef])) return;
 
@@ -25,9 +35,9 @@ export default function CreateUser(){
             var responseData = await sendData("User/CreateUser", userData);
             console.log(responseData);
 
-            window.location.replace("http://localhost:5173/login")
+            window.location.replace("http://localhost:5173/login");
         }
-        catch (error) {
+        catch (error){
             console.log(error);
             const errorNotification: NotificationData = {
                 title: "Error creating account",
@@ -36,6 +46,10 @@ export default function CreateUser(){
                 onClose: () => {}
             };
             setNotification(errorNotification);
+        }
+        finally{
+            registerButtonRef.current.disabled = false;
+            setRegisterDisable(false);
         }
     };
 
@@ -57,25 +71,33 @@ export default function CreateUser(){
     return(
         <div className="flex place-content-center text-black dark:text-white h-screen font-[Sansation]">
             <div className="flex flex-wrap bg-neutral-300 dark:bg-neutral-800 rounded-lg h-min self-center md:w-1/4 w-1/2 text-center drop-shadow-2xl drop-shadow-rose-500/50">
-                <button className="cursor-pointer rounded-lg bg-neutral-800 hover:bg-white hover:text-black transition duration-300 font-bold text-2xl border-2 border-white mt-8 ml-12 w-16" type="button" onClick={() => history.back()}>🡐</button>
-                <h1 className="text-4xl font-bold mt-8 basis-full">Let's create an account!</h1>
+                <Button className="mt-8 ml-12 w-16 text-2xl" onClick={() => history.back()}>🡐</Button>
+                <h1 className="text-4xl font-bold mt-6 basis-full">Let's create an account!</h1>
                 <div className="flex justify-center-safe">
                     <form className="flex flex-wrap basis-full justify-center-safe m-4" onSubmit={handleSubmit}>
-                    <div className="flex flex-wrap basis-full justify-center-safe text-start">
-                        <input className="bg-neutral-300 dark:bg-neutral-800 mx-8 my-4 py-2 px-4 rounded-lg caret-rose-500 ring-2 ring-white invalid:ring-rose-500 focus:ring-rose-300 focus:outline-none basis-full transition ease-in-out duration-300" id="email" ref={emailRef} type="email" placeholder="Email address" required/>
-                        <input className="bg-neutral-300 dark:bg-neutral-800 mx-8 my-4 py-2 px-4 rounded-lg caret-rose-500 ring-2 ring-white invalid:ring-rose-500 focus:ring-rose-300 focus:outline-none basis-full transition ease-in-out duration-300" id="password" ref={passwordRef} type="password" placeholder="Password" minLength={8} required/>
-                        <small className="basis-full mx-8 px-2">Password must be at least 8 characters long</small>
-                        <input className="bg-neutral-300 dark:bg-neutral-800 mx-8 my-4 py-2 px-4 rounded-lg caret-rose-500 ring-2 ring-white invalid:ring-rose-500 focus:ring-rose-300 focus:outline-none basis-full transition ease-in-out duration-300" id="username" ref={usernameRef} type="text" placeholder="Username" required/>
-                    </div>
-                    <div className="flex justify-between basis-full">
-                        <button className="bg-rose-600 mx-8 py-2 px-4 my-4 rounded-lg cursor-pointer transition duration-300 ease-in-out hover:bg-rose-900 font-bold basis-1/2" type="submit">Create Account</button>
-                        <Link className="bg-neutral-800 mx-8 py-2 px-4 my-4 rounded-lg cursor-pointer transition duration-300 ease-in-out hover:bg-white hover:text-black border-2 border-white" to="/login">Log in</Link>
-                    </div>
-                </form>
+                        <div className="flex flex-wrap basis-full justify-center-safe text-start">
+                            <input className="textinput-standard" id="email" ref={emailRef} type="email" placeholder="Email address" required/>
+                            <input className="textinput-standard" id="password" ref={passwordRef} type="password" placeholder="Password" minLength={8} required/>
+                            <small className="basis-full mx-8 px-2">Password must be at least 8 characters long</small>
+                            <input className="textinput-standard" id="username" ref={usernameRef} type="text" placeholder="Username" required/>
+                        </div>
+                        <div className="flex justify-between basis-full">
+                            <Button variant="filled" className="mx-8 py-2 px-4 my-4 basis-1/2 hover:scale-110 disabled:bg-rose-950 disabled:cursor-not-allowed disabled:scale-100" type="submit" ref={registerButtonRef}>
+                                {registerButtonDisabled ? 
+                                    <svg className="-mr-5 size-5 animate-spin text-blue-500 relative float-left" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24">
+                                        <path fill="white" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                                    </svg> :
+                                    <></>
+                                }
+                                Create Account
+                            </Button>
+                            <Button className="mx-8 py-2 px-4 my-4" type="button" onClick={() => navigate("/login")}>Log in</Button>
+                        </div>
+                    </form>
                 </div>
             </div>
-                {notification && (<Notification message={notification.message} title={notification.title} type={notification.type} onClose={() => setNotification(null)}/>)}
-        </div>
+            {notification && (<Notification message={notification.message} title={notification.title} type={notification.type} onClose={() => setNotification(null)}/>)}
+        </div>   
     )
 }
 

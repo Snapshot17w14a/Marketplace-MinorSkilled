@@ -60,9 +60,16 @@ namespace back.Controllers
         [HttpPost]
         public ActionResult Login([FromBody] LoginRequest loginRequest)
         {
-            var user = _context.Users.Where<User>(u => u.Email == loginRequest.Email && _passwordHasher.HashPassword(loginRequest.Password) == u.Password).First();
+            User user;
 
-            if (user == null) return NotFound();
+            try
+            {
+                user = _context.Users.Where<User>(u => u.Email == loginRequest.Email && _passwordHasher.HashPassword(loginRequest.Password) == u.Password).First();
+            }
+            catch (InvalidOperationException)
+            {
+                return NotFound();
+            }
 
             return Ok(new
             {

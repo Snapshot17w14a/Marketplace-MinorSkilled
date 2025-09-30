@@ -2,7 +2,7 @@ import { jwtDecode } from "jwt-decode";
 
 let isLoggedIn: boolean = false;
 
-export async function sendData(endpoint:string, data: any): Promise<any> {
+export async function sendData(endpoint:string, data: any, responseHandler?: (response: Response) => void): Promise<any> {
     console.log(JSON.stringify(data));
 
     const response = await fetch("http://localhost:5111/api/" + endpoint, {
@@ -13,7 +13,11 @@ export async function sendData(endpoint:string, data: any): Promise<any> {
         body: JSON.stringify(data)
     });
 
-    if (!response.ok){
+    if(responseHandler != null && !response.ok){
+        responseHandler(response);
+    }
+
+    else if (!response.ok){
         throw new Error(`Request to back end failed: ${response.status}`);
     }
 

@@ -16,7 +16,6 @@ createRoot(document.getElementById('root')!).render(
           <Route path='/login' element={<Login/>}/>
         </Routes>
       </BrowserRouter>
-      {/*<CreateUser />*/}
     </div>
-  </StrictMode>,
+  </StrictMode>
 )
