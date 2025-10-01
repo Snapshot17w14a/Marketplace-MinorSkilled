@@ -1,7 +1,8 @@
 import { useRef, useState, type FormEvent } from 'react'
-import Notification, { type NotificationData } from '../Components/Notification'
 import { sendData, SetJWToken } from '../BackendClient';
 import Button from '../Components/Button';
+import { useFadeContext } from './AccountPage';
+import { useNavigate } from 'react-router-dom';
 
 export default function Login(){
 
@@ -11,6 +12,10 @@ export default function Login(){
 
     const [loginButtonDisabled, setLoginDisable] = useState(false);
     
+    const navigate = useNavigate();
+
+    const fade = useFadeContext();
+
     const handleSubmit = async (event: FormEvent<HTMLFormElement>) => {
         event.preventDefault();
 
@@ -34,16 +39,16 @@ export default function Login(){
             var response = await sendData('User/Login', loginReqest, notFoundHandler);
             if (hasErrored) return;
             SetJWToken(response);
-            window.location.replace("http://localhost:5173/")
+            navigate("/");
         }
         catch (error){
-            const errorNotification: NotificationData = {
-                title: "Error logging in",
-                message: "An error occured when trying to login: " + error,
-                type: "error",
-                onClose: () => {}
-            };
-            setNotification(errorNotification);
+            // const errorNotification: NotificationData = {
+            //     title: "Error logging in",
+            //     message: "An error occured when trying to login: " + error,
+            //     type: "error",
+            //     onClose: () => {}
+            // };
+            // setNotification(errorNotification);
         }
         finally{
             loginRef.current.disabled = false;
@@ -51,15 +56,12 @@ export default function Login(){
         }
     };
 
-    const [notification, setNotification] = useState<NotificationData | null>(null);
-
     return(
-        <div className="flex place-content-center text-black dark:text-white h-screen font-[Sansation]">
-            <div className="flex flex-wrap bg-neutral-300 dark:bg-neutral-800 rounded-lg h-min self-center md:w-1/4 w-1/2 text-center drop-shadow-2xl drop-shadow-rose-500/50">
-                <Button className="mt-8 ml-12 w-16 text-2xl" type="button" onClick={() => history.back()}>🡐</Button>
-                <h1 className="text-4xl font-bold mt-8 basis-full">Enter login details</h1>
-                <div className="flex justify-center-safe">
-                    <form className="flex flex-wrap basis-full justify-center-safe m-4" onSubmit={handleSubmit}>
+        <>
+            <Button className="mt-8 ml-12 w-16 text-2xl" type="button" onClick={() => {fade(); setTimeout(() => history.back(), 500)}}>🡐</Button>
+            <h1 className="text-4xl font-bold mt-8 basis-full">Enter login details</h1>
+            <div className="flex justify-center-safe">
+                <form className="flex flex-wrap basis-full justify-center-safe m-4" onSubmit={handleSubmit}>
                     <div className="flex flex-wrap basis-full justify-center-safe text-start">
                         <input className="textinput-standard" id="email" ref={emailRef} type="email" placeholder="Email address" required/>
                         <input className="textinput-standard" id="password" ref={passwordRef} type="password" placeholder="Password" minLength={8} required/>
@@ -71,10 +73,8 @@ export default function Login(){
                         Log in
                     </Button>
                 </form>
-                </div>
             </div>
-                {notification && (<Notification message={notification.message} title={notification.title} type={notification.type} onClose={() => setNotification(null)}/>)}
-        </div>
+        </>
     )
 }
 
