@@ -11,7 +11,6 @@ import { AccountPage } from './Pages/AccountPage'
 
 createRoot(document.getElementById('root')!).render(
   <StrictMode>
-    <div className='bg-neutral-100 dark:bg-[#1c1c1d] h-[100vh] w-[100vw] block box-border'>
       <BrowserRouter>
         <Routes>
           <Route index element={<Home />}/>
@@ -19,10 +18,7 @@ createRoot(document.getElementById('root')!).render(
             <Route path='register' element={<CreateUser/>} />
             <Route path='login' element={<Login/>} />
           </Route>
-          {/* <Route path='/register' element={<CreateUser/>}/>
-          <Route path='/login' element={<Login/>}/> */}
         </Routes>
       </BrowserRouter>
-    </div>
   </StrictMode>
 )
