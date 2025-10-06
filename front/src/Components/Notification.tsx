@@ -1,16 +1,37 @@
-export interface NotificationData {
-    title: string;
-    message: string;
-    type?: "error" | "message" | "success";
-    onClose: () => void;
-}
+import { useState } from "react";
+import type { NotificationDescription } from "./NotificationProvider";
 
-export default function Notification(props: NotificationData){
+export default function Notification({ info, removeCallback }: { info: { id: number, descObj: NotificationDescription}, removeCallback: (id: number) => void}) {
+
+    const id = info.id;
+    const remove = removeCallback;
+
+    const [visibility, setVisibility] = useState<boolean>(true);
+
+    const styles: { [id: string]: string } = {
+        info: "bg-(--info)/80 border-(--info) ",
+        warning: "bg-(--warning)/80 border-(--warning) ",
+        error: "bg-(--error)/80 border-(--error) "
+    }
+
+    const closeHoverStyles: { [id: string]: string } = {
+        info: "hover:bg-(--info)",
+        warning: "hover:bg-(--warning)",
+        error: "hover:bg-(--error)"
+    }
+
+    const animateRemove = () => {
+        setVisibility(false);
+        setTimeout(() => {
+            remove(id);
+        }, 500);
+    }
+
     return(
-        <div className={`${props.type === 'error' ? "bg-red-700" : props.type === 'success' ? "bg-green-600" : "bg-blue-400"} absolute rounded-xl right-4 bottom-4 w-xs h-32 text-start p-4`}>
-            <button className="float-right size-6 cursor-pointer" type="button" onClick={props.onClose}>X</button>
-            <h1 className="text-2xl font-bold">{props.title}</h1>
-            <p className="text-sm block basis-full">{props.message}</p>
+        <div className={styles[info.descObj.type] + `basis-full mt-2 p-3 rounded-lg border-2 text-black select-none transition-opacity duration-500 ${visibility ? "opacity-100" : "opacity-0"}`}>
+            <button className={`float-right font-bold px-1 rounded-lg transition-colors + ${closeHoverStyles[info.descObj.type]}`} onClick={animateRemove}>X</button>
+            <h1 className="font-bold text-2xl">{info.descObj.header}</h1>
+            <p className="text-base">{info.descObj.message}</p>
         </div>
     )
 }

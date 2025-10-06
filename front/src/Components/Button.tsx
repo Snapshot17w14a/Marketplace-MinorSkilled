@@ -8,7 +8,6 @@ const Button = React.forwardRef<HTMLButtonElement, ButtonProps>(({ variant = "st
 
     const styles: { [id: string]: string } = {
         standard: "cursor-pointer rounded-lg bg-neutral-800 transition duration-300 hover:bg-white    ease-in-out font-bold hover:text-black border-2 border-white",
-        warning:  "",
         filled:   "cursor-pointer rounded-lg bg-rose-600    transition duration-300 hover:bg-rose-900 ease-in-out font-bold"
     }
 
