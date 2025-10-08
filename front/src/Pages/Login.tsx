@@ -1,11 +1,11 @@
 import { useRef, useState, type FormEvent } from 'react'
-import { sendData, SetJWToken } from '../BackendClient';
+import { postAnonymus, SetJWToken } from '../BackendClient';
 import Button from '../Components/Button';
 import { useFadeContext } from './AccountPage';
 import { useNavigate } from 'react-router-dom';
 import { useNotification, type NotificationDescription } from '../Components/NotificationProvider';
 
-export default function Login(){
+export default function Login() {
     const emailRef = useRef<HTMLInputElement | null>(null);
     const passwordRef = useRef<HTMLInputElement | null>(null);
     const loginRef = useRef<HTMLButtonElement | null>(null);
@@ -30,18 +30,23 @@ export default function Login(){
 
         var hasErrored = false;
         
-        const notFoundHandler = (response: Response) => {
-            console.log(`User not found ${response.status}`);  
+        const notFoundHandler = () => {
+            const notifDesc: NotificationDescription = {
+                type: "error",
+                header: "Cound not find user!",
+                message: "Password and Username do not match any account registered"
+            }
+            addNotification(notifDesc);
             hasErrored = true;
         };
 
-        try{
-            var response = await sendData('User/Login', loginReqest, notFoundHandler);
+        try {
+            var response = await postAnonymus('User/Login', loginReqest, notFoundHandler);
             if (hasErrored) return;
             SetJWToken(response);
             navigate("/");
         }
-        catch (error){
+        catch (error) {
             const notifDesc: NotificationDescription = {
                 type: "error",
                 header: "Something went wrong!",
@@ -49,7 +54,7 @@ export default function Login(){
             };
             addNotification(notifDesc);
         }
-        finally{
+        finally {
             loginRef.current.disabled = false;
             setLoginDisable(false);
         }

@@ -1,5 +1,5 @@
 import { useRef, useState, type FormEvent } from "react";
-import { sendData } from "../BackendClient";
+import { postAnonymus } from "../BackendClient";
 import Button from "../Components/Button";
 import { useNavigate } from "react-router-dom";
 import { useFadeContext } from "./AccountPage";
@@ -33,10 +33,10 @@ export default function CreateUser(){
         }
 
         try{
-            var responseData = await sendData("User/CreateUser", userData);
+            var responseData = await postAnonymus("User/Create", userData);
             console.log(responseData);
 
-            window.location.replace("http://localhost:5173/login");
+            navigate("/account/login");
         }
         catch (error){
             console.log(error);
@@ -54,12 +54,7 @@ export default function CreateUser(){
     };
 
     function CheckIfUndefined(refObjects: React.RefObject<HTMLInputElement | null>[]): boolean {
-        refObjects.forEach(element => {
-            if (element.current!.value === undefined || element.current!.value === ""){
-                return false;
-            }
-        });
-        return true;
+        return refObjects.every(ref => ref.current !== undefined);
     }
 
     return(

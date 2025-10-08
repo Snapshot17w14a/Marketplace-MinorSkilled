@@ -28,7 +28,7 @@ export default function Notification({ info, removeCallback }: { info: { id: num
     }
 
     return(
-        <div className={styles[info.descObj.type] + `basis-full mt-2 p-3 rounded-lg border-2 text-black select-none transition-opacity duration-500 ${visibility ? "opacity-100" : "opacity-0"}`}>
+        <div className={styles[info.descObj.type] + `basis-full mt-2 p-3 rounded-lg border-2 text-black select-none transition-opacity duration-500 ${visibility ? "opacity-100" : "opacity-0"} w-md text-pretty`}>
             <button className={`float-right font-bold px-1 rounded-lg transition-colors + ${closeHoverStyles[info.descObj.type]}`} onClick={animateRemove}>X</button>
             <h1 className="font-bold text-2xl">{info.descObj.header}</h1>
             <p className="text-base">{info.descObj.message}</p>

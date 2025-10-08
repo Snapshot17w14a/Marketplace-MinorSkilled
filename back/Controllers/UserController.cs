@@ -17,10 +17,10 @@ namespace back.Controllers
         private readonly JWTGeneratorService _jwtGeneratorService = jwtGeneratorService;
 
         [HttpGet]
-        public async Task<IEnumerable<User>> GetUsers() => await _context.Users.ToArrayAsync();
+        public async Task<IEnumerable<User>> Get() => await _context.Users.ToArrayAsync();
 
         [HttpGet("{id}")]
-        public async Task<ActionResult<User>> GetUser(int id)
+        public async Task<ActionResult<User>> Get(int id)
         {
             var user = await _context.Users.FindAsync(id);
 
@@ -32,8 +32,19 @@ namespace back.Controllers
 
         [AllowAnonymous]
         [HttpPost]
-        public async Task<ActionResult<User>> CreateUser([FromBody] CreateUserRequest requestUser)
+        public async Task<ActionResult<User>> Create([FromBody] CreateUserRequest requestUser)
         {
+            requestUser.Username = requestUser.Username.Trim();
+
+            if (await _context.Users.FirstOrDefaultAsync(u => u.Email == requestUser.Email) != null)
+            {
+                return Conflict(string.Format("A user with the email {0} already exists.", requestUser.Email));
+            }
+            else if (await _context.Users.FirstOrDefaultAsync(u => u.Name == requestUser.Username) != null)
+            {
+                return Conflict(string.Format("A user with the username {0} already exists.", requestUser.Username));
+            }
+
             try
             {
                 User newUser = new()
@@ -48,7 +59,7 @@ namespace back.Controllers
 
                 _context.Users.Add(newUser);
                 await _context.SaveChangesAsync();
-                return CreatedAtAction(nameof(GetUser), new { id = newUser.Id }, requestUser);
+                return CreatedAtAction(nameof(Get), new { id = newUser.Id }, requestUser);
             }
             catch (Exception ex)
             {
@@ -58,21 +69,14 @@ namespace back.Controllers
 
         [AllowAnonymous]
         [HttpPost]
-        public ActionResult Login([FromBody] LoginRequest loginRequest)
+        public async Task<ActionResult> Login([FromBody] LoginRequest loginRequest)
         {
-            User user;
+            User? user = await _context.Users.FirstOrDefaultAsync(u => u.Email == loginRequest.Email && _passwordHasher.HashPassword(loginRequest.Password) == u.Password);
 
-            try
-            {
-                user = _context.Users.Where<User>(u => u.Email == loginRequest.Email && _passwordHasher.HashPassword(loginRequest.Password) == u.Password).First();
-            }
-            catch (InvalidOperationException)
-            {
+            if (user == null)
                 return NotFound();
-            }
 
-            return Ok(new
-            {
+            return Ok(new {
                 access_token = _jwtGeneratorService.GenerateJWToken(user.Identifier, user.Email!)
             });
         }

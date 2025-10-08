@@ -1,11 +1,12 @@
 import { jwtDecode } from "jwt-decode";
+import endpointConfig from './Configs/endpoints.config'
+import { useNavigate } from "react-router-dom";
 
 let isLoggedIn: boolean = false;
 
-export async function sendData(endpoint:string, data: any, responseHandler?: (response: Response) => void): Promise<any> {
-    console.log(JSON.stringify(data));
+export async function postAnonymus(endpoint:string, data: any, responseHandler?: (response: Response) => void): Promise<any> {
 
-    const response = await fetch("http://localhost:5111/api/" + endpoint, {
+    const response = await fetch(endpointConfig.BackendBaseUrl + endpoint, {
         method: "POST",
         headers: {
             "Content-Type": "application/json"
@@ -13,12 +14,44 @@ export async function sendData(endpoint:string, data: any, responseHandler?: (re
         body: JSON.stringify(data)
     });
 
-    if(responseHandler != null && !response.ok){
-        responseHandler(response);
+    if (!response.ok){
+        if (responseHandler !== undefined && !response.ok) {
+            responseHandler(response);
+        }
+        else{
+            const errorText = await response.text();
+            throw new Error(`${response.status}, ${errorText}`);
+        }
     }
 
-    else if (!response.ok){
-        throw new Error(`Request to back end failed: ${response.status}`);
+    return await response.json();
+}
+
+export async function postAuthorized(endpoint: string, data: any, responseHandler? : (response: Response) => void): Promise<any> {
+
+    //Validate token before making request, if token isnt valid redirect to /account/login
+    if (!ValidateToken()) {
+        const navigate = useNavigate();
+        navigate("/account/login");
+    }
+
+    const response = await fetch(endpointConfig.BackendBaseUrl + endpoint, {
+        method: "POST",
+        headers: {
+            "ContentType": "application/json",
+            "Authorization": `Bearer ${sessionStorage.getItem("JWT")}`
+        },
+        body: JSON.stringify(data)
+    });
+
+    if (!response.ok) {
+        if (responseHandler !== undefined) {
+            responseHandler(response);
+        }
+        else {
+            const errorText = await response.text();
+            throw new Error(`${response.status}, ${errorText}`);
+        }
     }
 
     return await response.json();

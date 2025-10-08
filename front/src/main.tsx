@@ -7,7 +7,6 @@ import CreateUser from './Pages/CreateUser'
 import Login from './Pages/Login'
 import { AccountPage } from './Pages/AccountPage'
 import NotificationProvider from './Components/NotificationProvider'
-//import Login from './Pages/Login'
 
 createRoot(document.getElementById('root')!).render(
   <StrictMode>
