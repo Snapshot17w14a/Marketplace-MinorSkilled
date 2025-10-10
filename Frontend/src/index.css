@@ -1,0 +1,58 @@
+@import url('https://fonts.googleapis.com/css2?family=Sansation:ital,wght@0,300;0,400;0,700;1,300;1,400;1,700&display=swap');
+@import "tailwindcss";
+
+@layer theme, base, components, utilities;
+@import "tailwindcss/theme.css" layer(theme);
+@import "tailwindcss/preflight.css" layer(base);
+@import "tailwindcss/utilities.css" layer(utilities);
+
+@theme{
+    --error: #FF8C8C;
+    --warning: #FFFB82;
+    --info: #D9D9D9;
+
+    --dark: #1c1c1d;
+    --mid-dark: #262626;
+    --light-dark: #484747;
+
+    --dark-rose: #8B0836;
+    --light-rose: #FFA1AD;
+
+    --color-rose-gradient: linear-gradient(0deg, rgba(139, 8, 54, 1) 0%, rgba(255, 32, 86, 1) 50%, rgba(255, 161, 173, 1) 100%);
+
+    --transtition-width: width;
+
+    --animate-progtext: progtext 3s ease-in-out infinite;
+    --animate-opacity: fadeIn 0.5s ease forwards;
+
+    @keyframes progtext {
+        0%, 100% {
+            --tw-gradient-from: #8B0836;
+            --tw-gradient-to: #FF2056;
+        }
+        50% {
+            --tw-gradient-from: #FF2056;
+            --tw-gradient-to: #8B0836;
+        }
+    }
+
+    @keyframes fadeIn {
+        from { opacity: 0; transform: translateY(0.5rem); }
+        to { opacity: 1; transform: translateY(0); }
+    }
+}
+
+
+@layer base {
+    :root{
+        @apply bg-neutral-100 dark:bg-[#1c1c1d] h-[100vh] w-[100vw] block box-border font-[Sansation] text-black dark:text-white;
+    }
+}
+
+.textinput-standard{
+    @apply bg-neutral-300 dark:bg-neutral-800 py-2 px-4 mx-[2px] rounded-lg caret-rose-500 ring-2 ring-white invalid:ring-rose-500 focus:ring-rose-300 focus:outline-none basis-full transition ease-in-out duration-300 min-w-0;
+}
+
+.transition-width{
+    transition-property: width;
+}
