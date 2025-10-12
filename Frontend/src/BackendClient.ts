@@ -56,7 +56,29 @@ export async function postAuthorized(endpoint: string, data: any, responseHandle
     return await response.json();
 }
 
-export async function postXmlHttp<T>(endpoint: string, formData: FormData, notify: (notification: NotificationDescription) => void, onProgress?: (ev: ProgressEvent) => void): Promise<T> {
+export async function getAuthorized<T>(endpoint: string): Promise<T> {
+
+    if (!ValidateToken()) {
+        throw new Error("Auth expired");
+    }
+
+    const response = await fetch(endpointConfig.BackendBaseUrl + endpoint, {
+        method: 'GET',
+        headers: {
+            "Authorization": `Bearer ${GetJWT()}`
+        }
+    });
+
+    if (!response.ok) {
+        const errorText = await response.text();
+        throw new Error(`${response.status}, ${errorText}`)
+    }
+
+    const data = await response.json() as T;
+    return data;
+}
+
+export function postXmlHttp<T>(endpoint: string, formData: FormData, onProgress?: (ev: ProgressEvent) => void): Promise<T> {
     return new Promise<T>((resolve, reject) => {
 
         const xhr = new XMLHttpRequest();
@@ -76,30 +98,15 @@ export async function postXmlHttp<T>(endpoint: string, formData: FormData, notif
                     resolve(jsonResponse);
                 }
                 catch (error) {
-                    notify({
-                        type: "error",
-                        header: "Something went wrong!",
-                        message: `${error}`
-                    });
                     reject(error);
                 }
             }
             else {
-                notify({
-                    type: "error",
-                    header: "Upload failed!",
-                    message: `Code: ${xhr.status}`
-                });
-                reject("Upload failed!");
+                reject(`Code: ${xhr.status}`);
             }
         }
 
         xhr.onerror = () => {
-            notify({
-                type: "error",
-                header: "Network error!",
-                message: "The transfer was interrupted"
-            });
             reject("Network error!");
         }
 

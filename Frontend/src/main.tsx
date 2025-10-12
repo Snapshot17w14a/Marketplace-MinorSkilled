@@ -9,6 +9,7 @@ import { AccountPage } from './Pages/AccountPage'
 import NotificationProvider from './Components/NotificationProvider'
 import LisitngCreator from './Pages/ListingCreator'
 import { ValidateToken } from './Auth'
+import Listing from './Pages/Listing'
 
 ValidateToken();
 
@@ -18,6 +19,7 @@ createRoot(document.getElementById('root')!).render(
         <NotificationProvider>
           <Routes>
             <Route index element={<Home />}/>
+            <Route path='listing/:listingId' element={<Listing/>} />
             <Route path='listingCreator' element={<LisitngCreator/>} />
             <Route path='account' element={<AccountPage/>}>
               <Route path='register' element={<Register/>} />

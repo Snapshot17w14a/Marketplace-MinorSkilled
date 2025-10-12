@@ -1,9 +1,8 @@
 import { useState } from "react";
 import type { NotificationDescription } from "./NotificationProvider";
 
-export default function Notification({ info, removeCallback }: { info: { id: number, descObj: NotificationDescription}, removeCallback: (id: number) => void}) {
+export default function Notification({ info, removeCallback }: { info: { id: number, descObj: NotificationDescription}, removeCallback: (id: NotificationDescription) => void}) {
 
-    const id = info.id;
     const remove = removeCallback;
 
     const [visibility, setVisibility] = useState<boolean>(true);
@@ -23,7 +22,7 @@ export default function Notification({ info, removeCallback }: { info: { id: num
     const animateRemove = () => {
         setVisibility(false);
         setTimeout(() => {
-            remove(id);
+            remove(info.descObj);
         }, 500);
     }
 

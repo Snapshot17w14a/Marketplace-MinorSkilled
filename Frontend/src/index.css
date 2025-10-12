@@ -45,7 +45,7 @@
 
 @layer base {
     :root{
-        @apply bg-neutral-100 dark:bg-[#1c1c1d] h-[100vh] w-[100vw] block box-border font-[Sansation] text-black dark:text-white;
+        @apply bg-neutral-100 dark:bg-[#1c1c1d] min-h-screen min-w-screen block box-border font-[Sansation] text-black dark:text-white;
     }
 }
 

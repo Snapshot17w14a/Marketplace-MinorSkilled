@@ -54,7 +54,7 @@ namespace Backend.Controllers
             var listingImage = new ListingImage()
             {
                 Guid = guid,
-                RelaivePath = relativePath,
+                RelativePath = relativePath,
                 ContentType = file.ContentType,
                 Size = file.Length
             };

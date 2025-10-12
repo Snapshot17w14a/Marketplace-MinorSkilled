@@ -4,7 +4,7 @@ import Logo from '../assets/Subtract.svg'
 import Button from './Button'
 import { useEffect, useState } from 'react';
 
-export default function TopNavigation(){
+export default function TopNavigation({ className = ''}) {
 
     useEffect(() => {
         setIsLoggedIn(IsLoggedIn());
@@ -20,7 +20,7 @@ export default function TopNavigation(){
     };
 
     return(
-        <nav className='w-screen h-16 bg-[#262626] border-b-2 border-[#484747] p-2 flex justify-between fixed drop-shadow-xl drop-shadow-rose-500/50'>
+        <nav className={'w-screen h-16 bg-[#262626] border-b-2 border-[#484747] p-2 flex justify-between fixed drop-shadow-xl drop-shadow-rose-500/50' + className}>
             <div className='flex h-full justify-around items-center'>
                 <button type='button' className='h-full w-12 cursor-pointer' onClick={() => navigate('/')}>
                     <img src={Logo} className='h-full object-contain'></img>

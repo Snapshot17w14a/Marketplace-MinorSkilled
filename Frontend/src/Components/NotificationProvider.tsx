@@ -5,25 +5,17 @@ const notificationContext = createContext<(notifDesc: NotificationDescription) =
 
 export default function NotificationProvider({ children } : { children: React.ReactNode}){
 
-    const [notifications, setNotifications] = useState<{ id:number, descObj: NotificationDescription}[]>();
+    const [notifications, setNotifications] = useState<{ id:number, descObj: NotificationDescription}[]>([]);
 
     const addNotification = (notifDesc: NotificationDescription) => {
-        if (notifications !== undefined) {
-            setNotifications([
-                ...notifications,
-                { id: Date.now(), descObj: notifDesc }
-            ])
-        }
-        else {
-            setNotifications([{ id: Date.now(), descObj: notifDesc }]);
-        }
+        setNotifications(prev => [...prev, { id: Date.now(), descObj: notifDesc }])
     }
 
-    const removeNotification = (id: number) => {
-        if (notifications === undefined) return;
+    const removeNotification = (notification: NotificationDescription) => {
+        if (!notifications) return;
 
         const remainingNotifications = notifications.filter(notifObject => {
-            return(notifObject.id !== id)
+            return(notifObject.descObj !== notification)
         })
 
         setNotifications(remainingNotifications);
@@ -34,9 +26,9 @@ export default function NotificationProvider({ children } : { children: React.Re
             {children}
             {
                 <div className="absolute bottom-2 right-2 flex flex-col-reverse">
-                    {notifications !== undefined ? notifications.map(notification => {
-                            return(<Notification key={notification.id} info={notification} removeCallback={removeNotification} />)
-                        }) : <></>
+                    {notifications && notifications.map(notification => {
+                            return(<Notification key={notification.id + Math.random()} info={notification} removeCallback={removeNotification} />)
+                        })
                     }
                 </div>
             }
