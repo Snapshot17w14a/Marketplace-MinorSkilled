@@ -9,7 +9,6 @@ using Microsoft.EntityFrameworkCore;
 
 namespace Backend.Controllers
 {
-    [Authorize]
     [Route("api/[controller]/[Action]")]
     [ApiController]
     public class ListingsController(ApplicationDbContext context) : ControllerBase
@@ -17,6 +16,7 @@ namespace Backend.Controllers
         private readonly ApplicationDbContext _context = context;
 
         [HttpPost]
+        [Authorize]
         public async Task<ActionResult> CreateListing([FromBody] CreateListingRequest createListingRequest, [FromHeader] AuthorizationHeader auth)
         {
             var listingImages = Array.Empty<ListingImage>();
@@ -82,6 +82,44 @@ namespace Backend.Controllers
                 return NotFound();
 
             return Ok(listing);
+        }
+
+        [HttpGet("{count}")]
+        public async Task<ActionResult<ICollection<Listing>>> GetPage(int count)
+        {
+            var listingsCount = await _context.Listings.CountAsync();
+
+            var listings = await _context.Listings.Include(l => l.Images).OrderByDescending(li => li.CreatedAt).Take(listingsCount < count ? listingsCount : count).ToArrayAsync();   
+
+            return Ok(listings);
+        }
+
+        [HttpGet]
+        public async Task<ActionResult> QueryPage([FromQuery] ListingQueryObject query)
+        {
+            var listings = _context.Listings.AsQueryable();
+
+            listings = listings.Where(l => 
+                l.Title.Contains(query.Phrase) || l.Description.Contains(query.Phrase));
+
+            listings = query.SortBy.Trim().ToLower() switch
+            {
+                "price" => query.Descending ? listings.OrderByDescending(l => l.Price) : listings.OrderBy(l => l.Price),
+                _ => query.Descending ? listings.OrderByDescending(l => l.CreatedAt) : listings.OrderBy(l => l.CreatedAt),
+            };
+
+            var listingCount = await listings.CountAsync();
+            var pageCount = (int)Math.Ceiling(listingCount / (float)query.PageCount);
+
+            var finalListings = listings.Include(l => l.Images).Skip((query.Page - 1) * query.PageCount).Take(query.PageCount).ToArray();
+
+            return Ok(new
+            {
+                listings = finalListings,
+                query.Page,
+                pageCount,
+                listingCount
+            });
         }
     }
 }

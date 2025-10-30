@@ -1,5 +1,5 @@
 import { useRef, useState, type FormEvent } from 'react'
-import { postAnonymus } from '../BackendClient';
+import { postAnonymous } from '../BackendClient';
 import { SetJWToken, SetActiveUser } from '../Auth';
 import Button from '../Components/Button';
 import { useFadeContext } from './AccountPage';
@@ -42,7 +42,7 @@ export default function Login() {
         };
 
         try {
-            var response = await postAnonymus('User/Login', loginReqest, notFoundHandler);
+            var response = await postAnonymous('User/Login', loginReqest, notFoundHandler);
             if (hasErrored) return;
             SetJWToken(response.access_token);
             SetActiveUser(response.user_data);

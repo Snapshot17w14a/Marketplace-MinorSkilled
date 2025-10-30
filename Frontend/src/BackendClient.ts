@@ -1,9 +1,8 @@
 import endpointConfig from './Configs/endpoints.config'
 import { useNavigate } from "react-router-dom";
 import { GetJWT, ValidateToken } from './Auth';
-import type { NotificationDescription } from './Components/NotificationProvider';
 
-export async function postAnonymus(endpoint: string, data: any, responseHandler?: (response: Response) => void): Promise<any> {
+export async function postAnonymous(endpoint: string, data: any, responseHandler?: (response: Response) => void): Promise<any> {
 
     const response = await fetch(endpointConfig.BackendBaseUrl + endpoint, {
         method: "POST",
@@ -54,6 +53,20 @@ export async function postAuthorized(endpoint: string, data: any, responseHandle
     }
 
     return await response.json();
+}
+
+export async function getAnonymous<T>(endpoint: string): Promise<T> {
+    const response = await fetch(endpointConfig.BackendBaseUrl + endpoint, {
+        method: 'GET',
+    });
+
+    if (!response.ok) {
+        const errorText = await response.text();
+        throw new Error(`${response.status}, ${errorText}`)
+    }
+
+    const data = await response.json() as T;
+    return data;
 }
 
 export async function getAuthorized<T>(endpoint: string): Promise<T> {

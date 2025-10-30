@@ -10,6 +10,7 @@ import NotificationProvider from './Components/NotificationProvider'
 import LisitngCreator from './Pages/ListingCreator'
 import { ValidateToken } from './Auth'
 import Listing from './Pages/Listing'
+import SearchResult from './Pages/SearchResult'
 
 ValidateToken();
 
@@ -25,6 +26,7 @@ createRoot(document.getElementById('root')!).render(
               <Route path='register' element={<Register/>} />
               <Route path='login' element={<Login/>} />
             </Route>
+            <Route path='search/:searchPhrase' element={<SearchResult/>} />
           </Routes>
         </NotificationProvider>
       </BrowserRouter>

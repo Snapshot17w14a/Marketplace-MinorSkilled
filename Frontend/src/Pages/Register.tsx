@@ -1,5 +1,5 @@
 import { useRef, useState, type FormEvent } from "react";
-import { postAnonymus } from "../BackendClient";
+import { postAnonymous } from "../BackendClient";
 import Button from "../Components/Button";
 import { useNavigate } from "react-router-dom";
 import { useFadeContext } from "./AccountPage";
@@ -33,7 +33,7 @@ export default function Register(){
         }
 
         try{
-            var responseData = await postAnonymus("User/Create", userData);
+            var responseData = await postAnonymous("User/Create", userData);
             console.log(responseData);
 
             navigate("/account/login");
