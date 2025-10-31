@@ -1,14 +1,21 @@
-import { createContext, useContext, useState } from "react";
+import { createContext, useContext, useState, type JSX } from "react";
 import Notification from "./Notification";
 
 const notificationContext = createContext<(notifDesc: NotificationDescription) => void>(() => {});
 
 export default function NotificationProvider({ children } : { children: React.ReactNode}){
 
-    const [notifications, setNotifications] = useState<{ id:number, descObj: NotificationDescription}[]>([]);
+    const [notifications, setNotifications] = useState<{ id: number, descObj: NotificationDescription, component: JSX.Element}[]>([]);
 
     const addNotification = (notifDesc: NotificationDescription) => {
-        setNotifications(prev => [...prev, { id: Date.now(), descObj: notifDesc }])
+        const id = Date.now() + Math.random();
+        setNotifications(prev => {
+            return([...prev, {
+                id: id,
+                descObj: notifDesc,
+                component: <Notification key={id} info={{ id: id, descObj: notifDesc }} removeCallback={removeNotification}/>
+            }])
+        })
     }
 
     const removeNotification = (notification: NotificationDescription) => {
@@ -26,7 +33,7 @@ export default function NotificationProvider({ children } : { children: React.Re
             {children}
             <div className="absolute bottom-2 right-2 flex flex-col-reverse">
                 {notifications && notifications.map(notification => {
-                        return(<Notification key={notification.id + Math.random()} info={notification} removeCallback={removeNotification} />)
+                        return(notification.component)
                     })
                 }
             </div>
