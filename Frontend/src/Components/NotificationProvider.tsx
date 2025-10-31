@@ -24,14 +24,12 @@ export default function NotificationProvider({ children } : { children: React.Re
     return(
         <notificationContext.Provider value={addNotification}>
             {children}
-            {
-                <div className="absolute bottom-2 right-2 flex flex-col-reverse">
-                    {notifications && notifications.map(notification => {
-                            return(<Notification key={notification.id + Math.random()} info={notification} removeCallback={removeNotification} />)
-                        })
-                    }
-                </div>
-            }
+            <div className="absolute bottom-2 right-2 flex flex-col-reverse">
+                {notifications && notifications.map(notification => {
+                        return(<Notification key={notification.id + Math.random()} info={notification} removeCallback={removeNotification} />)
+                    })
+                }
+            </div>
         </notificationContext.Provider>
     )
 }

@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import type { NotificationDescription } from "./NotificationProvider";
 
 export default function Notification({ info, removeCallback }: { info: { id: number, descObj: NotificationDescription}, removeCallback: (id: NotificationDescription) => void}) {
@@ -6,6 +6,9 @@ export default function Notification({ info, removeCallback }: { info: { id: num
     const remove = removeCallback;
 
     const [visibility, setVisibility] = useState<boolean>(true);
+    const [isFocused, setIsFocused] = useState<boolean>(false);
+    const [autocloseTimeout, setAutocloseTimeout] = useState<number>();
+    const [fadeTimeout, setFadeTimeout] = useState<number>();
 
     const styles: { [id: string]: string } = {
         info: "bg-(--info)/80 border-(--info) ",
@@ -19,15 +22,35 @@ export default function Notification({ info, removeCallback }: { info: { id: num
         error: "hover:bg-(--error)"
     }
 
+    const startAutoclose = useCallback(() => {
+        const timeout = window.setTimeout(() => {
+            animateRemove();
+        }, 5000);
+        setAutocloseTimeout(timeout);
+    }, []);
+
+    useEffect(() => {
+        if (isFocused) {
+            window.clearTimeout(autocloseTimeout);
+            window.clearTimeout(fadeTimeout);
+            setVisibility(true);
+            console.log("sotp");
+        }
+        else {
+            startAutoclose();
+        }
+    }, [isFocused])
+
     const animateRemove = () => {
         setVisibility(false);
-        setTimeout(() => {
+        const timeout = window.setTimeout(() => {
             remove(info.descObj);
         }, 500);
+        setFadeTimeout(timeout);
     }
 
     return(
-        <div className={styles[info.descObj.type] + `basis-full mt-2 p-3 rounded-lg border-2 text-black select-none transition-opacity duration-500 ${visibility ? "opacity-100" : "opacity-0"} w-md text-pretty`}>
+        <div className={styles[info.descObj.type] + `basis-full mt-2 p-3 rounded-lg border-2 text-black select-none transition-opacity duration-500 ${visibility ? "opacity-100" : "opacity-0"} w-md text-pretty`} onPointerLeave={() => setIsFocused(false)} onPointerEnter={() => setIsFocused(true)}>
             <button className={`float-right font-bold px-1 rounded-lg transition-colors + ${closeHoverStyles[info.descObj.type]}`} onClick={animateRemove}>X</button>
             <h1 className="font-bold text-2xl">{info.descObj.header}</h1>
             <p className="text-base">{info.descObj.message}</p>

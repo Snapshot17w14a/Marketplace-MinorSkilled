@@ -83,7 +83,7 @@ function Results({ parameters } : { parameters: SearchQueryParameters }) {
             notify({
                 type: "error",
                 header: `An error occured while trying to search for the term "${parameters.phrase}"`,
-                message: 'error'
+                message: `${error}`
             });
         }
     };
