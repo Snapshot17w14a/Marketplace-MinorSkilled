@@ -4,8 +4,11 @@ import Button from "../Components/Button";
 import { postAuthorized, postXmlHttp } from "../BackendClient";
 import TopNavigation from "../Components/TopNavigation";
 import ProgressBar from "../Components/ProgressBar";
+import { useNavigate } from "react-router-dom";
 
 export default function LisitngCreator() {
+
+    const naviagate = useNavigate();
 
     const [imageGuids, setImageGuids] = useState<string[]>([]);
     const [listingData, setListingData] = useState({
@@ -39,6 +42,8 @@ export default function LisitngCreator() {
         const response = await postAuthorized('Listings/CreateListing', listing);
 
         console.log(response);
+
+        naviagate(`/listing/${response.guid}`);
     }
 
     return(

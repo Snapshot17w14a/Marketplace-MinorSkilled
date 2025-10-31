@@ -1,6 +1,6 @@
 ﻿namespace Backend.Protocols.ListingProtocols
 {
-    public class ListingQueryObject
+    public class ListingQueryParameters
     {
         public string Phrase { get; set; } = null!;
         public string SortBy { get; set; } = "CreatedAt";

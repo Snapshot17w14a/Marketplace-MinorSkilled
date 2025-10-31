@@ -44,7 +44,7 @@ export default function Home() {
     return(
         <div className='flex justify-center'>
             <TopNavigation/>
-            <div className='w-2/3 pt-16 text-center'>
+            <div className='max-w-full p-8 pt-16 text-center'>
                 <h1 className='font-bold text-6xl mt-24'>Modern marketplace for modern people</h1>
                 <h2 className='text-2xl mt-12'>Create beautiful listings and find the right audience for your products</h2>
                 <Button variant='filled' className='text-2xl px-8 py-4 mt-12' onClick={handleCreateListing}>Create a listing</Button>
@@ -53,7 +53,7 @@ export default function Home() {
                     <ProductAnimator interval={2000} className='text-2xl from-rose-950 to-rose-50 bg-linear-to-r bg-clip-text text-transparent animate-progtext inline-block' />
                     <h2 className='text-2xl inline-block'>and see what others are selling</h2>
                 </div>
-                <form className='mt-12 w-2/3 mx-auto' onSubmit={onSearchSubmit}>
+                <form className='mt-12 w-full sm:w-2/3 mx-auto' onSubmit={onSearchSubmit}>
                     <input className={`textinput-standard w-full ${searchDisabled ? 'disabled' : ''}`} placeholder='Search for anything...' ref={searchRef}></input>
                 </form>
                 <h2 className='text-2xl mt-12'>Or check out our latest listings below</h2>

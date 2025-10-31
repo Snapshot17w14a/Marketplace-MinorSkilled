@@ -95,7 +95,7 @@ namespace Backend.Controllers
         }
 
         [HttpGet]
-        public async Task<ActionResult> QueryPage([FromQuery] ListingQueryObject query)
+        public async Task<ActionResult> QueryPage([FromQuery] ListingQueryParameters query)
         {
             var listings = _context.Listings.AsQueryable();
 

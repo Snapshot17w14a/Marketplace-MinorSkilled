@@ -8,8 +8,8 @@ export default function ListingCard({ descriptor, className }: { descriptor?: Li
     const navigate = useNavigate();
 
     return(
-        <div className={"bg-(--dark) border-2 border-(--light-dark) rounded-lg sm:w-sm w-72 relative " + className} >
-            <div className="h-3/5 object-contain flex justify-center rounded-lg m-2 bg-(--mid-dark) border-2 border-(--light-dark)">
+        <div className={"bg-(--dark) border-2 border-(--light-dark) rounded-lg sm:w-sm w-full relative " + className} >
+            <div className="h-3/5 object-fill overflow-clip flex justify-center rounded-lg m-2 bg-(--mid-dark) border-2 border-(--light-dark)">
                 <img className="h-full" src={`${endpointsConfig.BackendStaticUrl}${descriptor?.images[0].relativePath}`}></img>
             </div>
             <div className="font-bold text-2xl flex justify-between h-min overflow-clip truncate">
