@@ -1,6 +1,6 @@
 import { useNavigate, useParams } from "react-router-dom"
 import TopNavigation from "../Components/TopNavigation";
-import { createContext, useContext, useEffect, useRef, useState, type FormEvent } from "react";
+import { createContext, useContext, useEffect, useRef, useState, type FormEvent, type JSX } from "react";
 import Button from "../Components/Button";
 import Separator from "../Components/Separator";
 import { getAnonymous } from "../BackendClient";
@@ -37,6 +37,7 @@ export default function SearchResult() {
 
     useEffect(() => {
         setQueryFilters(prev => {
+            if (prev.phrase === searchPhrase) return prev;
             return({
                 ...prev,
                 phrase: searchPhrase ?? ''
@@ -78,33 +79,48 @@ function Results({ parameters } : { parameters: SearchQueryParameters }) {
     const setResultCount = useResultUpdater();
     const notify = useNotification();
 
-    const [listingPage, setListingPage] = useState<ListingDescriptor[] | null>(null);
+    const [listingPages, setListingPage] = useState<{ listings: JSX.Element }[]>([]);
+    const [pageCount, setPageCount] = useState<number>(0);
+    const lastQuery = useRef<string>('');
 
-    const fetchListings = async () => {
-        const queryString = buildQueryString(parameters);
+    const fetchListings = async (page: number) => {
+        const queryString = buildQueryString({...parameters, page: page});
+
+        console.log(queryString);
+
+        if (queryString === lastQuery.current) return;
+        lastQuery.current = queryString;
 
         try {
             const data = await getAnonymous<QueryResult>(`listings/QueryPage?${queryString}`);
 
-            setListingPage(data.listings);
+            setListingPage(prev => {
+                return([
+                    ...prev,
+                    { listings: <PageResults listings={data.listings} page={data.page} key={data.page}/> }
+                ])
+            })
             setResultCount(data.listingCount);
+            setPageCount(data.pageCount);
         }
         catch (error) {
             notify({
                 type: "error",
-                header: `An error occured while trying to search for the term "${parameters.phrase}"`,
+                header: `An error occured while trying gathering data!`,
                 message: `${error}`
             });
         }
     };
     
     useEffect(() => {
-        fetchListings();
+        setListingPage([]);
+        fetchListings(0);
     }, [parameters]);
 
     return(
-        <div className="mt-2">
-            {listingPage !== null && <PageResults listings={listingPage} page={1}/>}
+        <div className="mt-2 text-center">
+            {listingPages && listingPages.map(e => e.listings)}
+            {listingPages.length < pageCount && <Button className="px-2 py-1 my-1" onClick={() => fetchListings(listingPages.length + 1)}>Load more</Button>}
         </div>
     )
 }

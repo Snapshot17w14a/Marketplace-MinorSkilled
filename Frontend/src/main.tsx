@@ -16,19 +16,19 @@ ValidateToken();
 
 createRoot(document.getElementById('root')!).render(
   <StrictMode>
-      <BrowserRouter>
-        <NotificationProvider>
-          <Routes>
-            <Route index element={<Home />}/>
-            <Route path='listing/:listingId' element={<Listing/>} />
-            <Route path='listingCreator' element={<LisitngCreator/>} />
-            <Route path='account' element={<AccountPage/>}>
-              <Route path='register' element={<Register/>} />
-              <Route path='login' element={<Login/>} />
-            </Route>
-            <Route path='search/:searchPhrase' element={<SearchResult/>} />
-          </Routes>
-        </NotificationProvider>
-      </BrowserRouter>
+    <BrowserRouter>
+      <NotificationProvider>
+        <Routes>
+          <Route index element={<Home />}/>
+          <Route path='listing/:listingId' element={<Listing/>} />
+          <Route path='listingCreator' element={<LisitngCreator/>} />
+          <Route path='account' element={<AccountPage/>}>
+            <Route path='register' element={<Register/>} />
+            <Route path='login' element={<Login/>} />
+          </Route>
+          <Route path='search/:searchPhrase' element={<SearchResult/>} />
+        </Routes>
+      </NotificationProvider>
+    </BrowserRouter>
   </StrictMode>
 )
