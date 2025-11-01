@@ -99,31 +99,45 @@ namespace Backend.Controllers
         {
             var listings = _context.Listings.AsQueryable();
 
-            listings = listings.Where(l => 
+            try
+            {
+                listings = listings.Where(l =>
                 l.Title.Contains(query.Phrase) || l.Description.Contains(query.Phrase));
 
-            listings = query.SortBy.Trim().ToLower() switch
+                listings = query.SortBy.Trim().ToLower() switch
+                {
+                    "price" => query.Descending ? listings.OrderByDescending(l => l.Price) : listings.OrderBy(l => l.Price),
+                    _ => query.Descending ? listings.OrderByDescending(l => l.CreatedAt) : listings.OrderBy(l => l.CreatedAt),
+                };
+
+                listings = listings.Where(l => l.Price >= query.MinPrice && l.Price <= query.MaxPrice);
+
+                var listingCount = await listings.CountAsync();
+                var pageCount = (int)Math.Ceiling(listingCount / (float)query.PageCount);
+                var maxPrice = listings.Max(l => l.Price);
+
+                var finalListings = listings.Include(l => l.Images).Skip((query.Page - 1) * query.PageCount).Take(query.PageCount).ToArray();
+
+                return Ok(new
+                {
+                    listings = finalListings,
+                    query.Page,
+                    pageCount,
+                    listingCount,
+                    maxPrice
+                });
+            }
+            catch
             {
-                "price" => query.Descending ? listings.OrderByDescending(l => l.Price) : listings.OrderBy(l => l.Price),
-                _ => query.Descending ? listings.OrderByDescending(l => l.CreatedAt) : listings.OrderBy(l => l.CreatedAt),
-            };
-
-            listings = listings.Where(l => l.Price >= query.MinPrice && l.Price <= query.MaxPrice);
-
-            var listingCount = await listings.CountAsync();
-            var pageCount = (int)Math.Ceiling(listingCount / (float)query.PageCount);
-            var maxPrice = listings.Max(l => l.Price);
-
-            var finalListings = listings.Include(l => l.Images).Skip((query.Page - 1) * query.PageCount).Take(query.PageCount).ToArray();
-
-            return Ok(new
-            {
-                listings = finalListings,
-                query.Page,
-                pageCount,
-                listingCount,
-                maxPrice
-            });
+                return Ok(new
+                {
+                    listings = Array.Empty<Listing>(),
+                    query.Page,
+                    pageCount = 1,
+                    listingCount = 0,
+                    maxPrice = 0
+                });
+            }
         }
     }
 }

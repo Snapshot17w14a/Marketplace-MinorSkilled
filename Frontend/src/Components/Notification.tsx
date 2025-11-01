@@ -23,16 +23,19 @@ export default function Notification({ info, removeCallback }: { info: { id: num
     }
 
     const startAutoclose = useCallback(() => {
+        if (autocloseTimeout) return;
         const timeout = window.setTimeout(() => {
             animateRemove();
         }, 5000);
         setAutocloseTimeout(timeout);
-    }, []);
+    }, [autocloseTimeout]);
 
     useEffect(() => {
         if (isFocused) {
             window.clearTimeout(autocloseTimeout);
+            setAutocloseTimeout(undefined);
             window.clearTimeout(fadeTimeout);
+            setFadeTimeout(undefined);
             setVisibility(true);
             console.log("sotp");
         }
@@ -43,6 +46,8 @@ export default function Notification({ info, removeCallback }: { info: { id: num
 
     const animateRemove = () => {
         setVisibility(false);
+        window.clearTimeout(autocloseTimeout);
+        setAutocloseTimeout(undefined);
         const timeout = window.setTimeout(() => {
             remove(info.descObj);
         }, 500);

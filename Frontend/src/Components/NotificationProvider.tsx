@@ -21,11 +21,13 @@ export default function NotificationProvider({ children } : { children: React.Re
     const removeNotification = (notification: NotificationDescription) => {
         if (!notifications) return;
 
-        const remainingNotifications = notifications.filter(notifObject => {
-            return(notifObject.descObj !== notification)
+        setNotifications(prev => {
+            return(
+                prev.filter(notif => {
+                    return(notif.descObj !== notification);
+                })
+            )
         })
-
-        setNotifications(remainingNotifications);
     }
 
     return(
