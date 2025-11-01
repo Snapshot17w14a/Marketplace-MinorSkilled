@@ -112,6 +112,7 @@ namespace Backend.Controllers
 
             var listingCount = await listings.CountAsync();
             var pageCount = (int)Math.Ceiling(listingCount / (float)query.PageCount);
+            var maxPrice = listings.Max(l => l.Price);
 
             var finalListings = listings.Include(l => l.Images).Skip((query.Page - 1) * query.PageCount).Take(query.PageCount).ToArray();
 
@@ -120,7 +121,8 @@ namespace Backend.Controllers
                 listings = finalListings,
                 query.Page,
                 pageCount,
-                listingCount
+                listingCount,
+                maxPrice
             });
         }
     }

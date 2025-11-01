@@ -8,6 +8,7 @@ import type { ListingDescriptor } from "../types/listingDescriptor";
 import ListingCard from "../Components/ListingCard";
 import type { QueryResult } from "../types/queryResult";
 import { useNotification } from "../Components/NotificationProvider";
+import filterParameters from "../Configs/filters.confg";
 
 const ResultUpdaterContext = createContext<(count: number) => void>(() => {});
 
@@ -35,13 +36,11 @@ export default function SearchResult() {
     }
 
     useEffect(() => {
-        console.log(`phrase: ${searchPhrase}`)
         setQueryFilters(prev => {
-            const obj: SearchQueryParameters = {
+            return({
                 ...prev,
-                phrase: searchPhrase ?? ""
-            }
-            return(obj);
+                phrase: searchPhrase ?? ''
+            })
         })
     }, [searchPhrase]);
 
@@ -101,7 +100,6 @@ function Results({ parameters } : { parameters: SearchQueryParameters }) {
     
     useEffect(() => {
         fetchListings();
-        console.log("params changed!");
     }, [parameters]);
 
     return(
@@ -128,7 +126,7 @@ function FilterPanel({ enabled, setVisible, setFilters } : { enabled: boolean, s
     const minRef = useRef<HTMLInputElement>(null);
     const maxRef = useRef<HTMLInputElement>(null);
 
-    const [priceMinMax, setPriceMinMax] = useState<{ minValue: number, maxValue: number }>({ minValue: 0, maxValue: 20000 });
+    const [priceMinMax, setPriceMinMax] = useState<{ minValue: number, maxValue: number }>({ minValue: filterParameters.minPrice, maxValue: filterParameters.maxPrice });
 
     const applyFilters = (e: FormEvent) => {
         e.preventDefault();
@@ -151,11 +149,11 @@ function FilterPanel({ enabled, setVisible, setFilters } : { enabled: boolean, s
                     obj.sortBy = "CreatedAt"
                     obj.descending = true
                     break;
-                case "Price ascending":
+                case "Price Ascending":
                     obj.sortBy = "price"
                     obj.descending = false;
                     break;
-                case "Price descending":
+                case "Price Descending":
                     obj.sortBy = "price";
                     obj.descending = true;
                     break;
@@ -172,8 +170,15 @@ function FilterPanel({ enabled, setVisible, setFilters } : { enabled: boolean, s
         setVisible(prev => !prev);
     }
 
+    useEffect(() => {
+        if (!minRef.current || !maxRef.current) return;
+
+        minRef.current.value = `${filterParameters.minPrice}`;
+        maxRef.current.value = `${filterParameters.maxPrice}`;
+    }, [minRef, maxRef])
+
     return(
-        <div className="w-1/3 pt-15.5 h-screen absolute top-0 right-0 z-20 transition-transform duration-500" style={{transform: `translateX(${enabled ? 0 : 100}%)`}}>
+        <div className="w-full sm:w-1/3 pt-15.5 h-screen absolute top-0 right-0 z-20 transition-transform duration-500" style={{transform: `translateX(${enabled ? 0 : 100}%)`}}>
             <div className="bg-(--dark) border-2 border-(--light-dark) rounded-lg h-full p-4">
                 <div className="flex items-center mb-4">
                     <Button className="px-2 py-0.5" onClick={() => setVisible(prev => !prev)}>X</Button>
@@ -183,10 +188,9 @@ function FilterPanel({ enabled, setVisible, setFilters } : { enabled: boolean, s
                     <div className="flex mb-4 items-center">
                         <h2 className="font-semibold basis-1/3">Sort by</h2>
                         <select ref={selectRef} className="textinput-standard basis-2/3">
-                            <option>Latest</option>
-                            <option>Oldest</option>
-                            <option>Price ascending</option>
-                            <option>Price descending</option>
+                            {filterParameters.sortingParameters.map((sortParameter, index) => {
+                                return(<option key={index}>{sortParameter}</option>)
+                            })}
                         </select>
                     </div>
                     <div className="w-full">
@@ -194,14 +198,14 @@ function FilterPanel({ enabled, setVisible, setFilters } : { enabled: boolean, s
                             <h1 className="basis-1/3">Minimum price</h1>
                             <div className="basis-2/3 flex">
                                 <p className="basis-1/6">{priceMinMax.minValue}</p>
-                                <input step={10} className="basis-5/6" type="range" ref={minRef} min={0} max={priceMinMax.maxValue} onChange={event => setPriceMinMax(prev => {return({...prev, minValue: Number.parseInt(event.target.value)})})}></input>
+                                <input step={10} className="basis-5/6" type="range" ref={minRef} min={filterParameters.minPrice} max={priceMinMax.maxValue} onChange={event => setPriceMinMax(prev => {return({...prev, minValue: Number.parseInt(event.target.value)})})}></input>
                             </div>
                         </div>
                         <div className="w-full flex items-center">
                             <h1 className="basis-1/3">Maximum price</h1>
                             <div className="basis-2/3 flex">
                                 <p className="basis-1/6">{priceMinMax.maxValue}</p>
-                                <input step={10} className="basis-5/6" type="range" ref={maxRef} min={priceMinMax.minValue} max={20000} onChange={event => setPriceMinMax(prev => {return({...prev, maxValue: Number.parseInt(event.target.value)})})}></input>
+                                <input step={10} className="basis-5/6" type="range" ref={maxRef} min={priceMinMax.minValue} max={filterParameters.maxPrice} onChange={event => setPriceMinMax(prev => {return({...prev, maxValue: Number.parseInt(event.target.value)})})}></input>
                             </div>
                         </div>
                     </div>
@@ -215,8 +219,6 @@ function FilterPanel({ enabled, setVisible, setFilters } : { enabled: boolean, s
 
 function buildQueryString(queryParams: SearchQueryParameters): string {
     let builder = new URLSearchParams;
-
-    console.log(queryParams);
 
     Object.entries(queryParams).forEach(([key, value]) => {
         if (key !== null && value !== null && value !== '') {

@@ -60,7 +60,7 @@ export default function Listing() {
                     </div>
                 </div>
             </div>
-        : <></>}
+        :   <></>}
         </>
     )
 }
@@ -72,10 +72,14 @@ function ImageRoulette({ images, className } : { images: ListingImage[] | undefi
     return(
         <div className={"relative " + className}>
             <div className="absolute w-full h-full flex justify-center items-center z-1">
-                <Button className="absolute top-2 left-2 font-bold text-2xl px-2" onClick={() => history.back()}>X</Button>
+                <Button variant="filled" className="absolute top-2 left-2 font-bold py-1 px-2" onClick={() => history.back()}>Back</Button>
                 <div className="flex justify-between w-full p-2">
-                    <Button className="px-2 py-1" onClick={() => setIndex(prev => (prev - 1 + images!.length) % images!.length)}>🡐</Button>
-                    <Button className="px-2 py-1" onClick={() => setIndex(prev => (prev + 1) % images!.length)}>🡒</Button>
+                    {images && images.length > 1 && 
+                    <>
+                        <Button className="px-2 py-1" onClick={() => setIndex(prev => (prev - 1  + images.length) % images.length)}>🡐</Button>
+                        <Button className="px-2 py-1" onClick={() => setIndex(prev => (prev + 1) % images.length)}>🡒</Button>
+                    </>
+                    }
                 </div>
             </div>
             <div className="flex flex-nowrap h-full overflow-x-visible will-change-transform transition-transform duration-500 ease-in-out" style={{ transform: `translateX(-${index * 100}%)`}} >
@@ -91,7 +95,7 @@ function ImageRoulette({ images, className } : { images: ListingImage[] | undefi
     )
 }
 
-function ListingNav({ className = ''}){
+function ListingNav({ className = '' }){
 
     const navigate = useNavigate();
 
