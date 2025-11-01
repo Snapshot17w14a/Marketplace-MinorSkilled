@@ -34,6 +34,17 @@ export default function SearchResult() {
         searchInputRef.current.value = '';
     }
 
+    useEffect(() => {
+        console.log(`phrase: ${searchPhrase}`)
+        setQueryFilters(prev => {
+            const obj: SearchQueryParameters = {
+                ...prev,
+                phrase: searchPhrase ?? ""
+            }
+            return(obj);
+        })
+    }, [searchPhrase]);
+
     return(
         <div className="overflow-hidden relative min-h-screen">
             <TopNavigation className=" z-10"/>
@@ -51,7 +62,7 @@ export default function SearchResult() {
                 </div>
                 <Separator/>
                 <ResultUpdaterContext.Provider value={setResultCount}>
-                    {searchPhrase && <Results parameters={queryFilters}></Results>}
+                    <Results parameters={queryFilters}></Results>
                 </ResultUpdaterContext.Provider>
             </div>
             <FilterPanel enabled={filterVisible} setVisible={setFilterVisible} setFilters={setQueryFilters}></FilterPanel>
@@ -90,6 +101,7 @@ function Results({ parameters } : { parameters: SearchQueryParameters }) {
     
     useEffect(() => {
         fetchListings();
+        console.log("params changed!");
     }, [parameters]);
 
     return(
@@ -112,35 +124,52 @@ function PageResults({ listings, page } : { listings: ListingDescriptor[], page:
 
 function FilterPanel({ enabled, setVisible, setFilters } : { enabled: boolean, setVisible: React.Dispatch<React.SetStateAction<boolean>>, setFilters: React.Dispatch<React.SetStateAction<SearchQueryParameters>> }) {
 
-    const selectRef = useRef<HTMLSelectElement | null>(null);
-    const descendingRef = useRef<HTMLInputElement | null>(null);
+    const selectRef = useRef<HTMLSelectElement>(null);
+    const minRef = useRef<HTMLInputElement>(null);
+    const maxRef = useRef<HTMLInputElement>(null);
+
+    const [priceMinMax, setPriceMinMax] = useState<{ minValue: number, maxValue: number }>({ minValue: 0, maxValue: 20000 });
 
     const applyFilters = (e: FormEvent) => {
         e.preventDefault();
 
         setFilters(prev => {
 
-            if (!selectRef.current) return prev;
+            const obj: SearchQueryParameters = {
+                ...prev
+            }
+
+            if (!selectRef.current) return obj;
 
             const expr = selectRef.current.value;
             switch (expr) {
                 case "Latest":
-                    prev.sortBy = "CreatedAt"
+                    obj.sortBy = "CreatedAt"
+                    obj.descending = false;
+                    break;
+                case "Oldest":
+                    obj.sortBy = "CreatedAt"
+                    obj.descending = true
                     break;
                 case "Price ascending":
-                    prev.sortBy = "price"
+                    obj.sortBy = "price"
+                    obj.descending = false;
                     break;
                 case "Price descending":
-                    if (!descendingRef.current) break;
-                    prev.sortBy = "price";
-                    prev.descending = descendingRef.current.checked;
+                    obj.sortBy = "price";
+                    obj.descending = true;
                     break;
             }
-            
-            console.log(prev);
 
-            return prev;
+            if (!minRef.current || !maxRef.current) return obj;
+
+            obj.minPrice = Number.parseInt(minRef.current.value);
+            obj.maxPrice = Number.parseInt(maxRef.current.value);
+
+            return obj;
         })
+
+        setVisible(prev => !prev);
     }
 
     return(
@@ -151,14 +180,32 @@ function FilterPanel({ enabled, setVisible, setFilters } : { enabled: boolean, s
                     <h1 className="w-full font-bold text-2xl text-center">Filters</h1>
                 </div>
                 <form onSubmit={applyFilters}>
-                    <h2 className="font-semibold">Sort by</h2>
-                    <select ref={selectRef} className="textinput-standard">
-                        <option>Latest</option>
-                        <option>Price ascending</option>
-                        <option>Price descending</option>
-                    </select>
-                    <label htmlFor="descending">Descending</label>
-                    <input ref={descendingRef} type="checkbox" name="descending"></input>
+                    <div className="flex mb-4 items-center">
+                        <h2 className="font-semibold basis-1/3">Sort by</h2>
+                        <select ref={selectRef} className="textinput-standard basis-2/3">
+                            <option>Latest</option>
+                            <option>Oldest</option>
+                            <option>Price ascending</option>
+                            <option>Price descending</option>
+                        </select>
+                    </div>
+                    <div className="w-full">
+                        <div className="w-full flex items-center">
+                            <h1 className="basis-1/3">Minimum price</h1>
+                            <div className="basis-2/3 flex">
+                                <p className="basis-1/6">{priceMinMax.minValue}</p>
+                                <input step={10} className="basis-5/6" type="range" ref={minRef} min={0} max={priceMinMax.maxValue} onChange={event => setPriceMinMax(prev => {return({...prev, minValue: Number.parseInt(event.target.value)})})}></input>
+                            </div>
+                        </div>
+                        <div className="w-full flex items-center">
+                            <h1 className="basis-1/3">Maximum price</h1>
+                            <div className="basis-2/3 flex">
+                                <p className="basis-1/6">{priceMinMax.maxValue}</p>
+                                <input step={10} className="basis-5/6" type="range" ref={maxRef} min={priceMinMax.minValue} max={20000} onChange={event => setPriceMinMax(prev => {return({...prev, maxValue: Number.parseInt(event.target.value)})})}></input>
+                            </div>
+                        </div>
+                    </div>
+                    <br/>
                     <Button className="px-2 py-1" type="submit">Apply filters</Button>
                 </form>
             </div>
@@ -184,6 +231,9 @@ interface SearchQueryParameters {
     phrase: string,
     sortBy?: string,
     descending?: boolean,
+    
+    minPrice?: number,
+    maxPrice?: number,
 
     page?: number,
     pageCount?: number

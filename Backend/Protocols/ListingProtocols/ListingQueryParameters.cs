@@ -6,6 +6,9 @@
         public string SortBy { get; set; } = "CreatedAt";
         public bool Descending { get; set; } = true;
 
+        public int MinPrice { get; set; }
+        public int MaxPrice { get; set; }
+
         public int Page { get; set; } = 1;
         public int PageCount { get; set; } = 20;
     }

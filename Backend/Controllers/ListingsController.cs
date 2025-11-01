@@ -108,6 +108,8 @@ namespace Backend.Controllers
                 _ => query.Descending ? listings.OrderByDescending(l => l.CreatedAt) : listings.OrderBy(l => l.CreatedAt),
             };
 
+            listings = listings.Where(l => l.Price >= query.MinPrice && l.Price <= query.MaxPrice);
+
             var listingCount = await listings.CountAsync();
             var pageCount = (int)Math.Ceiling(listingCount / (float)query.PageCount);
 
