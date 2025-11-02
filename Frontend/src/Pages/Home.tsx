@@ -1,6 +1,6 @@
 import Button from '../Components/Button'
 import TopNavigation from '../Components/TopNavigation'
-import { IsLoggedIn } from '../Auth'
+import { isLoggedIn } from '../Auth'
 import { useNavigate } from 'react-router-dom'
 import { useCallback, useState, useRef, type FormEvent, useEffect } from 'react';
 import ListingCard from '../Components/ListingCard';
@@ -18,8 +18,8 @@ export default function Home() {
     const navigate = useNavigate();
 
     const handleCreateListing = useCallback(() => {
-        navigate(IsLoggedIn() ? 'listingCreator' : 'account/register');
-    }, [IsLoggedIn]);
+        navigate(isLoggedIn() ? 'listingCreator' : 'account/register');
+    }, [isLoggedIn]);
 
     useEffect(() => {
         const fetchListngs = async () => {

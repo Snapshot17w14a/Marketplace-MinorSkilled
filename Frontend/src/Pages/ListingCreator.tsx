@@ -5,6 +5,7 @@ import { postAuthorized, postXmlHttp } from "../BackendClient";
 import TopNavigation from "../Components/TopNavigation";
 import ProgressBar from "../Components/ProgressBar";
 import { useNavigate } from "react-router-dom";
+import { getJWT } from "../Auth";
 
 export default function LisitngCreator() {
 
@@ -122,10 +123,12 @@ function ImageUpload( { setImageGuids } : { setImageGuids: React.Dispatch<React.
     const uploadFile = async () => {
         if (!files) return;
 
-        const uploadPromises = files.map((uFile, index) => {
+        console.log('upld');
+        let uploadPromises
+        try{
+         uploadPromises = files.map(async (uFile, index) => {
             
             const formData = new FormData();
-            formData.append("Authorization", `Bearer ${sessionStorage.getItem("JWT")}`)
             formData.append('file', uFile.file);
 
             const onProgress = (event: ProgressEvent) => {
@@ -137,7 +140,8 @@ function ImageUpload( { setImageGuids } : { setImageGuids: React.Dispatch<React.
 
             return postXmlHttp<UploadResult>('Images/UploadImage', formData, onProgress)
         });
-
+        }
+        catch(e){console.log(e); return;}
         const results = await Promise.allSettled(uploadPromises);
 
         const successfullGuids: string[] = [];

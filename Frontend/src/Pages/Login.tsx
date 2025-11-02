@@ -1,10 +1,9 @@
 import { useRef, useState, type FormEvent } from 'react'
-import { postAnonymous } from '../BackendClient';
-import { SetJWToken, SetActiveUser } from '../Auth';
 import Button from '../Components/Button';
 import { useFadeContext } from './AccountPage';
 import { useNavigate } from 'react-router-dom';
 import { useNotification, type NotificationDescription } from '../Components/NotificationProvider';
+import { requestJWToken, type LoginRequest } from '../Auth';
 
 export default function Login() {
     const emailRef = useRef<HTMLInputElement | null>(null);
@@ -31,21 +30,21 @@ export default function Login() {
 
         var hasErrored = false;
         
-        const notFoundHandler = () => {
+        const notFoundHandler = (e: unknown) => {
             const notifDesc: NotificationDescription = {
                 type: "error",
                 header: "Cound not find user!",
-                message: "Password and Username do not match any account registered"
+                message: `Password and Username do not match any account registered: ${e}`
             }
             notify(notifDesc);
             hasErrored = true;
         };
 
         try {
-            var response = await postAnonymous('User/Login', loginReqest, notFoundHandler);
-            if (hasErrored) return;
-            SetJWToken(response.access_token);
-            SetActiveUser(response.user_data);
+            const success = await requestJWToken(loginReqest, notFoundHandler);
+            console.log('beforse success: ' + success);
+            if (!success) return;
+            console.log('after success');
             navigate("/");
         }
         catch (error) {
@@ -81,9 +80,4 @@ export default function Login() {
             </form>
         </div>
     )
-}
-
-type LoginRequest = {
-    email: string,
-    password: string
 }

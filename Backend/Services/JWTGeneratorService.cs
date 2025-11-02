@@ -1,12 +1,16 @@
 ﻿using System.IdentityModel.Tokens.Jwt;
 using System.Security.Claims;
 using Microsoft.IdentityModel.Tokens;
+using Backend.Models;
+using Backend.Database;
 
 namespace Backend.Services
 {
-    public class JWTGeneratorService
+    public class JWTGeneratorService(ApplicationDbContext context)
     {
-        public string GenerateJWToken(Guid userId, string email)
+        private readonly ApplicationDbContext _context = context;
+
+        public string GenerateJWToken(User user)
         {
             var tokenHandler = new JwtSecurityTokenHandler();
             var secretKey = "VerySecretKeyForAuthenticationDontShareWithAnyone"u8.ToArray();
@@ -14,8 +18,8 @@ namespace Backend.Services
             var claims = new List<Claim>
             {
                 new(JwtRegisteredClaimNames.Jti, Guid.NewGuid().ToString()),
-                new(JwtRegisteredClaimNames.Sub, userId.ToString()),
-                new(JwtRegisteredClaimNames.Email, email)
+                new(JwtRegisteredClaimNames.Sub, user.Identifier.ToString()),
+                new(JwtRegisteredClaimNames.Email, user.Email)
             };
 
             var tokenDescriptor = new SecurityTokenDescriptor
@@ -29,6 +33,21 @@ namespace Backend.Services
 
             var token = tokenHandler.CreateToken(tokenDescriptor);
             return tokenHandler.WriteToken(token);
+        }
+
+        public async Task<string> GenerateRefreshToken(User user)
+        {
+            var token = new RefreshToken
+            {
+                TokenId = Guid.NewGuid(),
+                UserId = user.Identifier,
+                Expiration = DateTime.UtcNow.AddHours(24),
+            };
+
+            _context.RefreshTokens.Add(token);
+            await _context.SaveChangesAsync();
+
+            return Base64UrlEncoder.Encode(token.ToString());
         }
     }
 }

@@ -86,8 +86,6 @@ function Results({ parameters } : { parameters: SearchQueryParameters }) {
     const fetchListings = async (page: number) => {
         const queryString = buildQueryString({...parameters, page: page});
 
-        console.log(queryString);
-
         if (queryString === lastQuery.current) return;
         lastQuery.current = queryString;
 

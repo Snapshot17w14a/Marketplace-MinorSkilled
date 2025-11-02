@@ -1,72 +1,127 @@
 import { jwtDecode } from "jwt-decode";
-import type { userData } from "./types/userData";
+import { decodeUserData, encodeUserData, type UserData as UserData } from "./types/userData";
+import { ParseToken as rftDecode } from "./types/refreshToken";
+import { postAnonymous } from "./BackendClient";
 
-let isLoggedIn: boolean = false;
-let activeUserData: userData | undefined = undefined;
+let loggedIn: boolean = false;
+let activeUserData: UserData | undefined;
 
-export function SetJWToken(token: string) {
-    localStorage.setItem("JWT", token);
-    isLoggedIn = true;
+export function getActiveUser(): UserData | undefined {
+    return activeUserData;
 }
 
-export function SetActiveUser(user: userData) {
-    localStorage.setItem("activeUserData", JSON.stringify(user));
-    activeUserData = user;
+export function isLoggedIn(): boolean {
+    return loggedIn;
 }
 
-export function ValidateToken(): boolean {
-    
-    const token = localStorage.getItem("JWT");
+export async function logOut() {
+    await cookieStore.delete('access');
+    await cookieStore.delete('refresh');
 
-    if (token === null) return false;
+    loggedIn = false;
+    activeUserData = undefined;
+}
 
-    const decodedToken = jwtDecode(token);
-    
-    if (decodedToken.exp === undefined) return false;
-    
-    
-    const expirationSeconds = decodedToken.exp * 1000;
-    const isValid = expirationSeconds > Date.now();
-    console.log(`exp: ${expirationSeconds} now: ${Date.now()}`);
+export async function getJWT(): Promise<string | null> {
 
-    if (!isValid) return false;
+    const isLoginValid = await validateLogin();
+    if (!isLoginValid) return null;
 
-    isLoggedIn = true;
+    const accessToken = await cookieStore.get('access');
+    return accessToken!.value!;
+}
+
+export async function validateLogin(): Promise<boolean> {
+    
+    const access = await isAccessValid();
+    if (!access) {
+        const success = await refreshLogin();
+
+        if (!success) return false;
+    }
+
+    loggedIn = true;
+    const userCookie = await cookieStore.get('user');
+    activeUserData = decodeUserData(userCookie!.value!);
 
     return true;
 }
 
-export function IsLoggedIn(): boolean {
-    return isLoggedIn;
-}
-
-export function GetCurrentActiveUser(): userData | undefined {
-    //Check if the current session has the active user already defined
-    if (activeUserData === undefined) {
-
-        //If not read the local storage to see if we have data about the user stored
-        const readActiveUserData = localStorage.getItem("activeUserData");
-
-        //If not we have no info about the user, return undefined
-        if (readActiveUserData === null) {
-            return undefined;
-        }
-
-        //If its defined parse the JSON and set the current instance of activeUserData to it
-        SetActiveUser(JSON.parse(readActiveUserData));
+export async function requestJWToken(loginDetails: LoginRequest, handler?: (e: unknown) => void): Promise<boolean> {
+    try {
+        const data = await postAnonymous<LoginResult>('user/Login', loginDetails);
+        await processLoginResult(data);
+        return true;
     }
-
-    //Return the set active user data
-    return activeUserData;
+    catch(e) {
+        if(handler) handler(e);
+        return false;
+    }
 }
 
-export function LogOutUser() {
-    activeUserData = undefined;
-    isLoggedIn = false;
+export async function refreshLogin(): Promise<boolean> {
 
-    localStorage.clear();
+    const refreshCookie = await cookieStore.get('refresh');
+    if(!refreshCookie) return false;
+
+    try {
+        const data = await postAnonymous<LoginResult>('user/RefreshLogin', refreshCookie.value!);
+        await processLoginResult(data);
+        return true;
+    }
+    catch (e) {
+        return false;
+    }
 }
 
-export function GetJWT(): string {
-    return(localStorage.getItem('JWT') ?? '');
+async function isAccessValid(): Promise<boolean> {
+    const accessCookie = await cookieStore.get('access');
+    if (!accessCookie) return false;
+
+    const jwt = jwtDecode(accessCookie.value!);
+
+    const expSeconds = jwt.exp! * 1000;
+    const isValid = expSeconds > Date.now();
+
+    return isValid;
+}
+
+async function processLoginResult(data: LoginResult) {
+    
+    const jwt = jwtDecode(data.accessToken);
+    const rft = rftDecode(data.refreshToken);
+    
+    await cookieStore.set({
+        name: "access",
+        value: data.accessToken,
+        expires: jwt.exp! * 1000,
+        path: '/',
+    });
+
+    await cookieStore.set({
+        name: "refresh",
+        value: data.refreshToken,
+        expires: rft.expiration * 1000,
+        path: '/',
+    });
+
+    await cookieStore.set({
+        name: "user",
+        value: encodeUserData(data.userData),
+        path: '/'
+    });
+
+    loggedIn = true;
+    activeUserData = data.userData;
+}
+
+type LoginResult = {
+    accessToken: string,
+    refreshToken: string,
+    userData: UserData
+}
+
+export type LoginRequest = {
+    email: string,
+    password: string
 }

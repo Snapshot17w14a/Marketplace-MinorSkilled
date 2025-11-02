@@ -1,5 +1,5 @@
 import { useNavigate } from 'react-router-dom'
-import { GetCurrentActiveUser, IsLoggedIn, LogOutUser } from '../Auth';
+import { getActiveUser, isLoggedIn as getIsLoggedIn, logOut } from '../Auth';
 import Logo from '../assets/Subtract.svg'
 import Button from './Button'
 import { useEffect, useState } from 'react';
@@ -7,7 +7,7 @@ import { useEffect, useState } from 'react';
 export default function TopNavigation({ className = ''}) {
 
     useEffect(() => {
-        setIsLoggedIn(IsLoggedIn());
+        setIsLoggedIn(getIsLoggedIn());
     }, []);
 
     const navigate = useNavigate();
@@ -15,7 +15,7 @@ export default function TopNavigation({ className = ''}) {
     const [isLoggedIn, setIsLoggedIn] = useState<boolean>(false);
 
     const handleLogOut = () => {
-        LogOutUser();
+        logOut();
         setIsLoggedIn(false);
     };
 
@@ -30,7 +30,7 @@ export default function TopNavigation({ className = ''}) {
             {
                 isLoggedIn ? 
                 <div className='flex justify-around items-center'> 
-                    <p className='font-bold text-lg w-min sm:w-auto'>Logged in as {GetCurrentActiveUser()?.username}</p>
+                    <p className='font-bold text-lg w-min sm:w-auto'>Logged in as {getActiveUser()?.username}</p>
                     <Button variant='filled' className='px-4 py-2.5 ml-4' onClick={handleLogOut}>Log out</Button>
                 </div> 
                 :

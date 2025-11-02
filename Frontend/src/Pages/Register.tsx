@@ -2,8 +2,8 @@ import { useRef, useState, type FormEvent } from "react";
 import { postAnonymous } from "../BackendClient";
 import Button from "../Components/Button";
 import { useNavigate } from "react-router-dom";
-import { useFadeContext } from "./AccountPage";
-import { useNotification } from "../Components/NotificationProvider";
+import { useFadeContext as useFade } from "./AccountPage";
+import { useNotification as useNotify } from "../Components/NotificationProvider";
 
 export default function Register(){
     const emailRef = useRef<HTMLInputElement>(null);
@@ -13,9 +13,9 @@ export default function Register(){
 
     const [registerButtonDisabled, setRegisterDisable] = useState(false);
 
-    const notify = useNotification();
+    const notify = useNotify();
     const navigate = useNavigate();
-    const fade = useFadeContext();
+    const fade = useFade();
 
     const handleSubmit = async (event: FormEvent<HTMLFormElement>) => {
         event.preventDefault();

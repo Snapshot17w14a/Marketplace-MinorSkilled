@@ -8,11 +8,11 @@ import Login from './Pages/Login'
 import { AccountPage } from './Pages/AccountPage'
 import NotificationProvider from './Components/NotificationProvider'
 import LisitngCreator from './Pages/ListingCreator'
-import { ValidateToken } from './Auth'
+import { validateLogin } from './Auth'
 import Listing from './Pages/Listing'
 import SearchResult from './Pages/SearchResult'
 
-ValidateToken();
+validateLogin();
 
 createRoot(document.getElementById('root')!).render(
   <StrictMode>

@@ -1,8 +1,8 @@
 import endpointConfig from './Configs/endpoints.config'
 import { useNavigate } from "react-router-dom";
-import { GetJWT, ValidateToken } from './Auth';
+import { getJWT, validateLogin } from './Auth';
 
-export async function postAnonymous(endpoint: string, data: any, responseHandler?: (response: Response) => void): Promise<any> {
+export async function postAnonymous<T>(endpoint: string, data: any, responseHandler?: (response: Response) => void): Promise<any> {
 
     const response = await fetch(endpointConfig.BackendBaseUrl + endpoint, {
         method: "POST",
@@ -22,22 +22,21 @@ export async function postAnonymous(endpoint: string, data: any, responseHandler
         }
     }
 
-    return await response.json();
+    const result = await response.json() as T;
+    return result;
 }
 
 export async function postAuthorized(endpoint: string, data: any, responseHandler? : (response: Response) => void): Promise<any> {
 
-    //Validate token before making request, if token isnt valid redirect to /account/login
-    if (!ValidateToken()) {
-        const navigate = useNavigate();
-        navigate("/account/login");
+    if (!validateLogin()) {
+        throw new Error("Auth expired");
     }
 
     const response = await fetch(endpointConfig.BackendBaseUrl + endpoint, {
         method: "POST",
         headers: {
             "Content-Type": "application/json",
-            "Authorization": `Bearer ${GetJWT()}`
+            "Authorization": `Bearer ${await getJWT()}`
         },
         body: JSON.stringify(data)
     });
@@ -71,14 +70,14 @@ export async function getAnonymous<T>(endpoint: string): Promise<T> {
 
 export async function getAuthorized<T>(endpoint: string): Promise<T> {
 
-    if (!ValidateToken()) {
+    if (!validateLogin()) {
         throw new Error("Auth expired");
     }
 
     const response = await fetch(endpointConfig.BackendBaseUrl + endpoint, {
         method: 'GET',
         headers: {
-            "Authorization": `Bearer ${GetJWT()}`
+            "Authorization": `Bearer ${await getJWT()}`
         }
     });
 
@@ -91,14 +90,15 @@ export async function getAuthorized<T>(endpoint: string): Promise<T> {
     return data;
 }
 
-export function postXmlHttp<T>(endpoint: string, formData: FormData, onProgress?: (ev: ProgressEvent) => void): Promise<T> {
-    return new Promise<T>((resolve, reject) => {
+export async function postXmlHttp<T>(endpoint: string, formData: FormData, onProgress?: (ev: ProgressEvent) => void): Promise<T> {
+    return new Promise<T>(async (resolve, reject) => {
 
         const xhr = new XMLHttpRequest();
 
         xhr.open("POST", endpointConfig.BackendBaseUrl + endpoint);
 
-        xhr.setRequestHeader("Authorization", `Bearer ${GetJWT()}`);
+        const jwt = await getJWT();
+        xhr.setRequestHeader("Authorization", `Bearer ${jwt}`);
 
         if (onProgress){
             xhr.upload.onprogress = onProgress;

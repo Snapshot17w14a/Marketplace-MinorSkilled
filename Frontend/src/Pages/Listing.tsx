@@ -3,7 +3,7 @@ import { useNavigate, useParams } from "react-router-dom";
 import { getAnonymous } from "../BackendClient";
 import endpointsConfig from "../Configs/endpoints.config";
 import Logo from '../assets/Subtract.svg';
-import { GetCurrentActiveUser, IsLoggedIn } from "../Auth";
+import { getActiveUser, isLoggedIn } from "../Auth";
 import Button from "../Components/Button";
 import type { ListingDescriptor } from "../types/listingDescriptor";
 import type { ListingImage } from "../types/listingImage";
@@ -104,8 +104,8 @@ function ListingNav({ className = '' }){
             <button className="p-2 h-full cursor-pointer" type="button" onClick={() => navigate("/")}>
                 <img className="h-full object-contain" src={Logo}></img>
             </button>
-            {IsLoggedIn() ? 
-                <p className="mr-2 text-xl">Logged in as {GetCurrentActiveUser()?.username}</p> :
+            {isLoggedIn() ? 
+                <p className="mr-2 text-xl">Logged in as {getActiveUser()?.username}</p> :
                 <Button className="p-2 mr-2" variant="filled" type="button" onClick={() => navigate('/account/login')}>Log in</Button>
             }
         </div>

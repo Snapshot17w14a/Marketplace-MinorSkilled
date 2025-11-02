@@ -75,9 +75,46 @@ namespace Backend.Controllers
             if (user == null)
                 return NotFound();
 
+            var invalidRft = await _context.RefreshTokens.FirstAsync(rft => rft.UserId == user.Identifier);
+            _context.RefreshTokens.Remove(invalidRft);
+            await _context.SaveChangesAsync();
+
             return Ok(new {
-                access_token = _jwtGeneratorService.GenerateJWToken(user.Identifier, user.Email!),
-                user_data = new
+                accessToken = _jwtGeneratorService.GenerateJWToken(user),
+                refreshToken = await _jwtGeneratorService.GenerateRefreshToken(user),
+                userData = new
+                {
+                    username = user.Name,
+                    email = user.Email,
+                    guid = user.Identifier
+                }
+            });
+        }
+
+        [HttpPost]
+        public async Task<ActionResult> RefreshLogin([FromBody] RefreshRequest refreshRequest)
+        {
+            var decodedToken = RefreshToken.DecodeTokenString(refreshRequest.Token);
+
+            if (! await _context.RefreshTokens.ContainsAsync(decodedToken))
+            {
+                return Forbid();
+            }
+
+            User? user = await _context.Users.FirstOrDefaultAsync(u => u.Identifier == decodedToken.UserId);
+
+            if (user == null)
+            {
+                return NotFound();
+            }
+
+            _context.RefreshTokens.Remove(decodedToken);
+            await _context.SaveChangesAsync();
+
+            return Ok(new {
+                accessToken = _jwtGeneratorService.GenerateJWToken(user),
+                refreshToken = await _jwtGeneratorService.GenerateRefreshToken(user),
+                userData = new
                 {
                     username = user.Name,
                     email = user.Email,

@@ -27,12 +27,14 @@ builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme).AddJw
     {
         IssuerSigningKey = new SymmetricSecurityKey("VerySecretKeyForAuthenticationDontShareWithAnyone"u8.ToArray()),
         ValidIssuer = "https://api.mkev.dev",
-        ValidAudience = "https://marketplace.mkev.dev"
+        ValidAudience = "https://marketplace.mkev.dev",
+        ValidateLifetime = true,
+        ValidateIssuerSigningKey = true,
     };
 });
 
 builder.Services.AddSingleton<PasswordHashService>();
-builder.Services.AddSingleton<JWTGeneratorService>();
+builder.Services.AddScoped<JWTGeneratorService>();
 
 if (builder.Environment.IsDevelopment())
 {
