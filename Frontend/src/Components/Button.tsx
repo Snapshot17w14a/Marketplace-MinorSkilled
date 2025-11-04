@@ -12,7 +12,7 @@ const Button = React.forwardRef<HTMLButtonElement, ButtonProps>(({ variant = "st
     }
 
     return(
-        <button {...rest} className={`h-min ${styles[variant]} ` + rest.className} ref={ref}>
+        <button {...rest} className={`${styles[variant]} ` + rest.className} ref={ref}>
             {rest.children}
         </button>
     )

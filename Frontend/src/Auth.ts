@@ -65,7 +65,7 @@ export async function refreshLogin(): Promise<boolean> {
     if(!refreshCookie) return false;
 
     try {
-        const data = await postAnonymous<LoginResult>('user/RefreshLogin', refreshCookie.value!);
+        const data = await postAnonymous<LoginResult>('user/RefreshLogin', { "token": refreshCookie.value!});
         await processLoginResult(data);
         return true;
     }

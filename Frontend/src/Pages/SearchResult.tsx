@@ -157,11 +157,11 @@ function FilterPanel({ enabled, setVisible, setFilters } : { enabled: boolean, s
             switch (expr) {
                 case "Latest":
                     obj.sortBy = "CreatedAt"
-                    obj.descending = false;
+                    obj.descending = true;
                     break;
                 case "Oldest":
                     obj.sortBy = "CreatedAt"
-                    obj.descending = true
+                    obj.descending = false
                     break;
                 case "Price Ascending":
                     obj.sortBy = "price"

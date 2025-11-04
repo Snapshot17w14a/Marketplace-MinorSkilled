@@ -7,6 +7,7 @@ import { getActiveUser, isLoggedIn } from "../Auth";
 import Button from "../Components/Button";
 import type { ListingDescriptor } from "../types/listingDescriptor";
 import type { ListingImage } from "../types/listingImage";
+import { addSavedListing, isListingSaved, removeSavedListing } from "../SavedListings";
 
 export default function Listing() {
     
@@ -14,6 +15,10 @@ export default function Listing() {
     
     const [listingGuid, setListingGuid] = useState<string | null>(null);
     const [listingData, setListingData] = useState<ListingDescriptor | null>(null);
+    const [isSaved, setIsSaved] = useState<boolean>(() => {
+        if (!listingId) return false;
+        return isListingSaved(listingId);
+    });
 
     useEffect(() => {
         setListingGuid(listingId ?? "");
@@ -31,10 +36,20 @@ export default function Listing() {
 
     }, [listingGuid])
 
-    useEffect(() => {
-        console.log(listingData);
-        console.log(listingId);
-    }, [listingData]);
+    const saveListing = () => {
+        if (!listingId) return;
+
+        const isSaved = isListingSaved(listingId);
+
+        if(isSaved){
+            removeSavedListing(listingId);
+            setIsSaved(false);
+        }
+        else{
+            addSavedListing(listingId);
+            setIsSaved(true);
+        }
+    }
     
     return(
         <>
@@ -50,7 +65,7 @@ export default function Listing() {
                         <h3 className="text-[#888888] mb-4">Listed at: {listingData.createdAt}</h3>
                         <div className="flex justify-evenly gap-4 mb-4">
                             <Button className="basis-4/6 px-2 py-1.5" variant="filled">Message</Button>
-                            <Button className="basis-1/6 px-2 py-1">Save</Button>
+                            <Button className="basis-1/6 px-2 py-1" variant={isSaved ? "filled" : "standard"} onClick={saveListing}>{isSaved ? "Saved!" : "Save"}</Button>
                             <Button className="basis-1/6 px-2 py-1">Share</Button>
                         </div>
                         <div className="w-full h-1 bg-(--light-dark) rounded-lg mb-4"></div>
@@ -85,8 +100,8 @@ function ImageRoulette({ images, className } : { images: ListingImage[] | undefi
             <div className="flex flex-nowrap h-full overflow-x-visible will-change-transform transition-transform duration-500 ease-in-out" style={{ transform: `translateX(-${index * 100}%)`}} >
                 {images && images.map((img, index) => {
                     return(
-                        <div className="lg:h-screen w-full flex shrink-0 justify-center items-center">
-                            <img className="object-contain h-full" src={endpointsConfig.BackendStaticUrl + img.relativePath} key={index}/>
+                        <div key={index} className="lg:h-screen w-full flex shrink-0 justify-center items-center">
+                            <img className="object-contain h-full" src={endpointsConfig.BackendStaticUrl + img.relativePath}/>
                         </div>
                     )
                 })}

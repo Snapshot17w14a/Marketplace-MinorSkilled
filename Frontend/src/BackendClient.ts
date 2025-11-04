@@ -1,5 +1,4 @@
 import endpointConfig from './Configs/endpoints.config'
-import { useNavigate } from "react-router-dom";
 import { getJWT, validateLogin } from './Auth';
 
 export async function postAnonymous<T>(endpoint: string, data: any, responseHandler?: (response: Response) => void): Promise<any> {
@@ -51,6 +50,7 @@ export async function postAuthorized(endpoint: string, data: any, responseHandle
         }
     }
 
+    response.text
     return await response.json();
 }
 

@@ -32,7 +32,7 @@ namespace Backend.Controllers
 
             var tokenHandler = new JwtSecurityTokenHandler();
             var jwt = auth.Authorization;
-            jwt = jwt[7..];
+            jwt = jwt[7..]; // Ignore the "Bearer " part of the header
             var decodedToken = tokenHandler.ReadJwtToken(jwt);
 
             User? creatingUser;

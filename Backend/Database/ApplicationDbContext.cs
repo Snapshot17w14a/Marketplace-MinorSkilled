@@ -9,6 +9,7 @@ namespace Backend.Database
         public DbSet<Listing> Listings { get; set; }
         public DbSet<ListingImage> ListingsImages { get; set; }
         public DbSet<RefreshToken> RefreshTokens { get; set; }
+        public DbSet<SavedListing> SavedListings { get; set; }
 
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
@@ -25,12 +26,15 @@ namespace Backend.Database
                 .HasKey(x => x.Id);
 
             modelBuilder.Entity<Listing>()
-                .HasMany<ListingImage>(l => l.Images)
+                .HasMany(l => l.Images)
                 .WithOne(li => li.Listing)
                 .HasForeignKey(li => li.ListingId);
 
             modelBuilder.Entity<RefreshToken>()
                 .HasKey(rt => rt.TokenId);
+
+            modelBuilder.Entity<SavedListing>()
+                .HasKey(sl => sl.Id);
         }
     }
 }

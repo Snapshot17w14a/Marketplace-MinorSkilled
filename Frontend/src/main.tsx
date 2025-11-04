@@ -11,8 +11,10 @@ import LisitngCreator from './Pages/ListingCreator'
 import { validateLogin } from './Auth'
 import Listing from './Pages/Listing'
 import SearchResult from './Pages/SearchResult'
+import { fetchSavedListings } from './SavedListings'
 
-validateLogin();
+await validateLogin();
+fetchSavedListings();
 
 createRoot(document.getElementById('root')!).render(
   <StrictMode>

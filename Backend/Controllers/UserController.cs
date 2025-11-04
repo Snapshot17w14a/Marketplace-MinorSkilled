@@ -91,24 +91,34 @@ namespace Backend.Controllers
             });
         }
 
+        [AllowAnonymous]
         [HttpPost]
         public async Task<ActionResult> RefreshLogin([FromBody] RefreshRequest refreshRequest)
         {
-            var decodedToken = RefreshToken.DecodeTokenString(refreshRequest.Token);
+            var decodedTokenId = RefreshToken.DecodeTokenString(refreshRequest.Token).TokenId;
 
-            if (! await _context.RefreshTokens.ContainsAsync(decodedToken))
+            RefreshToken? rft = await _context.RefreshTokens.Where(rft => rft.TokenId == decodedTokenId).FirstOrDefaultAsync();
+
+            if (rft == null)
             {
+                return NotFound();
+            }
+
+            if (rft.Expiration < DateTime.UtcNow)
+            {
+                _context.RefreshTokens.Remove(rft);
+                await _context.SaveChangesAsync();
                 return Forbid();
             }
 
-            User? user = await _context.Users.FirstOrDefaultAsync(u => u.Identifier == decodedToken.UserId);
+            User? user = await _context.Users.FirstOrDefaultAsync(u => u.Identifier == rft.UserId);
 
             if (user == null)
             {
                 return NotFound();
             }
 
-            _context.RefreshTokens.Remove(decodedToken);
+            _context.RefreshTokens.Remove(rft);
             await _context.SaveChangesAsync();
 
             return Ok(new {
