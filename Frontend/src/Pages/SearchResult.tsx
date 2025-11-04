@@ -1,6 +1,6 @@
 import { useNavigate, useParams } from "react-router-dom"
 import TopNavigation from "../Components/TopNavigation";
-import { createContext, useContext, useEffect, useRef, useState, type FormEvent, type JSX } from "react";
+import { useEffect, useRef, useState, type FormEvent, type JSX } from "react";
 import Button from "../Components/Button";
 import Separator from "../Components/Separator";
 import { getAnonymous } from "../BackendClient";
@@ -9,8 +9,7 @@ import ListingCard from "../Components/ListingCard";
 import type { QueryResult } from "../types/queryResult";
 import { useNotification } from "../Components/NotificationProvider";
 import filterParameters from "../Configs/filters.confg";
-
-const ResultUpdaterContext = createContext<(count: number) => void>(() => {});
+import SidePanel from "../Components/SidePanel";
 
 export default function SearchResult() {
 
@@ -46,9 +45,9 @@ export default function SearchResult() {
     }, [searchPhrase]);
 
     return(
-        <div className="overflow-hidden relative min-h-screen">
-            <TopNavigation className=" z-10"/>
-            <div className="p-4 pt-24">
+        <div className="overflow-hidden flex relative min-h-screen">
+            <TopNavigation className="z-10"/>
+            <div className="w-full p-4 pt-8 mt-16 relative">
                 <h1 className="text-2xl">Showing {resultCount} results for "{searchPhrase}"</h1>
                 <div className="flex">
                     <form className="my-4 basis-1/2" onSubmit={onSearchSubmit}>
@@ -61,22 +60,17 @@ export default function SearchResult() {
                     </div>
                 </div>
                 <Separator/>
-                <ResultUpdaterContext.Provider value={setResultCount}>
-                    <Results parameters={queryFilters}></Results>
-                </ResultUpdaterContext.Provider>
+                <Results parameters={queryFilters} setResultCount={setResultCount}></Results>
+                <SidePanel topPadding={15.5} innerContainerClass="p-4" enabled={filterVisible}>
+                    <FilterPanel setVisible={setFilterVisible} setFilters={setQueryFilters}></FilterPanel>
+                </SidePanel>
             </div>
-            <FilterPanel enabled={filterVisible} setVisible={setFilterVisible} setFilters={setQueryFilters}></FilterPanel>
         </div>
     )
 }
 
-function useResultUpdater() {
-    return useContext(ResultUpdaterContext);
-}
+function Results({ parameters, setResultCount } : { parameters: SearchQueryParameters, setResultCount: React.Dispatch<React.SetStateAction<number>> }) {
 
-function Results({ parameters } : { parameters: SearchQueryParameters }) {
-
-    const setResultCount = useResultUpdater();
     const notify = useNotification();
 
     const [listingPages, setListingPage] = useState<{ listings: JSX.Element }[]>([]);
@@ -127,14 +121,14 @@ function PageResults({ listings, page } : { listings: ListingDescriptor[], page:
     return(
         <>
             <div className="flex flex-wrap w-full px-2 justify-around">
-                {listings !== undefined && listings.map((listingData, index) => {return(<div className="p-1 h-96 min-w-full sm:min-w-1/6 max-w-full shrink-0 flex justify-center" key={index}><ListingCard className="h-full" descriptor={listingData}/></div>)})}
+                {listings !== undefined && listings.map((listingData, index) => {return(<div className="p-1 h-96 min-w-full sm:min-w-1/6 max-w-full shrink-0 flex justify-center mb-2" key={index}><ListingCard className="h-full" descriptor={listingData}/></div>)})}
             </div>
             <Separator text={`Page ${page}`} />
         </>
     )
 }
 
-function FilterPanel({ enabled, setVisible, setFilters } : { enabled: boolean, setVisible: React.Dispatch<React.SetStateAction<boolean>>, setFilters: React.Dispatch<React.SetStateAction<SearchQueryParameters>> }) {
+function FilterPanel({ setVisible, setFilters } : { setVisible: React.Dispatch<React.SetStateAction<boolean>>, setFilters: React.Dispatch<React.SetStateAction<SearchQueryParameters>> }) {
 
     const selectRef = useRef<HTMLSelectElement>(null);
     const minRef = useRef<HTMLInputElement>(null);
@@ -192,42 +186,40 @@ function FilterPanel({ enabled, setVisible, setFilters } : { enabled: boolean, s
     }, [minRef, maxRef])
 
     return(
-        <div className="w-full sm:w-1/3 pt-15.5 h-screen absolute top-0 right-0 z-20 transition-transform duration-500" style={{transform: `translateX(${enabled ? 0 : 100}%)`}}>
-            <div className="bg-(--dark) border-2 border-(--light-dark) rounded-lg h-full p-4">
-                <div className="flex items-center mb-4">
-                    <Button className="px-2 py-0.5" onClick={() => setVisible(prev => !prev)}>X</Button>
-                    <h1 className="w-full font-bold text-2xl text-center">Filters</h1>
-                </div>
-                <form onSubmit={applyFilters}>
-                    <div className="flex mb-4 items-center">
-                        <h2 className="font-semibold basis-1/3">Sort by</h2>
-                        <select ref={selectRef} className="textinput-standard basis-2/3">
-                            {filterParameters.sortingParameters.map((sortParameter, index) => {
-                                return(<option key={index}>{sortParameter}</option>)
-                            })}
-                        </select>
-                    </div>
-                    <div className="w-full">
-                        <div className="w-full flex items-center">
-                            <h1 className="basis-1/3">Minimum price</h1>
-                            <div className="basis-2/3 flex">
-                                <p className="basis-1/6">{priceMinMax.minValue}</p>
-                                <input step={10} className="basis-5/6" type="range" ref={minRef} min={filterParameters.minPrice} max={priceMinMax.maxValue} onChange={event => setPriceMinMax(prev => {return({...prev, minValue: Number.parseInt(event.target.value)})})}></input>
-                            </div>
-                        </div>
-                        <div className="w-full flex items-center">
-                            <h1 className="basis-1/3">Maximum price</h1>
-                            <div className="basis-2/3 flex">
-                                <p className="basis-1/6">{priceMinMax.maxValue}</p>
-                                <input step={10} className="basis-5/6" type="range" ref={maxRef} min={priceMinMax.minValue} max={filterParameters.maxPrice} onChange={event => setPriceMinMax(prev => {return({...prev, maxValue: Number.parseInt(event.target.value)})})}></input>
-                            </div>
-                        </div>
-                    </div>
-                    <br/>
-                    <Button className="px-2 py-1" type="submit">Apply filters</Button>
-                </form>
+        <>
+            <div className="flex items-center mb-4">
+                <Button className="px-2 py-0.5" onClick={() => setVisible(prev => !prev)}>X</Button>
+                <h1 className="w-full font-bold text-2xl text-center">Filters</h1>
             </div>
-        </div>
+            <form onSubmit={applyFilters}>
+                <div className="flex mb-4 items-center">
+                    <h2 className="font-semibold basis-1/3">Sort by</h2>
+                    <select ref={selectRef} className="textinput-standard basis-2/3">
+                        {filterParameters.sortingParameters.map((sortParameter, index) => {
+                            return(<option key={index}>{sortParameter}</option>)
+                        })}
+                    </select>
+                </div>
+                <div className="w-full">
+                    <div className="w-full flex items-center">
+                        <h1 className="basis-1/3">Minimum price</h1>
+                        <div className="basis-2/3 flex">
+                            <p className="basis-1/6">{priceMinMax.minValue}</p>
+                            <input step={10} className="basis-5/6" type="range" ref={minRef} min={filterParameters.minPrice} max={priceMinMax.maxValue} onChange={event => setPriceMinMax(prev => {return({...prev, minValue: Number.parseInt(event.target.value)})})}></input>
+                        </div>
+                    </div>
+                    <div className="w-full flex items-center">
+                        <h1 className="basis-1/3">Maximum price</h1>
+                        <div className="basis-2/3 flex">
+                            <p className="basis-1/6">{priceMinMax.maxValue}</p>
+                            <input step={10} className="basis-5/6" type="range" ref={maxRef} min={priceMinMax.minValue} max={filterParameters.maxPrice} onChange={event => setPriceMinMax(prev => {return({...prev, maxValue: Number.parseInt(event.target.value)})})}></input>
+                        </div>
+                    </div>
+                </div>
+                <br/>
+                <Button className="px-2 py-1" type="submit">Apply filters</Button>
+            </form>
+        </>
     )
 }
 

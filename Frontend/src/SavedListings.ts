@@ -32,7 +32,7 @@ async function addSaveBackend(listingId: string) {
     await postAuthorized('Save/SaveListing', { listingId: listingId });
 }
 
-export async function getSavedListings() {
+export function getSavedListings() {
     return savedListings;
 }
 
