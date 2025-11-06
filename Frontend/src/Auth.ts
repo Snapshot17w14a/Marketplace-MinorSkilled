@@ -47,14 +47,15 @@ export async function validateLogin(): Promise<boolean> {
     return true;
 }
 
-export async function requestJWToken(loginDetails: LoginRequest, handler?: (e: unknown) => void): Promise<boolean> {
+export async function requestJWToken(loginDetails: LoginRequest, allowThrowing: boolean = false): Promise<boolean> {
     try {
         const data = await postAnonymous<LoginResult>('user/Login', loginDetails);
         await processLoginResult(data);
         return true;
     }
     catch(e) {
-        if(handler) handler(e);
+        if (allowThrowing) throw e;
+        
         return false;
     }
 }

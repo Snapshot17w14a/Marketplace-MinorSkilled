@@ -12,6 +12,8 @@ import { validateLogin } from './Auth'
 import Listing from './Pages/Listing'
 import SearchResult from './Pages/SearchResult'
 import { fetchSavedListings } from './SavedListings'
+import ForgotPassword from './Pages/ForgotPassword'
+import ChangePassword from './Pages/ChangePassword'
 
 await validateLogin();
 fetchSavedListings();
@@ -27,6 +29,8 @@ createRoot(document.getElementById('root')!).render(
           <Route path='account' element={<AccountPage/>}>
             <Route path='register' element={<Register/>} />
             <Route path='login' element={<Login/>} />
+            <Route path='forgotPassword' element={<ForgotPassword/>} />
+            <Route path='changePassword/:resetToken' element={<ChangePassword/>} />
           </Route>
           <Route path='search/:searchPhrase' element={<SearchResult/>} />
         </Routes>

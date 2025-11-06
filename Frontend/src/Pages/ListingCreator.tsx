@@ -1,11 +1,10 @@
 import { useState, type ChangeEvent, type FormEvent } from "react"
-import { useNotification, type NotificationDescription } from "../Components/NotificationProvider";
+import { useNotify, type NotificationDescription } from "../Components/NotificationProvider";
 import Button from "../Components/Button";
 import { postAuthorized, postXmlHttp } from "../BackendClient";
 import TopNavigation from "../Components/TopNavigation";
 import ProgressBar from "../Components/ProgressBar";
 import { useNavigate } from "react-router-dom";
-import { getJWT } from "../Auth";
 
 export default function LisitngCreator() {
 
@@ -40,9 +39,7 @@ export default function LisitngCreator() {
             linkedImages: imageGuids
         }
 
-        const response = await postAuthorized('Listings/CreateListing', listing);
-
-        console.log(response);
+        const response = await (await postAuthorized('Listings/CreateListing', listing)).json();
 
         naviagate(`/listing/${response.guid}`);
     }
@@ -72,7 +69,7 @@ function ImageUpload( { setImageGuids } : { setImageGuids: React.Dispatch<React.
 
     const maxSizeBytes = 5 * 1024 * 1024;
 
-    const notify = useNotification();
+    const notify = useNotify();
 
     const [files, setFiles] = useState<UploadFile[] | null>(null);
 

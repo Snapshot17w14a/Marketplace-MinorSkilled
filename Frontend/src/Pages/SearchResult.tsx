@@ -7,7 +7,7 @@ import { getAnonymous } from "../BackendClient";
 import type { ListingDescriptor } from "../types/listingDescriptor";
 import ListingCard from "../Components/ListingCard";
 import type { QueryResult } from "../types/queryResult";
-import { useNotification } from "../Components/NotificationProvider";
+import { useNotify } from "../Components/NotificationProvider";
 import filterParameters from "../Configs/filters.confg";
 import SidePanel from "../Components/SidePanel";
 
@@ -71,7 +71,7 @@ export default function SearchResult() {
 
 function Results({ parameters, setResultCount } : { parameters: SearchQueryParameters, setResultCount: React.Dispatch<React.SetStateAction<number>> }) {
 
-    const notify = useNotification();
+    const notify = useNotify();
 
     const [listingPages, setListingPage] = useState<{ listings: JSX.Element }[]>([]);
     const [pageCount, setPageCount] = useState<number>(0);

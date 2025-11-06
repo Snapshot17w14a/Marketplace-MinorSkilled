@@ -1,4 +1,6 @@
+using System.Text;
 using Backend.Database;
+using Backend.Iterfaces;
 using Backend.Services;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.EntityFrameworkCore;
@@ -23,9 +25,12 @@ builder.Services.AddSwaggerGen();
 
 builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme).AddJwtBearer(options =>
 {
+    string? JWTSymKeySecret = config.GetSection("Secrets").GetValue<string>("JWTSymKeySecret");
+    if (string.IsNullOrEmpty(JWTSymKeySecret)) throw new Exception("JWTSymKeySecret was not found in configuration");
+
     options.TokenValidationParameters = new()
     {
-        IssuerSigningKey = new SymmetricSecurityKey("VerySecretKeyForAuthenticationDontShareWithAnyone"u8.ToArray()),
+        IssuerSigningKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(JWTSymKeySecret)),
         ValidIssuer = "https://api.mkev.dev",
         ValidAudience = "https://marketplace.mkev.dev",
         ValidateLifetime = true,
@@ -35,6 +40,7 @@ builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme).AddJw
 
 builder.Services.AddSingleton<PasswordHashService>();
 builder.Services.AddScoped<JWTGeneratorService>();
+builder.Services.AddScoped<IEmailClient, BrevoEmailClient>();
 
 if (builder.Environment.IsDevelopment())
 {
@@ -52,6 +58,11 @@ if (builder.Environment.IsDevelopment())
 }
 
 var app = builder.Build();
+
+//Configure brevo client configuration
+var apiKey = config.GetSection("Secrets")["BrevoAPIKey"];
+if (string.IsNullOrEmpty(apiKey)) throw new Exception("The mail client API key could not be found in the config");
+brevo_csharp.Client.Configuration.Default.ApiKey.Add("api-key", apiKey);
 
 //Configure the HTTP request pipeline.
 if (app.Environment.IsDevelopment())

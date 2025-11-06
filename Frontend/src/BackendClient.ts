@@ -1,5 +1,6 @@
 import endpointConfig from './Configs/endpoints.config'
 import { getJWT, validateLogin } from './Auth';
+import { FetchError } from './classes/FetchError';
 
 export async function postAnonymous<T>(endpoint: string, data: any, responseHandler?: (response: Response) => void): Promise<any> {
 
@@ -17,15 +18,18 @@ export async function postAnonymous<T>(endpoint: string, data: any, responseHand
         }
         else{
             const errorText = await response.text();
-            throw new Error(`${response.status}, ${errorText}`);
+            throw new FetchError(response.status, errorText);
         }
     }
 
+    if (response.status === 204) {
+        return undefined as unknown as T;
+    }
     const result = await response.json() as T;
     return result;
 }
 
-export async function postAuthorized(endpoint: string, data: any, responseHandler? : (response: Response) => void): Promise<any> {
+export async function postAuthorized(endpoint: string, data: any, responseHandler? : (response: Response) => void): Promise<Response> {
 
     if (!validateLogin()) {
         throw new Error("Auth expired");
@@ -46,12 +50,11 @@ export async function postAuthorized(endpoint: string, data: any, responseHandle
         }
         else {
             const errorText = await response.text();
-            throw new Error(`${response.status}, ${errorText}`);
+            throw new FetchError(response.status, errorText);
         }
     }
 
-    response.text
-    return await response.json();
+    return response
 }
 
 export async function getAnonymous<T>(endpoint: string): Promise<T> {
@@ -61,7 +64,7 @@ export async function getAnonymous<T>(endpoint: string): Promise<T> {
 
     if (!response.ok) {
         const errorText = await response.text();
-        throw new Error(`${response.status}, ${errorText}`)
+        throw new FetchError(response.status, errorText);
     }
 
     const data = await response.json() as T;
@@ -83,7 +86,7 @@ export async function getAuthorized<T>(endpoint: string): Promise<T> {
 
     if (!response.ok) {
         const errorText = await response.text();
-        throw new Error(`${response.status}, ${errorText}`)
+        throw new FetchError(response.status, errorText);
     }
 
     const data = await response.json() as T;

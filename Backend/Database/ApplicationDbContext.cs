@@ -10,6 +10,7 @@ namespace Backend.Database
         public DbSet<ListingImage> ListingsImages { get; set; }
         public DbSet<RefreshToken> RefreshTokens { get; set; }
         public DbSet<SavedListing> SavedListings { get; set; }
+        public DbSet<PasswordResetToken> ResetTokens { get; set; }
 
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
@@ -35,6 +36,9 @@ namespace Backend.Database
 
             modelBuilder.Entity<SavedListing>()
                 .HasKey(sl => sl.Id);
+
+            modelBuilder.Entity<PasswordResetToken>()
+                .HasKey(prt => prt.Id);
         }
     }
 }
