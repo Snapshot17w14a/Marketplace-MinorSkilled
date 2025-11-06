@@ -8,6 +8,11 @@ using Microsoft.IdentityModel.Logging;
 using Microsoft.IdentityModel.Tokens;
 
 var builder = WebApplication.CreateBuilder(args);
+builder.Configuration
+    .AddJsonFile("appsettings.json", optional: false)
+    .AddUserSecrets<Program>(optional: true)
+    .AddEnvironmentVariables();
+
 var config = builder.Configuration;
 
 IdentityModelEventSource.ShowPII = true;
@@ -25,7 +30,7 @@ builder.Services.AddSwaggerGen();
 
 builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme).AddJwtBearer(options =>
 {
-    string? JWTSymKeySecret = config.GetSection("Secrets").GetValue<string>("JWTSymKeySecret");
+    string? JWTSymKeySecret = config["Secrets:JWTSymKeySecret"];
     if (string.IsNullOrEmpty(JWTSymKeySecret)) throw new Exception("JWTSymKeySecret was not found in configuration");
 
     options.TokenValidationParameters = new()
@@ -60,7 +65,7 @@ if (builder.Environment.IsDevelopment())
 var app = builder.Build();
 
 //Configure brevo client configuration
-var apiKey = config.GetSection("Secrets")["BrevoAPIKey"];
+var apiKey = config["Secrets:BrevoAPIKey"];
 if (string.IsNullOrEmpty(apiKey)) throw new Exception("The mail client API key could not be found in the config");
 brevo_csharp.Client.Configuration.Default.ApiKey.Add("api-key", apiKey);
 
