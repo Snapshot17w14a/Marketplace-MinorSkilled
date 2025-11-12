@@ -51,6 +51,6 @@ jobs:
       working-directory: ./Backend
       run: |
         ssh -i ~/.ssh/id_ed25519 ${{ secrets.REMOTE_USER }}@${{ secrets.TS_BACKEND_IP }} "sudo mkdir /var/target"
-        rsync -avz --delete --rsync-path="sudo rsync" ./bin/Release/net8.0/linux-x64/ ${{ secrets.REMOTE_USER }}@${{ secrets.TS_BACKEND_IP }}:/var/target
+        rsync -avz --delete --rsync-path="sudo rsync" bin/Release/net8.0/ ${{ secrets.REMOTE_USER }}@${{ secrets.TS_BACKEND_IP }}:/var/target
       
         
