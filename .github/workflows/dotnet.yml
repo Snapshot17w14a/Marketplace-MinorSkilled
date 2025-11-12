@@ -13,10 +13,6 @@ jobs:
   build:
 
     runs-on: ubuntu-latest
-
-    defaults:
-      run:
-        working-directory: ./Frontend
     
     steps:
     - uses: actions/checkout@v4
@@ -28,7 +24,7 @@ jobs:
       run: dotnet restore
       working-directory: ./Backend
     - name: Build
-      run: dotnet build --no-restore
+      run: dotnet build --no-restore -c Release 
       working-directory: ./Backend
     - name: Test
       run: dotnet test --no-build --verbosity normal
@@ -47,4 +43,14 @@ jobs:
           # Add server to known_hosts (replace with your server`s IP or hostname)
           ssh-keyscan -H ${{ secrets.TS_BACKEND_IP }} >> ~/.ssh/known_hosts
     - name: Test SSH connection
-      run: ssh -i ~/.ssh/id_ed25519 ${{ secrets.REMOTE_USER }}@${{ secrets.TS_BACKEND_IP }} "echo Connected successfully!"
+      run: | 
+        ssh -i ~/.ssh/id_ed25519 ${{ secrets.REMOTE_USER }}@${{ secrets.TS_BACKEND_IP }} "echo Connected successfully!"
+    - name: Install rsync
+      run: sudo apt install rsync
+    - name: Copy files using rsync
+      working-directory: ./Backend
+      run: |
+        ssh -i ~/.ssh/id_ed25519 ${{ secrets.REMOTE_USER }}@${{ secrets.TS_BACKEND_IP }} "mkdir /var/target"
+        rsync -avz --delete --rsync-path="sudo rsync" ./bin/Release/net8.0/linux-x64/ ${{ secrets.REMOTE_USER }}@${{ secrets.TS_BACKEND_IP }}:/var/target
+      
+        
