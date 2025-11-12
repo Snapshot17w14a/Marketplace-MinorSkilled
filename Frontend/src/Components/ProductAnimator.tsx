@@ -35,7 +35,7 @@ export default function ProductAnimator({ interval, className } : { interval: nu
     return(
         <div className={'flex justify-center items-center transition-(--transition-width) durarion-500 ease-in-out overflow-hidden mx-2'} style={{ width: width }}>
             <span key={product} ref={spanRef} className={className + 'animate-opacity transition-all duration-500 ease-in-out'}>
-                <p>{product}</p>
+                <p className='text-nowrap'>{product}</p>
             </span>
         </div>
     )

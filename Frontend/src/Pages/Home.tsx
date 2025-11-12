@@ -10,7 +10,7 @@ import type { ListingDescriptor } from '../types/listingDescriptor';
 
 export default function Home() {
 
-    const [searchDisabled, setSearchDisabled] = useState<boolean>(false);
+    //const [searchDisabled, setSearchDisabled] = useState<boolean>(false);
     const [latestListings, setLatestListings] = useState<ListingDescriptor[] | null>(null);
 
     const searchRef = useRef<HTMLInputElement | null>(null);
@@ -54,7 +54,7 @@ export default function Home() {
                     <h2 className='text-2xl inline-block'>and see what others are selling</h2>
                 </div>
                 <form className='mt-12 w-full sm:w-2/3 mx-auto' onSubmit={onSearchSubmit}>
-                    <input className={`textinput-standard w-full ${searchDisabled ? 'disabled' : ''}`} placeholder='Search for anything...' ref={searchRef}></input>
+                    <input className={`textinput-standard w-full`} placeholder='Search for anything...' ref={searchRef}></input>
                 </form>
                 <h2 className='text-2xl mt-12'>Or check out our latest listings below</h2>
                 <div className='w-full h-96 rounded-lg bg-[#262626] border-2 border-[#484747] my-12 p-2 overflow-x-auto overflow-y-clip grid grid-rows-1 grid-flow-col gap-2'>

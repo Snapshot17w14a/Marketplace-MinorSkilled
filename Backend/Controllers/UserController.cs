@@ -173,17 +173,17 @@ namespace Backend.Controllers
             _context.ResetTokens.Add(prt);
             await _context.SaveChangesAsync();
 
-//            _ = Task.Run(() => _emailClient.SendEmail(request.Email, "Password reset request",
-//                string.Format(@"
-//<h1>A request was made to reset your password</h1>
-//<p>Dear {0}, we got a request to reset your password.
-//If this was not you ignore this message.
-//To reset your password follow the link below.</p>
-//<small>The link expires in 5 minutes</small></br>
-//<a href='http://localhost:5173/account/changePassword/{1}'>Reset link</a>
-//<p>Thank you for using our marketplace! Stay awesome!</p>
-//                ", user.Name, resetToken)
-//                ));
+            _ = Task.Run(() => _emailClient.SendEmail(request.Email, "Password reset request",
+                string.Format(@"
+<h1>A request was made to reset your password</h1>
+<p>Dear {0}, we got a request to reset your password.
+If this was not you ignore this message.
+To reset your password follow the link below.</p>
+<small>The link expires in 5 minutes</small></br>
+<a href='http://localhost:5173/account/changePassword/{1}'>Reset link</a>
+<p>Thank you for using our marketplace! Stay awesome!</p>
+                ", user.Name, resetToken)
+                ));
 
             return Ok("Reset token sent!");
         }
