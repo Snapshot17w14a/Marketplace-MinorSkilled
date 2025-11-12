@@ -32,6 +32,7 @@ jobs:
       working-directory: ./Backend
     - name: Test
       run: dotnet test --no-build --verbosity normal
+      working-directory: ./Backend
     - name: Set up Tailscale connection
       uses: tailscale/github-action@v4
       with:
