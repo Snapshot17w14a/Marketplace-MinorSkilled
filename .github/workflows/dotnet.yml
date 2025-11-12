@@ -35,7 +35,7 @@ jobs:
         oauth-client-id: ${{ secrets.TS_OAUTH_CLIENT_ID }}
         oauth-secret: ${{ secrets.TS_OAUTH_SECRET }}
         tags: tag:vm
-    - name: Deploy to remote VM
+    - name: Set up SSH connection prerequisites
       run: |
           mkdir -p ~/.ssh
           echo "${{ secrets.SSH_PRIVATE_KEY }}" > ~/.ssh/id_ed25519
@@ -50,7 +50,7 @@ jobs:
     - name: Copy files using rsync
       working-directory: ./Backend
       run: |
-        ssh -i ~/.ssh/id_ed25519 ${{ secrets.REMOTE_USER }}@${{ secrets.TS_BACKEND_IP }} "sudo mkdir /var/target"
+        ssh -i ~/.ssh/id_ed25519 ${{ secrets.REMOTE_USER }}@${{ secrets.TS_BACKEND_IP }} "sudo rm -rf /var/target && sudo mkdir /var/target"
         rsync -avz --delete --rsync-path="sudo rsync" bin/Release/net8.0/ ${{ secrets.REMOTE_USER }}@${{ secrets.TS_BACKEND_IP }}:/var/target
       
         
