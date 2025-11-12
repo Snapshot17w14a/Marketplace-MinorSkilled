@@ -43,7 +43,7 @@ export default function TopNavigation({ className = ''}) {
                         <div className='flex items-center h-full'>
                             <Button variant='filled' className='px-2.5 py-1 object-contain aspect-square h-full' onClick={() => setSavedListingsVisible(prev => !prev)}>
                                 <svg className='w-full h-full' xmlns="http://www.w3.org/2000/svg" x="0px" y="0px" viewBox="0,0,256,256">
-                                    <g fill="#ffffff" fill-rule="nonzero" stroke="#ffffff" stroke-width="2" stroke-linecap="butt" stroke-linejoin="miter" stroke-miterlimit="10" stroke-dasharray="" stroke-dashoffset="0" font-family="none" font-weight="none" font-size="none" text-anchor="none" style={{mixBlendMode: 'normal'}}><g transform="scale(4,4)"><path d="M41.148,14h-18.296c-0.47,0 -0.852,0.382 -0.852,0.852v32.36c0,0.297 0.357,0.448 0.57,0.241l8.557,-8.303c0.487,-0.472 1.26,-0.472 1.747,0l8.557,8.303c0.212,0.207 0.569,0.056 0.569,-0.24v-32.36c0,-0.471 -0.382,-0.853 -0.852,-0.853zM41.148,10c2.679,0 4.852,2.173 4.852,4.852v37.46c0,1.925 -2.314,2.903 -3.695,1.563l-10.305,-9.998l-10.305,9.999c-1.381,1.34 -3.695,0.361 -3.695,-1.563v-37.46c0,-2.68 2.173,-4.853 4.852,-4.853z"></path></g></g>
+                                    <g fill="#ffffff" fillRule="nonzero" stroke="#ffffff" strokeWidth="2" strokeLinecap="butt" strokeLinejoin="miter" strokeMiterlimit="10" strokeDasharray="" strokeDashoffset="0" fontFamily="none" fontWeight="none" fontSize="none" textAnchor={undefined} style={{mixBlendMode: 'normal'}}><g transform="scale(4,4)"><path d="M41.148,14h-18.296c-0.47,0 -0.852,0.382 -0.852,0.852v32.36c0,0.297 0.357,0.448 0.57,0.241l8.557,-8.303c0.487,-0.472 1.26,-0.472 1.747,0l8.557,8.303c0.212,0.207 0.569,0.056 0.569,-0.24v-32.36c0,-0.471 -0.382,-0.853 -0.852,-0.853zM41.148,10c2.679,0 4.852,2.173 4.852,4.852v37.46c0,1.925 -2.314,2.903 -3.695,1.563l-10.305,-9.998l-10.305,9.999c-1.381,1.34 -3.695,0.361 -3.695,-1.563v-37.46c0,-2.68 2.173,-4.853 4.852,-4.853z"></path></g></g>
                                 </svg>
                             </Button>
                             <div className='mx-2 border-1 border-(--light-dark) h-full rounded-lg' />
@@ -69,7 +69,7 @@ export default function TopNavigation({ className = ''}) {
 
     function SavedListings() {
 
-        const savedListings: SavedListing[] = getSavedListings();
+        const [savedListings] = useState<SavedListing[]>(getSavedListings());
         const [listingData, setListingData] = useState<ListingDescriptor[]>([]);
 
         useEffect(() => {
@@ -101,9 +101,9 @@ export default function TopNavigation({ className = ''}) {
                     <h1 className='font-bold text-4xl'>Saved listings</h1>
                 </div>
                 <div className='flex items-center gap-4 my-8 flex-col'>
-                    {savedListings.map((sl, index) => {
+                    {listingData.length !== 0 && savedListings.map((sl, index) => {
                         const descriptor = listingData.find(ld => ld.guid === sl.listingId);
-                        if (!descriptor) return <></>
+                        if (!descriptor) return <div key={index}></div>
                         return(
                             <ListingCard key={index} descriptor={descriptor}></ListingCard>
                         )

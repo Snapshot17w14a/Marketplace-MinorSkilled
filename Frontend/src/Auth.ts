@@ -17,6 +17,7 @@ export function isLoggedIn(): boolean {
 export async function logOut() {
     await cookieStore.delete('access');
     await cookieStore.delete('refresh');
+    await cookieStore.delete('user');
 
     loggedIn = false;
     activeUserData = undefined;
@@ -66,11 +67,14 @@ export async function refreshLogin(): Promise<boolean> {
     if(!refreshCookie) return false;
 
     try {
-        const data = await postAnonymous<LoginResult>('user/RefreshLogin', { "token": refreshCookie.value!});
+        const data = await postAnonymous<LoginResult>('user/RefreshLogin', { "token": refreshCookie.value! });
         await processLoginResult(data);
         return true;
     }
     catch (e) {
+
+        logOut();
+
         return false;
     }
 }

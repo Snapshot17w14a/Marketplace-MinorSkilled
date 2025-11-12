@@ -77,9 +77,19 @@ namespace Backend.Controllers
             if (user == null)
                 return NotFound();
 
-            var invalidRft = await _context.RefreshTokens.FirstAsync(rft => rft.UserId == user.Identifier);
-            _context.RefreshTokens.Remove(invalidRft);
-            await _context.SaveChangesAsync();
+            // If there are no tokens in the collection, the LINQ query will throw an InvalidOperationException, we can safely ignore this
+            try
+            {
+                var invalidRft = await _context.RefreshTokens.FirstOrDefaultAsync(rft => rft.UserId == user.Identifier);
+
+                if (invalidRft != null)
+                {
+                    _context.RefreshTokens.Remove(invalidRft);
+                    await _context.SaveChangesAsync();
+                }
+            }
+            catch (InvalidOperationException) { }
+            
 
             return Ok(new {
                 accessToken = _jwtGeneratorService.GenerateJWToken(user),

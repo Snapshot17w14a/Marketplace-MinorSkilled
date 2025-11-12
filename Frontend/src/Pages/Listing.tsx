@@ -101,7 +101,6 @@ function ImageRoulette({ images, className } : { images: ListingImage[] | undefi
                 {images && images.map((img, i) => {
                     return(
                         <div key={i} className="lg:h-screen w-full flex shrink-0 justify-center items-center">
-                            {/* <img className="object-contain h-full" src={endpointsConfig.BackendStaticUrl + img.relativePath}/> */}
                             <DynamicImage imageIndex={i} currentIndex={index} relativePath={img.relativePath} />
                         </div>
                     )

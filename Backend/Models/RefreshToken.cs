@@ -17,13 +17,13 @@ namespace Backend.Models
             {
                 TokenId = Guid.Parse(content[0]),
                 UserId = Guid.Parse(content[1]),
-                Expiration = DateTime.Parse(content[2])
+                Expiration = DateTimeOffset.FromUnixTimeSeconds(int.Parse(content[2][..10])).UtcDateTime,
             };
         }
 
         public override string ToString()
         {
-            return string.Format("{0}.{1}.{2}", TokenId, UserId, Expiration);
+            return string.Format("{0}.{1}.{2}", TokenId, UserId, new DateTimeOffset(Expiration).ToUnixTimeMilliseconds());
         }
     }
 }

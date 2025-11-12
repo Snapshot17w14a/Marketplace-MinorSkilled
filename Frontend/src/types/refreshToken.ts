@@ -12,7 +12,7 @@ export function ParseToken(tokenString: string): RefreshToken {
     const token: RefreshToken = {
         tokenId: content[0],
         userId: content[1],
-        expiration: Date.parse(content[2])
+        expiration: Number.parseInt(content[2])
     }
 
     return token;
