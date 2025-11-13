@@ -7,7 +7,7 @@
     <UserSecretsId>47f2f720-0c63-4b62-af00-7e20432b7c7c</UserSecretsId>
     <DockerDefaultTargetOS>Linux</DockerDefaultTargetOS>
     <DockerfileContext>.</DockerfileContext>
-    <RuntimeIdentifier>win-x64;linux-x64</RuntimeIdentifier>
+    <RuntimeIdentifiers>win-x64;linux-x64</RuntimeIdentifiers>
   </PropertyGroup>
 
   <ItemGroup>

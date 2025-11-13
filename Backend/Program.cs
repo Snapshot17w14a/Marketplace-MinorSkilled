@@ -49,7 +49,7 @@ builder.Services.AddScoped<IEmailClient, BrevoEmailClient>();
 
 if (builder.Environment.IsDevelopment())
 {
-    //Allow frontend to make calls from local network with CORS
+    // Allow frontend to make calls from local network with CORS
     builder.Services.AddCors(options =>
     {
         options.AddPolicy("AllowFrontend", policy =>
@@ -61,10 +61,23 @@ if (builder.Environment.IsDevelopment())
         });
     });
 }
+else
+{
+    builder.Services.AddCors(options =>
+    {
+        options.AddPolicy("AllowFrontend", policy =>
+        {
+            policy.WithOrigins("https://marketplace.mkev.dev")
+            .AllowAnyHeader()
+            .AllowAnyMethod()
+            .AllowCredentials();
+        });
+    });
+}
 
-var app = builder.Build();
+    var app = builder.Build();
 
-//Configure brevo client configuration
+// Configure brevo client configuration
 var apiKey = config["Secrets:BrevoAPIKey"];
 if (string.IsNullOrEmpty(apiKey)) throw new Exception("The mail client API key could not be found in the config");
 brevo_csharp.Client.Configuration.Default.ApiKey.Add("api-key", apiKey);
@@ -75,9 +88,11 @@ if (app.Environment.IsDevelopment())
     app.UseSwagger();
     app.UseSwaggerUI();
 
-    //Enable CORS for local hosted frontend
-    app.UseCors("AllowFrontend");
+    
 }
+
+// Enable CORS for same origin fronend access
+app.UseCors("AllowFrontend");
 
 app.UseStaticFiles((new StaticFileOptions
 {
