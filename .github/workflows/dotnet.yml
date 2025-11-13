@@ -22,6 +22,7 @@ jobs:
     - name: Build
       env:
           ASPNETCORE_ENVIRONMENT: Production
+          ASPNETCORE_URLS: "http://0.0.0.0:5000"
           BrevoApiKey: ${{ secrets.BREVO_API_KEY }}
           JWTSymKey: ${{ secrets.JWT_SYMKEY }}
       run: dotnet publish --no-restore -c Release --output ./Publish
@@ -29,6 +30,11 @@ jobs:
     - name: Test
       run: dotnet test --no-build --verbosity normal
       working-directory: ./Backend
+    - name: Upload build artifact
+      uses: actions/upload-artifact@v4
+      with:
+        name: backend-publish
+        path: ./Backend/Publish
       
   deploy:
     needs: build
@@ -36,6 +42,11 @@ jobs:
     if: github.event_name == 'push' && github.ref == 'refs/heads/main'
 
     steps:
+    - name: Download build artifact
+      uses: actions/download-artifact@v4
+      with:
+        name: backend-publish
+        path: ./Backend/Publish
     - name: Set up Tailscale connection
       uses: tailscale/github-action@v4
       with:

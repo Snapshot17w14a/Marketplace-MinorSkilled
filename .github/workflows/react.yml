@@ -22,6 +22,11 @@ jobs:
       run: |
         npm install
         npm run build
+    - name: Upload build artifact
+      uses: actions/upload-artifact@v4
+      with:
+        name: frontend-dist
+        path: ./Frontend/dist
 
   deploy: 
     needs: build
@@ -29,6 +34,11 @@ jobs:
     if: github.event_name == 'push' && github.ref == 'refs/heads/main'
 
     steps:
+    - name: Download build artifact
+      uses: actions/download-artifact@v4
+      with:
+        name: frontend-dist
+        path: ./Frontend/dist
     - name: Set up Tailscale connection
       uses: tailscale/github-action@v4
       with:
