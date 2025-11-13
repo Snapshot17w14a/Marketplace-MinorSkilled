@@ -43,7 +43,7 @@ export default function NotificationProvider({ children } : { children: React.Re
     )
 }
 
-export function useNotification(){
+export function useNotify(){
     return useContext(notificationContext);
 }
 

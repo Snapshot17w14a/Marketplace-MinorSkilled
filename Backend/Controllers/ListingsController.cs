@@ -37,17 +37,10 @@ namespace Backend.Controllers
 
             User? creatingUser;
 
-            try
-            {
-                var userGuid = Guid.Parse(decodedToken.Claims.FirstOrDefault(c => c.Type == "sub")?.Value ?? "");
-                creatingUser = await _context.Users.FirstOrDefaultAsync(u => u.Identifier == userGuid);
-                if (creatingUser == null)
-                    throw new NullReferenceException("User not found!");
-            }
-            catch
-            {
+            var userGuid = Guid.Parse(decodedToken.Claims.FirstOrDefault(c => c.Type == "sub")?.Value ?? "");
+            creatingUser = await _context.Users.FirstOrDefaultAsync(u => u.Identifier == userGuid);
+            if (creatingUser == null)
                 return BadRequest("The user specified in the authorization token was not found!");
-            }
 
             var listing = new Listing()
             {

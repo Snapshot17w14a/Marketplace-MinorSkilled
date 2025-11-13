@@ -17,6 +17,7 @@ export function isLoggedIn(): boolean {
 export async function logOut() {
     await cookieStore.delete('access');
     await cookieStore.delete('refresh');
+    await cookieStore.delete('user');
 
     loggedIn = false;
     activeUserData = undefined;
@@ -47,14 +48,15 @@ export async function validateLogin(): Promise<boolean> {
     return true;
 }
 
-export async function requestJWToken(loginDetails: LoginRequest, handler?: (e: unknown) => void): Promise<boolean> {
+export async function requestJWToken(loginDetails: LoginRequest, allowThrowing: boolean = false): Promise<boolean> {
     try {
         const data = await postAnonymous<LoginResult>('user/Login', loginDetails);
         await processLoginResult(data);
         return true;
     }
     catch(e) {
-        if(handler) handler(e);
+        if (allowThrowing) throw e;
+        
         return false;
     }
 }
@@ -65,11 +67,14 @@ export async function refreshLogin(): Promise<boolean> {
     if(!refreshCookie) return false;
 
     try {
-        const data = await postAnonymous<LoginResult>('user/RefreshLogin', { "token": refreshCookie.value!});
+        const data = await postAnonymous<LoginResult>('user/RefreshLogin', { "token": refreshCookie.value! });
         await processLoginResult(data);
         return true;
     }
     catch (e) {
+
+        logOut();
+
         return false;
     }
 }

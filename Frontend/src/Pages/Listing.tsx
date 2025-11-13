@@ -98,10 +98,10 @@ function ImageRoulette({ images, className } : { images: ListingImage[] | undefi
                 </div>
             </div>
             <div className="flex flex-nowrap h-full overflow-x-visible will-change-transform transition-transform duration-500 ease-in-out" style={{ transform: `translateX(-${index * 100}%)`}} >
-                {images && images.map((img, index) => {
+                {images && images.map((img, i) => {
                     return(
-                        <div key={index} className="lg:h-screen w-full flex shrink-0 justify-center items-center">
-                            <img className="object-contain h-full" src={endpointsConfig.BackendStaticUrl + img.relativePath}/>
+                        <div key={i} className="lg:h-screen w-full flex shrink-0 justify-center items-center">
+                            <DynamicImage imageIndex={i} currentIndex={index} relativePath={img.relativePath} />
                         </div>
                     )
                 })}
@@ -124,5 +124,21 @@ function ListingNav({ className = '' }){
                 <Button className="p-2 mr-2" variant="filled" type="button" onClick={() => navigate('/account/login')}>Log in</Button>
             }
         </div>
+    )
+}
+
+function DynamicImage({ imageIndex, currentIndex, relativePath }: { imageIndex: number, currentIndex: number, relativePath: string }) {
+
+    const [isLoaded, setIsLoaded] = useState<boolean>(false);
+
+    useEffect(() => {
+        if (isLoaded || imageIndex !== currentIndex)
+            return;
+
+        setIsLoaded(true);
+    }, [currentIndex])
+
+    return(
+        <img className="object-contain h-full" src={isLoaded ? endpointsConfig.BackendStaticUrl + relativePath : undefined}/>
     )
 }

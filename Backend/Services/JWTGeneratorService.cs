@@ -3,17 +3,21 @@ using System.Security.Claims;
 using Microsoft.IdentityModel.Tokens;
 using Backend.Models;
 using Backend.Database;
+using System.Text;
 
 namespace Backend.Services
 {
-    public class JWTGeneratorService(ApplicationDbContext context)
+    public class JWTGeneratorService(ApplicationDbContext context, IConfiguration config)
     {
         private readonly ApplicationDbContext _context = context;
+        private readonly IConfiguration _config = config;
 
         public string GenerateJWToken(User user)
         {
             var tokenHandler = new JwtSecurityTokenHandler();
-            var secretKey = "VerySecretKeyForAuthenticationDontShareWithAnyone"u8.ToArray();
+            var JWTSymKeySecret = _config.GetSection("Secrets")["JWTSymKeySecret"];
+            if (string.IsNullOrEmpty(JWTSymKeySecret)) throw new Exception("JWTSymKeySecret was not found in configuration");
+            var secretKey = Encoding.UTF8.GetBytes(JWTSymKeySecret);
 
             var claims = new List<Claim>
             {

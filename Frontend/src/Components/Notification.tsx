@@ -1,14 +1,14 @@
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import type { NotificationDescription } from "./NotificationProvider";
+import { useHover } from "@uidotdev/usehooks";
 
 export default function Notification({ info, removeCallback }: { info: { id: number, descObj: NotificationDescription}, removeCallback: (id: NotificationDescription) => void}) {
 
-    const remove = removeCallback;
+    const [ref, hover] = useHover();
 
     const [visibility, setVisibility] = useState<boolean>(true);
-    const [isFocused, setIsFocused] = useState<boolean>(false);
-    const [autocloseTimeout, setAutocloseTimeout] = useState<number>();
-    const [fadeTimeout, setFadeTimeout] = useState<number>();
+    const autocloseRef = useRef<number | null>(null);
+    const fadeRef = useRef<number | null>(null);
 
     const styles: { [id: string]: string } = {
         info: "bg-(--info)/80 border-(--info) ",
@@ -22,41 +22,73 @@ export default function Notification({ info, removeCallback }: { info: { id: num
         error: "hover:bg-(--error)"
     }
 
+    const stopTimeouts = () => {
+        if (autocloseRef.current) {
+            window.clearTimeout(autocloseRef.current);
+            autocloseRef.current = null;
+        }
+
+        if (fadeRef.current) {
+            window.clearTimeout(fadeRef.current);
+            fadeRef.current = null;
+        }
+
+        setVisibility(true);
+    }
+
     const startAutoclose = useCallback(() => {
-        if (autocloseTimeout) return;
-        const timeout = window.setTimeout(() => {
-            animateRemove();
-        }, 5000);
-        setAutocloseTimeout(timeout);
-    }, [autocloseTimeout]);
+        const timeoutId = window.setTimeout(() => {
+            close();
+        }, 1000);
+        autocloseRef.current = timeoutId;
+    }, [])
 
     useEffect(() => {
-        if (isFocused) {
-            window.clearTimeout(autocloseTimeout);
-            setAutocloseTimeout(undefined);
-            window.clearTimeout(fadeTimeout);
-            setFadeTimeout(undefined);
-            setVisibility(true);
-            console.log("sotp");
+        return () => {
+            if (autocloseRef.current) {
+                window.clearTimeout(autocloseRef.current);
+                autocloseRef.current = null;
+            }
+            if (fadeRef.current) {
+                window.clearTimeout(fadeRef.current);
+                fadeRef.current = null;
+            }
+        }
+    }, [])
+
+    useEffect(() => {
+        if (hover) {
+            stopTimeouts();
         }
         else {
+            if (autocloseRef.current) return;
             startAutoclose();
         }
-    }, [isFocused])
+    }, [hover, startAutoclose])
 
-    const animateRemove = () => {
+    const close = () => {
         setVisibility(false);
-        window.clearTimeout(autocloseTimeout);
-        setAutocloseTimeout(undefined);
-        const timeout = window.setTimeout(() => {
-            remove(info.descObj);
+        const timeoutId = window.setTimeout(() => {
+            removeCallback(info.descObj);
+        }, 500)
+        fadeRef.current = timeoutId;
+    }
+
+    const instantClose = () => {
+        if (autocloseRef.current) {
+            window.clearTimeout(autocloseRef.current);
+            autocloseRef.current = null;
+        }
+        setVisibility(false);
+        const timeoutId = window.setTimeout(() => {
+            removeCallback(info.descObj);
         }, 500);
-        setFadeTimeout(timeout);
+        fadeRef.current = timeoutId;
     }
 
     return(
-        <div className={styles[info.descObj.type] + `basis-full mt-2 p-3 rounded-lg border-2 text-black select-none transition-opacity duration-500 ${visibility ? "opacity-100" : "opacity-0"} w-md text-pretty`} onPointerLeave={() => setIsFocused(false)} onPointerEnter={() => setIsFocused(true)}>
-            <button className={`float-right font-bold px-1 rounded-lg transition-colors + ${closeHoverStyles[info.descObj.type]}`} onClick={animateRemove}>X</button>
+        <div ref={ref} className={styles[info.descObj.type] + `basis-full mt-2 p-3 rounded-lg border-2 text-black select-none transition-opacity duration-500 w-md text-pretty`} style={{opacity: visibility ? 1 : 0}}>
+            <button className={`float-right font-bold px-1 rounded-lg transition-colors ${closeHoverStyles[info.descObj.type]}`} onClick={instantClose}>X</button>
             <h1 className="font-bold text-2xl">{info.descObj.header}</h1>
             <p className="text-base">{info.descObj.message}</p>
         </div>

@@ -7,7 +7,7 @@ import { getAnonymous } from "../BackendClient";
 import type { ListingDescriptor } from "../types/listingDescriptor";
 import ListingCard from "../Components/ListingCard";
 import type { QueryResult } from "../types/queryResult";
-import { useNotification } from "../Components/NotificationProvider";
+import { useNotify } from "../Components/NotificationProvider";
 import filterParameters from "../Configs/filters.confg";
 import SidePanel from "../Components/SidePanel";
 
@@ -71,7 +71,7 @@ export default function SearchResult() {
 
 function Results({ parameters, setResultCount } : { parameters: SearchQueryParameters, setResultCount: React.Dispatch<React.SetStateAction<number>> }) {
 
-    const notify = useNotification();
+    const notify = useNotify();
 
     const [listingPages, setListingPage] = useState<{ listings: JSX.Element }[]>([]);
     const [pageCount, setPageCount] = useState<number>(0);
@@ -123,7 +123,7 @@ function PageResults({ listings, page } : { listings: ListingDescriptor[], page:
             <div className="flex flex-wrap w-full px-2 justify-around">
                 {listings !== undefined && listings.map((listingData, index) => {return(<div className="p-1 h-96 min-w-full sm:min-w-1/6 max-w-full shrink-0 flex justify-center mb-2" key={index}><ListingCard className="h-full" descriptor={listingData}/></div>)})}
             </div>
-            <Separator text={`Page ${page}`} />
+            <Separator text={`Page ${page + 1}`} />
         </>
     )
 }
