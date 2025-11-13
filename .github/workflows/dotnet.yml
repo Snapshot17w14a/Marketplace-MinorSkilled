@@ -1,15 +1,13 @@
-# This workflow will build a .NET project
-# For more information see: https://docs.github.com/en/actions/automating-builds-and-tests/building-and-testing-net
-
 name: .NET
 
 on:
+  pull_request:
+    branches: [ "main" ]
   push:
     branches: [ "main" ]
 
 jobs:
   build:
-
     runs-on: ubuntu-latest
     
     steps:
@@ -31,6 +29,13 @@ jobs:
     - name: Test
       run: dotnet test --no-build --verbosity normal
       working-directory: ./Backend
+      
+  deploy:
+    needs: build
+    runs-on: ubuntu-latest
+    if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+
+    steps:
     - name: Set up Tailscale connection
       uses: tailscale/github-action@v4
       with:
@@ -54,5 +59,3 @@ jobs:
       run: |
         ssh -i ~/.ssh/id_ed25519 ${{ secrets.REMOTE_USER }}@${{ secrets.TS_BACKEND_IP }} "sudo rm -rf /var/backend && sudo mkdir /var/backend"
         rsync -avz --delete --rsync-path="sudo rsync" ./Publish/ ${{ secrets.REMOTE_USER }}@${{ secrets.TS_BACKEND_IP }}:/var/backend
-      
-        

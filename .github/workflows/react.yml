@@ -1,8 +1,10 @@
 name: React
 
 on:
+  pull_request:
+    branches: [ "main" ]
   push:
-    branches:  [ "main" ]
+    branches: [ "main" ]
     
 jobs:
   build:
@@ -20,8 +22,15 @@ jobs:
       run: |
         npm install
         npm run build
+
+  deploy: 
+    needs: build
+    runs-on: ubuntu-latest
+    if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+
+    steps:
     - name: Set up Tailscale connection
-      uses: tailcale/github-action@v4
+      uses: tailscale/github-action@v4
       with:
         oauth-client-id: ${{ secrets.TS_OAUTH_CLIENT_ID }}
         oauth-secret: ${{ secrets.TS_OAUTH_SECRET }}
