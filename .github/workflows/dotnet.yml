@@ -20,11 +20,6 @@ jobs:
       run: dotnet restore
       working-directory: ./Backend
     - name: Build
-      env:
-          ASPNETCORE_ENVIRONMENT: Production
-          ASPNETCORE_URLS: "http://0.0.0.0:5000"
-          BrevoApiKey: ${{ secrets.BREVO_API_KEY }}
-          JWTSymKey: ${{ secrets.JWT_SYMKEY }}
       run: dotnet publish --no-restore -c Release --output ./Publish
       working-directory: ./Backend
     - name: Test
@@ -40,6 +35,12 @@ jobs:
     needs: build
     runs-on: ubuntu-latest
     if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+
+    env:
+      ASPNETCORE_ENVIRONMENT: Production
+      ASPNETCORE_URLS: "http://0.0.0.0:5000"
+      BrevoApiKey: ${{ secrets.BREVO_API_KEY }}
+      JWTSymKey: ${{ secrets.JWT_SYMKEY }}
 
     steps:
     - name: Download build artifact
