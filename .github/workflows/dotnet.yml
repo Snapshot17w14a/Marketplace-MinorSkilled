@@ -6,8 +6,6 @@ name: .NET
 on:
   push:
     branches: [ "main" ]
-  pull_request:
-    branches: [ "main" ]
 
 jobs:
   build:
@@ -24,7 +22,11 @@ jobs:
       run: dotnet restore
       working-directory: ./Backend
     - name: Build
-      run: dotnet build --no-restore -c Release 
+      env:
+          ASPNETCORE_ENVIRONMENT: Production
+          BrevoApiKey: ${{ secrets.BREVO_API_KEY }}
+          JWTSymKey: ${{ secrets.JWT_SYMKEY }}
+      run: dotnet publish --no-restore -c Release --output ./Publish
       working-directory: ./Backend
     - name: Test
       run: dotnet test --no-build --verbosity normal
@@ -50,7 +52,7 @@ jobs:
     - name: Copy files using rsync
       working-directory: ./Backend
       run: |
-        ssh -i ~/.ssh/id_ed25519 ${{ secrets.REMOTE_USER }}@${{ secrets.TS_BACKEND_IP }} "sudo rm -rf /var/target && sudo mkdir /var/target"
-        rsync -avz --delete --rsync-path="sudo rsync" bin/Release/net8.0/ ${{ secrets.REMOTE_USER }}@${{ secrets.TS_BACKEND_IP }}:/var/target
+        ssh -i ~/.ssh/id_ed25519 ${{ secrets.REMOTE_USER }}@${{ secrets.TS_BACKEND_IP }} "sudo rm -rf /var/backend && sudo mkdir /var/backend"
+        rsync -avz --delete --rsync-path="sudo rsync" ./Publish/ ${{ secrets.REMOTE_USER }}@${{ secrets.TS_BACKEND_IP }}:/var/backend
       
         
