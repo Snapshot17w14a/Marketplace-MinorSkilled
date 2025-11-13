@@ -43,11 +43,11 @@ jobs:
           ssh-keyscan -H ${{ secrets.TS_BACKEND_IP }} >> ~/.ssh/known_hosts
     - name: Test SSH connection
       run: |
-        ssh -i ~/.ssh/id_ed25519 {{ secrets.REMOTE_USER }}@${{ secrets.TS_BACKEND_IP }} "echo Connected successfully!"
+        ssh -i ~/.ssh/id_ed25519 ${{ secrets.REMOTE_USER }}@${{ secrets.TS_FRONTEND_IP }} "echo Connected successfully!"
     - name: Install rsync
       run: sudo apt install rsync
     - name: Deploy build to remote VM
       working-directory: ./Frontend
       run: |
         rsync -avz --delete --rsync-path="sudo rsync" ./dist/ ${{ secrets.REMOTE_USER }}@${{ secrets.TS_FRONTEND_IP }}:/var/www/marketplace.mkev.dev/
-        ssh -i ~/.ssh/id_ed25519 user@your.server.ip "sudo systemctl reload nginx"
+        ssh -i ~/.ssh/id_ed25519 ${{ secrets.REMOTE_USER }}@${{ secrets.TS_FRONTEND_IP }} "sudo systemctl reload nginx"
