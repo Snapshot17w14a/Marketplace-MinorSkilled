@@ -1,0 +1,61 @@
+name: .NET
+
+on:
+  pull_request:
+    branches: [ "main" ]
+  push:
+    branches: [ "main" ]
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    
+    steps:
+    - uses: actions/checkout@v4
+    - name: Setup .NET
+      uses: actions/setup-dotnet@v4
+      with:
+        dotnet-version: 8.0.x
+    - name: Restore dependencies
+      run: dotnet restore
+      working-directory: ./Backend
+    - name: Build
+      env:
+          ASPNETCORE_ENVIRONMENT: Production
+          BrevoApiKey: ${{ secrets.BREVO_API_KEY }}
+          JWTSymKey: ${{ secrets.JWT_SYMKEY }}
+      run: dotnet publish --no-restore -c Release --output ./Publish
+      working-directory: ./Backend
+    - name: Test
+      run: dotnet test --no-build --verbosity normal
+      working-directory: ./Backend
+      
+  deploy:
+    needs: build
+    runs-on: ubuntu-latest
+    if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+
+    steps:
+    - name: Set up Tailscale connection
+      uses: tailscale/github-action@v4
+      with:
+        oauth-client-id: ${{ secrets.TS_OAUTH_CLIENT_ID }}
+        oauth-secret: ${{ secrets.TS_OAUTH_SECRET }}
+        tags: tag:vm
+    - name: Set up SSH connection prerequisites
+      run: |
+          mkdir -p ~/.ssh
+          echo "${{ secrets.SSH_PRIVATE_KEY }}" > ~/.ssh/id_ed25519
+          chmod 600 ~/.ssh/id_ed25519
+          # Add server to known_hosts (replace with your server`s IP or hostname)
+          ssh-keyscan -H ${{ secrets.TS_BACKEND_IP }} >> ~/.ssh/known_hosts
+    - name: Test SSH connection
+      run: | 
+        ssh -i ~/.ssh/id_ed25519 ${{ secrets.REMOTE_USER }}@${{ secrets.TS_BACKEND_IP }} "echo Connected successfully!"
+    - name: Install rsync
+      run: sudo apt install rsync
+    - name: Copy files using rsync
+      working-directory: ./Backend
+      run: |
+        ssh -i ~/.ssh/id_ed25519 ${{ secrets.REMOTE_USER }}@${{ secrets.TS_BACKEND_IP }} "sudo rm -rf /var/backend && sudo mkdir /var/backend"
+        rsync -avz --delete --rsync-path="sudo rsync" ./Publish/ ${{ secrets.REMOTE_USER }}@${{ secrets.TS_BACKEND_IP }}:/var/backend

@@ -1,0 +1,53 @@
+name: React
+
+on:
+  pull_request:
+    branches: [ "main" ]
+  push:
+    branches: [ "main" ]
+    
+jobs:
+  build:
+    runs-on: ubuntu-latest
+
+    steps:
+    - uses: actions/checkout@v4
+    - uses: dreamcodez/dead-simple-nodejs@1
+      with: 
+        NODE_VERSION: 22.14.0
+    - name: Install project dependencies and build project
+      working-directory: ./Frontend
+      env:
+        VITE_BACKEND_STATIC_URL: ${{ secrets.BACKEND_STATIC_URL }}
+      run: |
+        npm install
+        npm run build
+
+  deploy: 
+    needs: build
+    runs-on: ubuntu-latest
+    if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+
+    steps:
+    - name: Set up Tailscale connection
+      uses: tailscale/github-action@v4
+      with:
+        oauth-client-id: ${{ secrets.TS_OAUTH_CLIENT_ID }}
+        oauth-secret: ${{ secrets.TS_OAUTH_SECRET }}
+        tags: tag:vm
+    - name: Set up connection to remote VM
+      run: |
+          mkdir -p ~/.ssh
+          echo "${{ secrets.SSH_PRIVATE_KEY }}" > ~/.ssh/id_ed25519
+          chmod 600 ~/.ssh/id_ed25519
+          ssh-keyscan -H ${{ secrets.TS_BACKEND_IP }} >> ~/.ssh/known_hosts
+    - name: Test SSH connection
+      run: |
+        ssh -i ~/.ssh/id_ed25519 {{ secrets.REMOTE_USER }}@${{ secrets.TS_BACKEND_IP }} "echo Connected successfully!"
+    - name: Install rsync
+      run: sudo apt install rsync
+    - name: Deploy build to remote VM
+      working-directory: ./Frontend
+      run: |
+        rsync -avz --delete --rsync-path="sudo rsync" ./dist/ ${{ secrets.REMOTE_USER }}@${{ secrets.TS_FRONTEND_IP }}:/var/www/marketplace.mkev.dev/
+        ssh -i ~/.ssh/id_ed25519 user@your.server.ip "sudo systemctl reload nginx"
