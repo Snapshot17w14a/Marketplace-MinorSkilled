@@ -2,16 +2,26 @@ import Button from '../Components/Button'
 import TopNavigation from '../Components/TopNavigation'
 import { isLoggedIn } from '../Auth'
 import { useNavigate } from 'react-router-dom'
-import { useCallback, useState, useRef, type FormEvent, useEffect } from 'react';
+import { useCallback, useState, useRef, type FormEvent, useEffect, type JSX } from 'react';
 import ListingCard from '../Components/ListingCard';
 import ProductAnimator from '../Components/ProductAnimator';
 import { getAnonymous } from '../BackendClient';
 import type { ListingDescriptor } from '../types/listingDescriptor';
+import PreviewListingCard from '../Components/PreviewListingCard';
 
 export default function Home() {
 
-    //const [searchDisabled, setSearchDisabled] = useState<boolean>(false);
-    const [latestListings, setLatestListings] = useState<ListingDescriptor[] | null>(null);
+    const [latestListings, setLatestListings] = useState<JSX.Element[]>([
+        <PreviewListingCard />,
+        <PreviewListingCard />,
+        <PreviewListingCard />,
+        <PreviewListingCard />,
+        <PreviewListingCard />,
+        <PreviewListingCard />,
+        <PreviewListingCard />,
+        <PreviewListingCard />,
+        <PreviewListingCard />,
+    ]);
 
     const searchRef = useRef<HTMLInputElement | null>(null);
 
@@ -23,11 +33,13 @@ export default function Home() {
 
     useEffect(() => {
         const fetchListngs = async () => {
-            const data = await getAnonymous<ListingDescriptor[]>("listings/GetPage/8");
+            const data = await getAnonymous<ListingDescriptor[]>("listings/GetLatest/8");
 
-            console.log(data);
+            const ListingCards: JSX.Element[] = data.map((listing, index) => {
+                return(<ListingCard className='h-full' key={index} descriptor={listing} />)
+            });
 
-            setLatestListings(data);
+            setLatestListings(ListingCards);
         };
 
         fetchListngs();
@@ -36,7 +48,7 @@ export default function Home() {
     const onSearchSubmit = (event: FormEvent) => {
         event.preventDefault();
 
-        if (searchRef.current === null) return;
+        if (searchRef.current === null || searchRef.current.value === '') return;
 
         navigate(`/search/${searchRef.current.value}`);
     };
@@ -53,14 +65,16 @@ export default function Home() {
                     <ProductAnimator interval={2000} className='text-2xl from-rose-950 to-rose-50 bg-linear-to-r bg-clip-text text-transparent animate-progtext inline-block' />
                     <h2 className='text-2xl inline-block'>and see what others are selling</h2>
                 </div>
-                <form className='mt-12 w-full sm:w-2/3 mx-auto' onSubmit={onSearchSubmit}>
-                    <input className={`textinput-standard w-full`} placeholder='Search for anything...' ref={searchRef}></input>
+                <form className='mt-12 w-full sm:w-2/3 mx-auto relative' onSubmit={onSearchSubmit}>
+                    <input className={`textinput-standard w-full`} placeholder='Search for anything...' ref={searchRef} required></input>
+                    <Button className='px-2 py-1 absolute right-1 top-1' variant='filled'>Search</Button>
                 </form>
                 <h2 className='text-2xl mt-12'>Or check out our latest listings below</h2>
                 <div className='w-full h-96 rounded-lg bg-[#262626] border-2 border-[#484747] my-12 p-2 overflow-x-auto overflow-y-clip grid grid-rows-1 grid-flow-col gap-2'>
-                    {latestListings && latestListings.map((listing, index) => {
+                    {/* {latestListings && latestListings.map((listing, index) => {
                         return(<ListingCard className='h-full' key={index} descriptor={listing}></ListingCard>)
-                    })}
+                    })} */}
+                    {latestListings}
                 </div>
             </div>
         </div>

@@ -31,11 +31,11 @@ export default function TopNavigation({ className = ''}) {
     return(
         <>
             <nav className={'w-screen h-16 bg-[#262626] border-b-2 border-[#484747] p-2 flex justify-between fixed top-0 drop-shadow-xl drop-shadow-rose-500/50 ' + className}>
-                <div className='flex h-full justify-around items-center'>
-                    <button type='button' className='h-full w-12 cursor-pointer' onClick={() => navigate('/')}>
-                        <img src={Logo} className='h-full object-contain'></img>
+                <div className='h-full text-nowrap'>
+                    <button type='button' className='flex items-center h-full w-12 cursor-pointer' onClick={() => navigate('/')}>
+                        <img src={Logo} className='h-full object-contain aspect-square inline-block'></img>
+                        <p className='mx-2 text-3xl font-bold text-rose-500 invisible w-0 sm:w-auto sm:visible inline-block'>Kev's marketplace</p>
                     </button>
-                    <p className='mx-2 text-3xl font-bold text-rose-500 invisible w-0 sm:w-auto sm:visible'>Kev's marketplace</p>
                 </div>
                 {
                     isLoggedIn ? 
@@ -69,10 +69,11 @@ export default function TopNavigation({ className = ''}) {
 
     function SavedListings() {
 
-        const [savedListings] = useState<SavedListing[]>(getSavedListings());
+        const [savedListings, setSavedListings] = useState<SavedListing[]>([]);
         const [listingData, setListingData] = useState<ListingDescriptor[]>([]);
 
         useEffect(() => {
+            setSavedListings(getSavedListings());
             fetchListings();
         }, [savedListings])
 

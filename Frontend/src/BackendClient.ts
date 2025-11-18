@@ -93,7 +93,7 @@ export async function getAuthorized<T>(endpoint: string): Promise<T> {
     return data;
 }
 
-export async function postXmlHttp<T>(endpoint: string, formData: FormData, onProgress?: (ev: ProgressEvent) => void): Promise<T> {
+export async function postXmlHttp<T>(endpoint: string, formData: FormData, onProgress?: (ev: ProgressEvent) => void, headers: [{key: string, value: string}] | undefined = undefined): Promise<T> {
     return new Promise<T>(async (resolve, reject) => {
 
         const xhr = new XMLHttpRequest();
@@ -102,6 +102,12 @@ export async function postXmlHttp<T>(endpoint: string, formData: FormData, onPro
 
         const jwt = await getJWT();
         xhr.setRequestHeader("Authorization", `Bearer ${jwt}`);
+
+        if (headers !== undefined) {
+            headers.forEach(header => {
+                xhr.setRequestHeader(header.key, header.value);
+            });
+        }
 
         if (onProgress){
             xhr.upload.onprogress = onProgress;

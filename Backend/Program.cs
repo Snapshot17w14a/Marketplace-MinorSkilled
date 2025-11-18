@@ -15,7 +15,7 @@ builder.Configuration
 
 var config = builder.Configuration;
 
-IdentityModelEventSource.ShowPII = true;
+IdentityModelEventSource.ShowPII = builder.Environment.IsDevelopment();
 
 // Add services to the container.
 builder.Services.AddDbContext<ApplicationDbContext>(options =>
@@ -87,8 +87,6 @@ if (app.Environment.IsDevelopment())
 {
     app.UseSwagger();
     app.UseSwaggerUI();
-
-    
 }
 
 // Enable CORS for same origin fronend access

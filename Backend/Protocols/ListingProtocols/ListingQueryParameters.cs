@@ -10,6 +10,6 @@
         public int MaxPrice { get; set; } = int.MaxValue;
 
         public int Page { get; set; } = 1;
-        public int PageCount { get; set; } = 20;
+        public int PageCount { get; set; } = 8;
     }
 }

@@ -22,7 +22,7 @@ export default function ListingCard({ descriptor, className }: { descriptor: Lis
     }
 
     return(
-        <div className={"bg-(--dark) border-2 border-(--light-dark) rounded-lg sm:size-96 w-full relative " + className} >
+        <div className={"bg-(--dark) border-2 border-(--light-dark) rounded-lg h-full relative aspect-square " + className} >
             <div className="h-3/5 object-fill overflow-clip flex justify-center rounded-lg m-2 bg-(--mid-dark) border-2 border-(--light-dark)">
                 <img className="h-full" src={`${endpointsConfig.BackendStaticUrl}${descriptor?.images[0].relativePath}`}></img>
             </div>

@@ -112,7 +112,7 @@ function Results({ parameters, setResultCount } : { parameters: SearchQueryParam
     return(
         <div className="mt-2 text-center">
             {listingPages && listingPages.map(e => e.listings)}
-            {listingPages.length < pageCount && <Button className="px-2 py-1 my-1" onClick={() => fetchListings(listingPages.length + 1)}>Load more</Button>}
+            {listingPages.length < pageCount && <Button className="px-2 py-1 my-1" onClick={() => fetchListings(listingPages.length)}>Load more</Button>}
         </div>
     )
 }

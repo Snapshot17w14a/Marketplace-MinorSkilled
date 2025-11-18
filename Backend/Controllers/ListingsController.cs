@@ -68,7 +68,7 @@ namespace Backend.Controllers
         public async Task<ActionResult<Listing>> Get(Guid guid)
         {
             var listing = await _context.Listings
-                .Include(l => l.Images)
+                .Include(l => l.Images.OrderBy(li => li.Index))
                 .FirstOrDefaultAsync(l => l.Guid == guid);
 
             if (listing == null)
@@ -78,11 +78,15 @@ namespace Backend.Controllers
         }
 
         [HttpGet("{count}")]
-        public async Task<ActionResult<ICollection<Listing>>> GetPage(int count)
+        public async Task<ActionResult<ICollection<Listing>>> GetLatest(int count)
         {
             var listingsCount = await _context.Listings.CountAsync();
 
-            var listings = await _context.Listings.Include(l => l.Images).OrderByDescending(li => li.CreatedAt).Take(listingsCount < count ? listingsCount : count).ToArrayAsync();   
+            var listings = await _context.Listings
+                .Include(l => l.Images.Where(li => li.Index == 0))
+                .OrderByDescending(li => li.CreatedAt)
+                .Take(listingsCount < count ? listingsCount : count)
+                .ToListAsync();
 
             return Ok(listings);
         }
@@ -94,26 +98,35 @@ namespace Backend.Controllers
 
             try
             {
+                // Sort by search phrase
                 listings = listings.Where(l =>
-                l.Title.Contains(query.Phrase) || l.Description.Contains(query.Phrase));
+                    l.Title.Contains(query.Phrase) || l.Description.Contains(query.Phrase)
+                );
 
+                // Order by sorting method
                 listings = query.SortBy.Trim().ToLower() switch
                 {
                     "price" => query.Descending ? listings.OrderByDescending(l => l.Price) : listings.OrderBy(l => l.Price),
                     _ => query.Descending ? listings.OrderByDescending(l => l.CreatedAt) : listings.OrderBy(l => l.CreatedAt),
                 };
 
+                // Exclude if out of price range
                 listings = listings.Where(l => l.Price >= query.MinPrice && l.Price <= query.MaxPrice);
 
+                // Calculate the number of matches, number of pages, and max price
                 var listingCount = await listings.CountAsync();
                 var pageCount = (int)Math.Ceiling(listingCount / (float)query.PageCount);
                 var maxPrice = listings.Max(l => l.Price);
 
-                var finalListings = listings.Include(l => l.Images).Skip((query.Page - 1) * query.PageCount).Take(query.PageCount).ToArray();
+                // Get the final listings, include images, skip pages, and take a page's worth of listings
+                var finalListings = listings
+                    .Include(l => l.Images.Where(li => li.Index == 0))
+                    .Skip(query.Page * query.PageCount)
+                    .Take(query.PageCount);
 
                 return Ok(new
                 {
-                    listings = finalListings,
+                    listings = finalListings.ToArray(),
                     query.Page,
                     pageCount,
                     listingCount,

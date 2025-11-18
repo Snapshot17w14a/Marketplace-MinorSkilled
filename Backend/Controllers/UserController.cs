@@ -6,6 +6,7 @@ using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using Backend.Protocols.UserProtocols;
 using Backend.Iterfaces;
+using Backend.Extensions;
 
 namespace Backend.Controllers
 {
@@ -39,11 +40,11 @@ namespace Backend.Controllers
         {
             requestUser.Username = requestUser.Username.Trim();
 
-            if (await _context.Users.FirstOrDefaultAsync(u => u.Email == requestUser.Email) != null)
+            if (await _context.Users.FromEmail(requestUser.Email) != null)
             {
                 return Conflict(string.Format("A user with the email {0} already exists.", requestUser.Email));
             }
-            else if (await _context.Users.FirstOrDefaultAsync(u => u.Name == requestUser.Username) != null)
+            else if (await _context.Users.FromUsername(requestUser.Username) != null)
             {
                 return Conflict(string.Format("A user with the username {0} already exists.", requestUser.Username));
             }
@@ -72,10 +73,13 @@ namespace Backend.Controllers
         [HttpPost]
         public async Task<ActionResult> Login([FromBody] LoginRequest loginRequest)
         {
-            User? user = await _context.Users.FirstOrDefaultAsync(u => u.Email == loginRequest.Email && _passwordHasher.HashPassword(loginRequest.Password) == u.Password);
+            User? user = await _context.Users.FromEmail(loginRequest.Email);
 
             if (user == null)
                 return NotFound();
+
+            if (user.Password != _passwordHasher.HashPassword(loginRequest.Password))
+                return Forbid();
 
             // If there are no tokens in the collection, the LINQ query will throw an InvalidOperationException, we can safely ignore this
             try
@@ -123,7 +127,7 @@ namespace Backend.Controllers
                 return Forbid();
             }
 
-            User? user = await _context.Users.FirstOrDefaultAsync(u => u.Identifier == rft.UserId);
+            User? user = await _context.Users.FromIdentifier(rft.UserId);
 
             if (user == null)
             {
@@ -149,7 +153,7 @@ namespace Backend.Controllers
         [AllowAnonymous]
         public async Task<ActionResult> RequestResetToken([FromBody] ResetTokenRequest request)
         {
-            User? user = await _context.Users.FirstOrDefaultAsync(u => u.Email == request.Email);
+            User? user = await _context.Users.FromEmail(request.Email);
 
             if (user == null)
             {
@@ -216,7 +220,7 @@ To reset your password follow the link below.</p>
                 return Forbid();
             }
 
-            User? user = await _context.Users.FirstOrDefaultAsync(u => u.Email == prt.Email);
+            User? user = await _context.Users.FromEmail(prt.Email);
 
             if (user == null)
             {
