@@ -1,5 +1,6 @@
 ﻿using System.IdentityModel.Tokens.Jwt;
 using Backend.Database;
+using Backend.Extensions;
 using Backend.Models;
 using Backend.Protocols;
 using Backend.Protocols.ListingProtocols;
@@ -38,7 +39,7 @@ namespace Backend.Controllers
             User? creatingUser;
 
             var userGuid = Guid.Parse(decodedToken.Claims.FirstOrDefault(c => c.Type == "sub")?.Value ?? "");
-            creatingUser = await _context.Users.FirstOrDefaultAsync(u => u.Identifier == userGuid);
+            creatingUser = await _context.Users.FromIdentifier(userGuid);
             if (creatingUser == null)
                 return BadRequest("The user specified in the authorization token was not found!");
 

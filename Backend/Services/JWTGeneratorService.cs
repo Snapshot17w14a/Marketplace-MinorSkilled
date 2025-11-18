@@ -22,8 +22,8 @@ namespace Backend.Services
             var claims = new List<Claim>
             {
                 new(JwtRegisteredClaimNames.Jti, Guid.NewGuid().ToString()),
-                new(JwtRegisteredClaimNames.Sub, user.Identifier.ToString()),
-                new(JwtRegisteredClaimNames.Email, user.Email)
+                new(JwtRegisteredClaimNames.Sub, user.Id.ToString()),
+                new(JwtRegisteredClaimNames.Email, user.Email!)
             };
 
             var tokenDescriptor = new SecurityTokenDescriptor
@@ -44,7 +44,7 @@ namespace Backend.Services
             var token = new RefreshToken
             {
                 TokenId = Guid.NewGuid(),
-                UserId = user.Identifier,
+                UserId = user.Id,
                 Expiration = DateTime.UtcNow.AddHours(24),
             };
 

@@ -1,11 +1,12 @@
-using System.Text;
 using Backend.Database;
 using Backend.Iterfaces;
 using Backend.Services;
-using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.IdentityModel.Logging;
-using Microsoft.IdentityModel.Tokens;
+using Microsoft.AspNetCore.Identity;
+using Backend.Models;
+using Microsoft.AspNetCore.Authentication.Cookies;
+using Microsoft.AspNetCore.Authentication.BearerToken;
 
 var builder = WebApplication.CreateBuilder(args);
 builder.Configuration
@@ -28,20 +29,15 @@ builder.Services.AddControllers();
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen();
 
-builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme).AddJwtBearer(options =>
-{
-    string? JWTSymKeySecret = config["Secrets:JWTSymKeySecret"];
-    if (string.IsNullOrEmpty(JWTSymKeySecret)) throw new Exception("JWTSymKeySecret was not found in configuration");
+builder.Services.AddAuthorizationBuilder()
+    .SetFallbackPolicy(null);
+builder.Services.AddAuthentication()
+    .AddBearerToken(IdentityConstants.BearerScheme)
+    .AddCookie(IdentityConstants.ApplicationScheme);
 
-    options.TokenValidationParameters = new()
-    {
-        IssuerSigningKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(JWTSymKeySecret)),
-        ValidIssuer = "https://api.mkev.dev",
-        ValidAudience = "https://marketplace.mkev.dev",
-        ValidateLifetime = true,
-        ValidateIssuerSigningKey = true,
-    };
-});
+builder.Services.AddIdentityCore<User>()
+    .AddEntityFrameworkStores<ApplicationDbContext>()
+    .AddApiEndpoints();
 
 builder.Services.AddSingleton<PasswordHashService>();
 builder.Services.AddScoped<JWTGeneratorService>();
@@ -85,6 +81,7 @@ brevo_csharp.Client.Configuration.Default.ApiKey.Add("api-key", apiKey);
 //Configure the HTTP request pipeline.
 if (app.Environment.IsDevelopment())
 {
+    app.MapSwagger();
     app.UseSwagger();
     app.UseSwaggerUI();
 }
@@ -107,6 +104,7 @@ app.UseHttpsRedirection();
 app.UseAuthentication();
 app.UseAuthorization();
 
+app.MapIdentityApi<User>().AllowAnonymous();
 app.MapControllers();
 
 app.Run();

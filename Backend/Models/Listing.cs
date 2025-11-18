@@ -3,7 +3,7 @@
     public class Listing
     {
         public int Id { get; set; }
-        public int UserId { get; set; }
+        public Guid UserId { get; set; }
         public Guid Guid { get; set; } = Guid.NewGuid();
         public required string Title { get; set; }
         public required string Description { get; set; }

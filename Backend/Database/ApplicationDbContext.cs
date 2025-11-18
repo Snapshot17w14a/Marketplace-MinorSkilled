@@ -1,11 +1,12 @@
 ﻿using Backend.Models;
+using Microsoft.AspNetCore.Identity;
+using Microsoft.AspNetCore.Identity.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore;
 
 namespace Backend.Database
 {
-    public class ApplicationDbContext(DbContextOptions<ApplicationDbContext> options) : DbContext(options)
+    public class ApplicationDbContext(DbContextOptions<ApplicationDbContext> options) : IdentityDbContext<User, IdentityRole<Guid>, Guid>(options)
     {
-        public DbSet<User> Users { get; set; }
         public DbSet<Listing> Listings { get; set; }
         public DbSet<ListingImage> ListingsImages { get; set; }
         public DbSet<RefreshToken> RefreshTokens { get; set; }
@@ -14,8 +15,7 @@ namespace Backend.Database
 
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
-            modelBuilder.Entity<User>()
-                .HasKey(x => x.Id);
+            base.OnModelCreating(modelBuilder);
 
             modelBuilder.Entity<User>()
                 .HasMany<Listing>()

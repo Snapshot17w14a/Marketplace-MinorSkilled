@@ -1,5 +1,5 @@
-﻿using Backend.Models;
-using Microsoft.EntityFrameworkCore;
+﻿using Microsoft.EntityFrameworkCore;
+using Backend.Models;
 
 namespace Backend.Extensions
 {
@@ -12,12 +12,12 @@ namespace Backend.Extensions
 
         public static Task<User?> FromUsername(this DbSet<User> db, string username)
         {
-            return db.FirstOrDefaultAsync(u => u.Name == username);
+            return db.FirstOrDefaultAsync(u => u.UserName == username);
         }
 
         public static Task<User?> FromIdentifier(this DbSet<User> db, Guid identifier)
         {
-            return db.FirstOrDefaultAsync(u => u.Identifier == identifier);
+            return db.FirstOrDefaultAsync(u => u.Id == identifier);
         }
     }
 }
