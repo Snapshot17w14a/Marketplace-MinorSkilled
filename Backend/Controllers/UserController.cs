@@ -7,6 +7,8 @@ using Microsoft.EntityFrameworkCore;
 using Backend.Protocols.UserProtocols;
 using Backend.Iterfaces;
 using Backend.Extensions;
+using Backend.Protocols.DTOs;
+using Backend.Roles;
 
 namespace Backend.Controllers
 {
@@ -21,17 +23,17 @@ namespace Backend.Controllers
         private readonly IEmailClient _emailClient = emailClient;
 
         [HttpGet]
-        public async Task<IEnumerable<User>> Get() => await _context.Users.ToArrayAsync();
+        public async Task<IEnumerable<UserDTO>> Get() => _context.Users.Cast<UserDTO>();
 
         [HttpGet("{id}")]
-        public async Task<ActionResult<User>> Get(int id)
+        public async Task<ActionResult<UserDTO>> Get(int id)
         {
             var user = await _context.Users.FindAsync(id);
 
             if (user == null)
                 return NotFound();
 
-            return user;
+            return new UserDTO(user);
         }
 
         [AllowAnonymous]
@@ -57,6 +59,7 @@ namespace Backend.Controllers
                     Name = requestUser.Username,
                     Email = requestUser.Email,
                     Password = _passwordHasher.HashPassword(requestUser.Password),
+                    Role = IdentityRole.Member
                 };
 
                 _context.Users.Add(newUser);

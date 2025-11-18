@@ -3,6 +3,7 @@ using System;
 using Backend.Database;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 
 #nullable disable
@@ -10,9 +11,11 @@ using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 namespace Backend.Migrations
 {
     [DbContext(typeof(ApplicationDbContext))]
-    partial class ApplicationDbContextModelSnapshot : ModelSnapshot
+    [Migration("20251118185743_listingCreator")]
+    partial class listingCreator
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder.HasAnnotation("ProductVersion", "9.0.9");
@@ -25,6 +28,9 @@ namespace Backend.Migrations
 
                     b.Property<DateTime>("CreatedAt")
                         .HasColumnType("TEXT");
+
+                    b.Property<int>("CreatorId")
+                        .HasColumnType("INTEGER");
 
                     b.Property<string>("Currency")
                         .IsRequired()
@@ -48,6 +54,8 @@ namespace Backend.Migrations
                         .HasColumnType("INTEGER");
 
                     b.HasKey("Id");
+
+                    b.HasIndex("CreatorId");
 
                     b.HasIndex("UserId");
 
@@ -108,20 +116,6 @@ namespace Backend.Migrations
                     b.ToTable("ResetTokens");
                 });
 
-            modelBuilder.Entity("Backend.Models.PermissionClaim", b =>
-                {
-                    b.Property<string>("Role")
-                        .HasColumnType("TEXT");
-
-                    b.Property<string>("Permission")
-                        .IsRequired()
-                        .HasColumnType("TEXT");
-
-                    b.HasKey("Role");
-
-                    b.ToTable("PermissionClaims");
-                });
-
             modelBuilder.Entity("Backend.Models.RefreshToken", b =>
                 {
                     b.Property<Guid>("TokenId")
@@ -180,34 +174,26 @@ namespace Backend.Migrations
                         .IsRequired()
                         .HasColumnType("TEXT");
 
-                    b.Property<string>("Role")
-                        .IsRequired()
-                        .HasColumnType("TEXT");
-
                     b.HasKey("Id");
-
-                    b.HasIndex("Role");
 
                     b.ToTable("Users");
                 });
 
-            modelBuilder.Entity("Backend.Models.UserRole", b =>
-                {
-                    b.Property<string>("Role")
-                        .HasColumnType("TEXT");
-
-                    b.HasKey("Role");
-
-                    b.ToTable("UserRoles");
-                });
-
             modelBuilder.Entity("Backend.Models.Listing", b =>
                 {
+                    b.HasOne("Backend.Models.User", "Creator")
+                        .WithMany()
+                        .HasForeignKey("CreatorId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
                     b.HasOne("Backend.Models.User", null)
                         .WithMany()
                         .HasForeignKey("UserId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
+
+                    b.Navigation("Creator");
                 });
 
             modelBuilder.Entity("Backend.Models.ListingImage", b =>
@@ -219,32 +205,9 @@ namespace Backend.Migrations
                     b.Navigation("Listing");
                 });
 
-            modelBuilder.Entity("Backend.Models.PermissionClaim", b =>
-                {
-                    b.HasOne("Backend.Models.UserRole", null)
-                        .WithMany("Permissions")
-                        .HasForeignKey("Role")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
-                });
-
-            modelBuilder.Entity("Backend.Models.User", b =>
-                {
-                    b.HasOne("Backend.Models.UserRole", null)
-                        .WithMany()
-                        .HasForeignKey("Role")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
-                });
-
             modelBuilder.Entity("Backend.Models.Listing", b =>
                 {
                     b.Navigation("Images");
-                });
-
-            modelBuilder.Entity("Backend.Models.UserRole", b =>
-                {
-                    b.Navigation("Permissions");
                 });
 #pragma warning restore 612, 618
         }

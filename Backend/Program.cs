@@ -1,5 +1,6 @@
 using System.Text;
 using Backend.Database;
+using Backend.Extensions;
 using Backend.Iterfaces;
 using Backend.Services;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
@@ -42,6 +43,7 @@ builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme).AddJw
         ValidateIssuerSigningKey = true,
     };
 });
+builder.Services.AddScoped<RoleManager>();
 
 builder.Services.AddSingleton<PasswordHashService>();
 builder.Services.AddScoped<JWTGeneratorService>();
@@ -75,7 +77,7 @@ else
     });
 }
 
-    var app = builder.Build();
+var app = builder.Build();
 
 // Configure brevo client configuration
 var apiKey = config["Secrets:BrevoAPIKey"];
@@ -103,6 +105,8 @@ app.UseStaticFiles((new StaticFileOptions
 }));
 
 app.UseHttpsRedirection();
+
+await app.SeedPermissionRoles();
 
 app.UseAuthentication();
 app.UseAuthorization();
