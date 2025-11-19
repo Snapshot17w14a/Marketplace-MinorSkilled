@@ -68,7 +68,8 @@ namespace Backend.Controllers
         public async Task<ActionResult<Listing>> Get(Guid guid)
         {
             var listing = await _context.Listings
-                .Include(l => l.Images.OrderBy(li => li.Index))
+                .Include(l => l.Images
+                .OrderBy(li => li.Index))
                 .FirstOrDefaultAsync(l => l.Guid == guid);
 
             if (listing == null)

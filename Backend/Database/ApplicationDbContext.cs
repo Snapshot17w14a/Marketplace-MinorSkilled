@@ -34,9 +34,8 @@ namespace Backend.Database
             modelBuilder.Entity<UserRole>()
                 .HasKey(ur => ur.Role);
 
-            // Ensure PermissionClaim has a key (composite key of Role + Permission)
             modelBuilder.Entity<PermissionClaim>()
-                .HasKey(pc => pc.Role);
+                .HasKey(pc => pc.Id);
 
             modelBuilder.Entity<User>()
                 .HasMany<Listing>()
@@ -44,8 +43,6 @@ namespace Backend.Database
                 .HasForeignKey(l => l.UserId)
                 .IsRequired();
 
-            // Correct relationship configuration: User.Role is a string FK, not a navigation property.
-            // Configure relationship to UserRole by specifying the related entity type and FK/principal key.
             modelBuilder.Entity<User>()
                 .HasOne<UserRole>()
                 .WithMany()

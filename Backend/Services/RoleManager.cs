@@ -7,7 +7,7 @@ namespace Backend.Services
     {
         private readonly ApplicationDbContext _context = context;
 
-        private Dictionary<string, List<string>> rolePermissions = [];
+        private readonly Dictionary<string, List<string>> rolePermissions = [];
 
         public void CreateRole(string role)
         {

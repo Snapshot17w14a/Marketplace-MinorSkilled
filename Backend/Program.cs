@@ -2,6 +2,7 @@ using System.Text;
 using Backend.Database;
 using Backend.Extensions;
 using Backend.Iterfaces;
+using Backend.Middleware;
 using Backend.Services;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.EntityFrameworkCore;
@@ -109,7 +110,7 @@ app.UseHttpsRedirection();
 await app.SeedPermissionRoles();
 
 app.UseAuthentication();
-app.UseAuthorization();
+app.UseMiddleware<SimpleAuthorization>();
 
 app.MapControllers();
 

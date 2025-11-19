@@ -1,4 +1,6 @@
-﻿namespace Backend.Models
+﻿using Backend.Roles;
+
+namespace Backend.Models
 {
     public class User
     {
@@ -8,6 +10,6 @@
         public required string Password { get; set; }
         public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
         public Guid Identifier { get; set; } = Guid.NewGuid();
-        public required string Role { get; set; }
+        public required string Role { get; set; } = IdentityRole.Member;
     }
 }

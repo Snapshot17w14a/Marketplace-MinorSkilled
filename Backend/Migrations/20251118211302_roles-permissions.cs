@@ -5,7 +5,7 @@
 namespace Backend.Migrations
 {
     /// <inheritdoc />
-    public partial class rolesTable : Migration
+    public partial class rolespermissions : Migration
     {
         /// <inheritdoc />
         protected override void Up(MigrationBuilder migrationBuilder)
@@ -27,7 +27,7 @@ namespace Backend.Migrations
                 table: "Users",
                 type: "TEXT",
                 nullable: false,
-                defaultValue: "");
+                defaultValue: "Member");
 
             migrationBuilder.CreateTable(
                 name: "UserRoles",
@@ -70,6 +70,18 @@ namespace Backend.Migrations
                 principalTable: "UserRoles",
                 principalColumn: "Role",
                 onDelete: ReferentialAction.Cascade);
+
+            migrationBuilder.Sql("INSERT OR IGNORE INTO UserRoles (Role) VALUES ('Member');");
+            migrationBuilder.Sql("INSERT OR IGNORE INTO UserRoles (Role) VALUES ('Admin');");
+
+            // Fix existing users WITHOUT a matching role
+            // Assign default role "User"
+            migrationBuilder.Sql(@"
+                UPDATE Users
+                SET Role = 'Member'
+                WHERE Role IS NULL 
+                   OR Role NOT IN (SELECT Role FROM UserRoles);
+            ");
         }
 
         /// <inheritdoc />

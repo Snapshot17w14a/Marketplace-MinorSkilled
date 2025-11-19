@@ -26,14 +26,18 @@ namespace Backend.Controllers
         public async Task<IEnumerable<UserDTO>> Get() => _context.Users.Cast<UserDTO>();
 
         [HttpGet("{id}")]
-        public async Task<ActionResult<UserDTO>> Get(int id)
+        public async Task<ActionResult> Get(int id)
         {
             var user = await _context.Users.FindAsync(id);
 
             if (user == null)
                 return NotFound();
 
-            return new UserDTO(user);
+            return Ok(new
+            {
+                user = new UserDTO(user),
+                permissions = _context.PermissionClaims.Where(pc => pc.Role == user.Role).Select(pc => pc.Permission)
+            });
         }
 
         [AllowAnonymous]
