@@ -12,15 +12,15 @@ import PreviewListingCard from '../Components/PreviewListingCard';
 export default function Home() {
 
     const [latestListings, setLatestListings] = useState<JSX.Element[]>([
-        <PreviewListingCard />,
-        <PreviewListingCard />,
-        <PreviewListingCard />,
-        <PreviewListingCard />,
-        <PreviewListingCard />,
-        <PreviewListingCard />,
-        <PreviewListingCard />,
-        <PreviewListingCard />,
-        <PreviewListingCard />,
+        <PreviewListingCard key={0} />,
+        <PreviewListingCard key={1} />,
+        <PreviewListingCard key={2} />,
+        <PreviewListingCard key={3} />,
+        <PreviewListingCard key={4} />,
+        <PreviewListingCard key={5} />,
+        <PreviewListingCard key={6} />,
+        <PreviewListingCard key={7} />,
+        <PreviewListingCard key={8} />,
     ]);
 
     const searchRef = useRef<HTMLInputElement | null>(null);
@@ -28,7 +28,7 @@ export default function Home() {
     const navigate = useNavigate();
 
     const handleCreateListing = useCallback(() => {
-        navigate(isLoggedIn() ? 'listingCreator' : 'account/register');
+        navigate(isLoggedIn() ? 'listing/creator' : 'account/register');
     }, [isLoggedIn]);
 
     useEffect(() => {
@@ -56,7 +56,7 @@ export default function Home() {
     return(
         <div className='flex justify-center'>
             <TopNavigation/>
-            <div className='max-w-full p-8 pt-16 text-center'>
+            <div className='max-w-full p-2 sm:p-8 pt-16 text-center'>
                 <h1 className='font-bold text-6xl mt-24'>Modern marketplace for modern people</h1>
                 <h2 className='text-2xl mt-12'>Create beautiful listings and find the right audience for your products</h2>
                 <Button variant='filled' className='text-2xl px-8 py-4 mt-12' onClick={handleCreateListing}>Create a listing</Button>
@@ -65,9 +65,9 @@ export default function Home() {
                     <ProductAnimator interval={2000} className='text-2xl from-rose-950 to-rose-50 bg-linear-to-r bg-clip-text text-transparent animate-progtext inline-block' />
                     <h2 className='text-2xl inline-block'>and see what others are selling</h2>
                 </div>
-                <form className='mt-12 w-full sm:w-2/3 mx-auto relative' onSubmit={onSearchSubmit}>
+                <form className='mt-12 w-full sm:w-2/3 mx-auto relative flex z-0' onSubmit={onSearchSubmit}>
                     <input className={`textinput-standard w-full`} placeholder='Search for anything...' ref={searchRef} required></input>
-                    <Button className='px-2 py-1 absolute right-1 top-1' variant='filled'>Search</Button>
+                    <Button className='px-2 py-1 absolute right-1.5 top-1' variant='filled'>Search</Button>
                 </form>
                 <h2 className='text-2xl mt-12'>Or check out our latest listings below</h2>
                 <div className='w-full h-96 rounded-lg bg-[#262626] border-2 border-[#484747] my-12 p-2 overflow-x-auto overflow-y-clip grid grid-rows-1 grid-flow-col gap-2'>

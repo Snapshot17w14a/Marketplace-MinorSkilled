@@ -44,39 +44,24 @@ builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme).AddJw
         ValidateIssuerSigningKey = true,
     };
 });
+
 builder.Services.AddScoped<RoleManager>();
 
 builder.Services.AddSingleton<PasswordHashService>();
 builder.Services.AddScoped<JWTGeneratorService>();
 builder.Services.AddScoped<IEmailClient, BrevoEmailClient>();
 
-if (builder.Environment.IsDevelopment())
+ // Allow frontend to make calls from local network with CORS
+builder.Services.AddCors(options =>
 {
-    // Allow frontend to make calls from local network with CORS
-    builder.Services.AddCors(options =>
+    options.AddPolicy("AllowFrontend", policy =>
     {
-        options.AddPolicy("AllowFrontend", policy =>
-        {
-            policy.WithOrigins("http://localhost:5173")
-                .AllowAnyHeader()
-                .AllowAnyMethod()
-                .AllowCredentials();
-        });
-    });
-}
-else
-{
-    builder.Services.AddCors(options =>
-    {
-        options.AddPolicy("AllowFrontend", policy =>
-        {
-            policy.WithOrigins("https://marketplace.mkev.dev")
+        policy.WithOrigins(builder.Environment.IsDevelopment() ? "http://localhost:5173" : "https://marketplace.mkev.dev")
             .AllowAnyHeader()
             .AllowAnyMethod()
             .AllowCredentials();
-        });
     });
-}
+});
 
 var app = builder.Build();
 
@@ -84,6 +69,13 @@ var app = builder.Build();
 var apiKey = config["Secrets:BrevoAPIKey"];
 if (string.IsNullOrEmpty(apiKey)) throw new Exception("The mail client API key could not be found in the config");
 brevo_csharp.Client.Configuration.Default.ApiKey.Add("api-key", apiKey);
+
+app.Use(async (context, next) =>
+{
+    Console.WriteLine("Incoming request:");
+    Console.WriteLine("Authorization: " + context.Request.Headers["Authorization"]);
+    await next();
+});
 
 //Configure the HTTP request pipeline.
 if (app.Environment.IsDevelopment())
@@ -95,21 +87,14 @@ if (app.Environment.IsDevelopment())
 // Enable CORS for same origin fronend access
 app.UseCors("AllowFrontend");
 
-app.UseStaticFiles((new StaticFileOptions
-{
-    OnPrepareResponse = ctx =>
-    {
-        ctx.Context.Response.Headers.Append("Access-Control-Allow-Origin", "http://localhost:5173");
-        ctx.Context.Response.Headers.Append("Access-Control-Allow-Methods", "GET,HEAD,OPTIONS");
-        ctx.Context.Response.Headers.Append("Access-Control-Allow-Headers", "Content-Type");
-    }
-}));
+app.UseStaticFiles();
 
 app.UseHttpsRedirection();
 
-await app.SeedPermissionRoles();
-
 app.UseAuthentication();
+app.UseAuthorization();
+
+await app.SeedPermissionRoles();
 app.UseMiddleware<SimpleAuthorization>();
 
 app.MapControllers();

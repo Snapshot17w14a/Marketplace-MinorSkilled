@@ -5,6 +5,7 @@ import { useNavigate } from "react-router-dom";
 import { useFade as useFade } from "./AccountPage";
 import { useNotify as useNotify } from "../Components/NotificationProvider";
 import { FetchError } from "../classes/FetchError";
+import responseCodes from "../types/responseCodes";
 
 export default function Register(){
     const emailRef = useRef<HTMLInputElement>(null);
@@ -38,10 +39,10 @@ export default function Register(){
         catch (error){
             if (error instanceof FetchError) {
                 switch(error.code) {
-                    case 404:
+                    case responseCodes.Conflict:
                         notify({
-                            header: "User could not be found!",
-                            message: "The user with the given credentials could not be found. Please check your login details!",
+                            header: "Conflicting information!",
+                            message: error.error,
                             type: 'error'
                         })
                 }

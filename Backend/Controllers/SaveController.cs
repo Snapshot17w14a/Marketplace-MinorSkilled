@@ -17,11 +17,11 @@ namespace Backend.Controllers
         private readonly ApplicationDbContext _context = context;
 
         [HttpPost]
-        public async Task<ActionResult> SaveListing(ListingSaveSelector saveListingRequest, [FromHeader] AuthorizationHeader auth)
+        public async Task<ActionResult> SaveListing(ListingSaveSelector saveListingRequest)
         {
-            var userId = ExtractUserGuid(auth);
+            var callingUser = (User)HttpContext.Items["User"]!;
 
-            var existingSave = await _context.SavedListings.FirstOrDefaultAsync(sl => sl.UserId == userId && sl.ListingId == saveListingRequest.ListingId);
+            var existingSave = await _context.SavedListings.FirstOrDefaultAsync(sl => sl.UserId == callingUser.Identifier && sl.ListingId == saveListingRequest.ListingId);
 
             if (existingSave != null)
             {
@@ -31,7 +31,7 @@ namespace Backend.Controllers
             SavedListing savedListing = new()
             {
                 ListingId = saveListingRequest.ListingId,
-                UserId = userId,
+                UserId = callingUser.Identifier,
             };
 
             _context.SavedListings.Add(savedListing);

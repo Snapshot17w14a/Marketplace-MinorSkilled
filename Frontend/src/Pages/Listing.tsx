@@ -13,12 +13,15 @@ export default function Listing() {
     
     const {listingId} = useParams();
     
+    const userData = getActiveUser();
     const [listingGuid, setListingGuid] = useState<string | null>(null);
     const [listingData, setListingData] = useState<ListingDescriptor | null>(null);
     const [isSaved, setIsSaved] = useState<boolean>(() => {
         if (!listingId) return false;
         return isListingSaved(listingId);
     });
+
+    const navigate = useNavigate();
 
     useEffect(() => {
         setListingGuid(listingId ?? "");
@@ -50,7 +53,7 @@ export default function Listing() {
             setIsSaved(true);
         }
     }
-    
+
     return(
         <>
         {listingData ? 
@@ -64,13 +67,20 @@ export default function Listing() {
                         <h2 className="text-2xl font-light mb-4">{`${listingData.price} ${listingData.currency}`}</h2>
                         <h3 className="text-[#888888] mb-4">Listed at: {listingData.createdAt}</h3>
                         <div className="flex justify-evenly gap-4 mb-4">
-                            <Button className="basis-4/6 px-2 py-1.5" variant="filled">Message</Button>
+                            {userData && (userData.guid == listingData.userId || userData.role == 'Admin') ?
+                                <Button className="basis-4/6 px-2 py-1.5" variant="filled" onClick={() => navigate(`/listing/edit/${listingId}`)}>Edit</Button> :
+                                <Button className="basis-4/6 px-2 py-1.5" variant="filled">Message</Button>
+                            }
                             <Button className="basis-1/6 px-2 py-1" variant={isSaved ? "filled" : "standard"} onClick={saveListing}>{isSaved ? "Saved!" : "Save"}</Button>
                             <Button className="basis-1/6 px-2 py-1">Share</Button>
                         </div>
                         <div className="w-full h-1 bg-(--light-dark) rounded-lg mb-4"></div>
                         <h1 className="text-4xl font-bold mb-4">Description</h1>
-                        <p className="mb-4">{listingData.description}</p>
+                        <div className="mb-4">
+                            {listingData.description.split('\n').map((element, index) => {
+                                return(<p key={index}>{element}<br/></p>)
+                            })}
+                        </div>
                         <div className="w-full h-1 bg-(--light-dark) rounded-lg mb-4"></div>
                     </div>
                 </div>

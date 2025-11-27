@@ -1,4 +1,5 @@
 export type ListingImage = {
     relativePath: string,
-    contentType: string
+    contentType: string,
+    guid: string
 }

@@ -1,4 +1,6 @@
-﻿namespace Backend.Models
+﻿using Backend.Protocols.ListingProtocols;
+
+namespace Backend.Models
 {
     public class Listing
     {
@@ -12,5 +14,20 @@
         public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
 
         public ICollection<ListingImage> Images { get; set; } = [];
+
+        public void ApplyChanges(EditListingRequest request)
+        {
+            if (!string.IsNullOrEmpty(request.Title))
+                this.Title = request.Title;
+
+            if (!string.IsNullOrEmpty(request.Description))
+                this.Description = request.Description;
+
+            if (!string.IsNullOrEmpty(request.Currency))
+                this.Currency = request.Currency;
+
+            if (request.Price != null)
+                this.Price = (int)request.Price;
+        }
     }
 }

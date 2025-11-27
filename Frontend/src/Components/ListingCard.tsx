@@ -3,13 +3,15 @@ import Button from "./Button";
 import endpointsConfig from "../Configs/endpoints.config";
 import type { ListingDescriptor } from "../types/listingDescriptor";
 import { addSavedListing, isListingSaved, removeSavedListing } from "../SavedListings";
-import { useState } from "react";
+import { useEffect, useRef, useState } from "react";
 
-export default function ListingCard({ descriptor, className }: { descriptor: ListingDescriptor, className?: string }) {
+export default function ListingCard({ descriptor, className = '' }: { descriptor: ListingDescriptor, className?: string }) {
 
     const navigate = useNavigate();
 
     const [isSaved, setIsSaved] = useState<boolean>(isListingSaved(descriptor.guid));
+    const [width, setWidth] = useState<number>(0);
+    const containerDiv = useRef<HTMLDivElement>(null);
 
     const toggleSave = () => {
         if (isSaved) {
@@ -21,19 +23,23 @@ export default function ListingCard({ descriptor, className }: { descriptor: Lis
         setIsSaved(prev => !prev);
     }
 
+    useEffect(() => {
+        setWidth(containerDiv.current?.offsetHeight??0);
+    }, [containerDiv])
+
     return(
-        <div className={"bg-(--dark) border-2 border-(--light-dark) rounded-lg h-full relative aspect-square " + className} >
+        <div className={"bg-(--dark) border-2 border-(--light-dark) rounded-lg h-full relative max-w-full " + className} ref={containerDiv} style={{width: width}}>
             <div className="h-3/5 object-fill overflow-clip flex justify-center rounded-lg m-2 bg-(--mid-dark) border-2 border-(--light-dark)">
                 <img className="h-full" src={`${endpointsConfig.BackendStaticUrl}${descriptor?.images[0].relativePath}`}></img>
             </div>
             <div className="font-bold text-2xl flex justify-between h-min overflow-clip truncate">
-                <h1 className="mx-4 max-w-1/2">{descriptor?.title}</h1>
+                <h1 className="mx-4 max-w-1/2 truncate">{descriptor?.title}</h1>
                 <div className="max-w-1/2 text-nowrap">
                     <h1 className="inline-block">{descriptor?.price}</h1>
                     <h1 className="inline-block mr-4 ml-2">{descriptor?.currency}</h1>
                 </div>
             </div>
-            <p className="text-start mx-4 my-2">{descriptor?.description}</p>
+            <p className="text-start mx-4 my-2 max-w-full truncate">{descriptor?.description}</p>
             <div className="flex ml-36 mr-12 justify-between">
                 <Button className="px-2 py-1" onClick={() => navigate(`/listing/${descriptor!.guid}`)}>To listing</Button>
                 <Button variant={isSaved ? "filled" : "standard"} className="aspect-square w-8 " onClick={toggleSave}>

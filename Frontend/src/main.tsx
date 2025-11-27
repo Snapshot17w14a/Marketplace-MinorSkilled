@@ -14,9 +14,10 @@ import SearchResult from './Pages/SearchResult'
 import { fetchSavedListings } from './SavedListings'
 import ForgotPassword from './Pages/ForgotPassword'
 import ChangePassword from './Pages/ChangePassword'
+import EditListing from './Pages/EditListing'
 
 await validateLogin();
-fetchSavedListings();
+await fetchSavedListings();
 
 createRoot(document.getElementById('root')!).render(
   <StrictMode>
@@ -25,7 +26,8 @@ createRoot(document.getElementById('root')!).render(
         <Routes>
           <Route index element={<Home />}/>
           <Route path='listing/:listingId' element={<Listing/>} />
-          <Route path='listingCreator' element={<LisitngCreator/>} />
+          <Route path='listing/creator' element={<LisitngCreator/>} />
+          <Route path='listing/edit/:listingId' element={<EditListing/>} />
           <Route path='account' element={<AccountPage/>}>
             <Route path='register' element={<Register/>} />
             <Route path='login' element={<Login/>} />

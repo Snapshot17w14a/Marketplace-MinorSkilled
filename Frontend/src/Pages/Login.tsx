@@ -5,6 +5,7 @@ import { useNavigate } from 'react-router-dom';
 import { useNotify } from '../Components/NotificationProvider';
 import { requestJWToken, type LoginRequest } from '../Auth';
 import { FetchError } from '../classes/FetchError';
+import responseCodes from '../types/responseCodes';
 
 export default function Login() {
     const emailRef = useRef<HTMLInputElement | null>(null);
@@ -33,12 +34,20 @@ export default function Login() {
         catch (error) {
             if (error instanceof FetchError) {
                 switch(error.code) {
-                    case 404:
+                    case responseCodes.NotFound:
                         notify({
                             header: "User could not be found!",
                             message: "The user with the given credentials could not be found. Please check your login details!",
                             type: 'error'
                         })
+                        break;
+                    case responseCodes.Forbidden:
+                        notify({
+                            header: "Wrong credentials!",
+                            message: "The provided email and password do not match. Try again, or click forgot password to reset your password.",
+                            type: 'error'
+                        });
+                        break;
                 }
             } else {
                 notify({

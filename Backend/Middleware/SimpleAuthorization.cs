@@ -21,17 +21,6 @@ namespace Backend.Middleware
                 return;
             }
 
-            // Get the attributes to check later
-            var roleReq = endpoint.Metadata.GetMetadata<RoleAttribute>();
-            var permsReq = endpoint.Metadata.GetMetadata<PermissionAttribute>();
-
-            // If none of the attributes exist don't run auth logic
-            if (permsReq == null && roleReq == null)
-            {
-                await _next(context);
-                return;
-            }
-
             // Get the auth header from the request, check if its null
             var token = context.Request.Headers.Authorization.ToString();
             if (string.IsNullOrWhiteSpace(token))
@@ -56,6 +45,19 @@ namespace Backend.Middleware
 
             // Fetch the user with the id extracted from the JWT
             var user = await dbContext.Users.FromIdentifier(Guid.Parse(subClaim));
+            context.Items["User"] = user;
+
+            // Get the attributes to check later
+            var roleReq = endpoint.Metadata.GetMetadata<RoleAttribute>();
+            var permsReq = endpoint.Metadata.GetMetadata<PermissionAttribute>();
+
+            // If none of the attributes exist don't run auth logic
+            if (permsReq == null && roleReq == null)
+            {
+                await _next(context);
+                return;
+            }
+
             if (user == null)
             {
                 await _next(context);

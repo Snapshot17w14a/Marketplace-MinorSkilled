@@ -1,16 +1,18 @@
-import { useState, type ChangeEvent, type FormEvent } from "react"
+import { useState, type ChangeEvent, type FormEvent, type JSX } from "react"
 import { useNotify } from "../Components/NotificationProvider";
 import Button from "../Components/Button";
 import { postAuthorized, postXmlHttp } from "../BackendClient";
 import TopNavigation from "../Components/TopNavigation";
 import ProgressBar from "../Components/ProgressBar";
 import { useNavigate } from "react-router-dom";
+import DragElement from "../Components/DragElement";
 
 export default function LisitngCreator() {
 
     const naviagate = useNavigate();
     const notify = useNotify();
 
+    const [topNav] = useState<JSX.Element>(<TopNavigation className="" />);
     const [imageGuids, setImageGuids] = useState<string[]>([]);
     const [listingData, setListingData] = useState({
         title: '',
@@ -57,7 +59,7 @@ export default function LisitngCreator() {
 
     return(
         <div className="h-screen min-h-screen overflow-x-hidden">
-            <TopNavigation className="" />
+            {topNav}
             <div className='flex p-4 pt-16 text-center h-full flex-warp flex-col'>
                 <h1 className="font-bold text-5xl mt-4">Create a listing</h1>
                 <div className="basis-full flex flex-col md:flex-row">
@@ -84,7 +86,8 @@ function ImageUpload( { setImageGuids, className = "" } : { setImageGuids: React
 
     const notify = useNotify();
 
-    const [files, setFiles] = useState<UploadFile[] | null>(null);
+    const [files, setFiles] = useState<UploadFile[] | null>([]);
+    const [previewElements, setPreviewElements] = useState<JSX.Element[]>([]);
 
     const onFileChange = (event: ChangeEvent<HTMLInputElement>) => {
 
@@ -116,16 +119,23 @@ function ImageUpload( { setImageGuids, className = "" } : { setImageGuids: React
             filesPass.push(file);
         }
 
-        setFiles(filesPass.map(f => {
-            const uFile: UploadFile = {
+        const previewElements: JSX.Element[] = [];
+
+        setFiles(filesPass.map((f, index) => {
+
+            const ufile: UploadFile = {
                 file: f,
                 progress: 0,
                 success: false,
                 preview: URL.createObjectURL(f)
-            };
-            
-            return uFile;
+            }
+
+            previewElements.push(<FilePreview key={index} uFile={ufile} index={index} setPreviewElements={setPreviewElements}/>)
+
+            return(ufile);
         }));
+
+        setPreviewElements(previewElements);
     };
 
     const uploadFiles = async () => {
@@ -201,35 +211,62 @@ function ImageUpload( { setImageGuids, className = "" } : { setImageGuids: React
                 </span>
             </div>
             <div className="bg-(--mid-dark) border-2 border-(--light-dark) p-2 rounded-lg grid grid-cols-1 gap-2">
-                {files && 
-                    files.map((file, index) => {
-                        return(<FilePreview uFile={file} key={index}/>)
-                    })
-                }
+                {previewElements}
             </div>
         </div>
     )
 }
 
-function FilePreview({ uFile }: { uFile: UploadFile }) {
+function FilePreview({ uFile, index, setPreviewElements }: { uFile: UploadFile, index: number, setPreviewElements: React.Dispatch<React.SetStateAction<JSX.Element[]>>}) {
+
+    const swapFileIndex = (index1: number, index2: number) => {
+        setPreviewElements((prev) => {
+
+            if (index2 < 0 || index2 >= prev.length)
+                return prev
+
+            const prevOrder = [...prev];
+
+            const p1: { uFile: UploadFile, index: number} = prev[index1].props;
+            const p2: { uFile: UploadFile, index: number} = prev[index2].props;
+
+            prevOrder[index1] = <FilePreview uFile={p2.uFile} index={index1} key={index1} setPreviewElements={setPreviewElements}/>
+            prevOrder[index2] = <FilePreview uFile={p1.uFile} index={index2} key={index2} setPreviewElements={setPreviewElements}/>
+
+            return prevOrder;
+        })
+    }
+
     return(
-        <div className="ring-2 ring-(--light-dark) rounded-lg h-full p-4 flex flex-col justify-between shrink-0 mb-2">
-            <div className="sm:hidden flex flex-wrap">
-                <h1 className="basis-full">{uFile.file.name}</h1>
-                <div className="rounded-lg overflow-clip ring-2 ring-(--light-dark) mt-2 mb-4 basis-full aspect-video flex justify-center">
-                    <img className="object-contain" src={uFile.preview}></img>
-                </div>
-                <ProgressBar progress={uFile.progress} className="basis-full"/>
-            </div>
-            <div className="hidden sm:flex flex-wrap">
-                <div className="basis-full flex mb-2">
-                    <div className="rounded-lg overflow-clip ring-2 ring-(--light-dark) my-2 w-2/3 aspect-video grow-0 flex justify-center items-center">
-                        <img className="object-contain h-full" src={uFile.preview}></img>
+        <div className="ring-2 ring-(--light-dark) rounded-lg h-full p-4 flex flex-col justify-between shrink-0 mb-2 select-none">
+            <DragElement>
+                <div className="sm:hidden flex flex-wrap">
+                    <h1 className="basis-full">{uFile.file.name}</h1>
+                    <div className="rounded-lg overflow-clip ring-2 ring-(--light-dark) mt-2 mb-4 basis-full aspect-video flex justify-center">
+                        <img className="object-contain" src={uFile.preview}></img>
                     </div>
-                    <h1 className="font-bold basis-1/3 shrink-0 text-2xl mt-2">{uFile.file.name}</h1>
+                    <ProgressBar progress={uFile.progress} className="basis-full"/>
                 </div>
-                <ProgressBar progress={uFile.progress} className="basis-full"/>
-            </div>
+                <div className="hidden sm:flex flex-row">
+                    <div className="flex flex-col w-16 shrink-0 justify-center pr-4 select-none">
+                        <Button className="px-2 py-1" onClick={() => swapFileIndex(index, index - 1)}>🡑</Button>
+                        <div className="flex items-center justify-center my-2 relative">
+                            <p className="font-bold text-2xl">{index + 1}</p>
+                        </div>
+                        <Button className="px-2 py-1" onClick={() => swapFileIndex(index, index + 1)}>🡓</Button>
+                    </div>
+                    <div className="flex flex-wrap basis-full">
+                        <div className="basis-full flex mb-2">
+                            <div className="rounded-lg overflow-clip ring-2 ring-(--light-dark) my-2 w-2/3 aspect-video grow-0 flex justify-center items-center">
+                                <img className="object-contain h-full pointer-events-none" src={uFile.preview}></img>
+                            </div>
+                            <h1 className="font-bold basis-1/3 shrink-0 text-2xl mt-2">{uFile.file.name}</h1>
+                        </div>
+                        <ProgressBar progress={uFile.progress} className="basis-full"/>
+                    </div>
+                    
+                </div>
+            </DragElement>
         </div>
     )
 }

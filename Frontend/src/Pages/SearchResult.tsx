@@ -121,7 +121,7 @@ function PageResults({ listings, page } : { listings: ListingDescriptor[], page:
     return(
         <>
             <div className="flex flex-wrap w-full px-2 justify-around">
-                {listings !== undefined && listings.map((listingData, index) => {return(<div className="p-1 h-96 min-w-full sm:min-w-1/6 max-w-full shrink-0 flex justify-center mb-2" key={index}><ListingCard className="h-full" descriptor={listingData}/></div>)})}
+                {listings !== undefined && listings.map((listingData, index) => {return(<div className="p-1 h-96 sm:w-96 w-full shrink-0 flex justify-center mb-2" key={index}><ListingCard className="h-full" descriptor={listingData}/></div>)})}
             </div>
             <Separator text={`Page ${page + 1}`} />
         </>

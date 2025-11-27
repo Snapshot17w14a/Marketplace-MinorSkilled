@@ -1,8 +1,11 @@
 ﻿using System.IdentityModel.Tokens.Jwt;
 using Backend.Database;
+using Backend.Extensions;
 using Backend.Models;
 using Backend.Protocols;
+using Backend.Protocols.DTOs;
 using Backend.Protocols.ListingProtocols;
+using Backend.Roles;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
@@ -30,15 +33,8 @@ namespace Backend.Controllers
                 return BadRequest($"One or more of the provided Guids for images was incorrect.\n{ex.Message}");
             }
 
-            var tokenHandler = new JwtSecurityTokenHandler();
-            var jwt = auth.Authorization;
-            jwt = jwt[7..]; // Ignore the "Bearer " part of the header
-            var decodedToken = tokenHandler.ReadJwtToken(jwt);
+            User? creatingUser = (User?)HttpContext.Items["User"];
 
-            User? creatingUser;
-
-            var userGuid = Guid.Parse(decodedToken.Claims.FirstOrDefault(c => c.Type == "sub")?.Value ?? "");
-            creatingUser = await _context.Users.FirstOrDefaultAsync(u => u.Identifier == userGuid);
             if (creatingUser == null)
                 return BadRequest("The user specified in the authorization token was not found!");
 
@@ -65,7 +61,7 @@ namespace Backend.Controllers
         }
 
         [HttpGet("{guid}")]
-        public async Task<ActionResult<Listing>> Get(Guid guid)
+        public async Task<ActionResult<ListingDTO>> Get(Guid guid)
         {
             var listing = await _context.Listings
                 .Include(l => l.Images
@@ -75,7 +71,9 @@ namespace Backend.Controllers
             if (listing == null)
                 return NotFound();
 
-            return Ok(listing);
+            var user = await _context.Users.FindAsync(listing.UserId);
+
+            return Ok(new ListingDTO(listing, user?.Identifier ?? Guid.Empty));
         }
 
         [HttpGet("{count}")]
@@ -145,6 +143,41 @@ namespace Backend.Controllers
                     maxPrice = 0
                 });
             }
+        }
+
+        [Authorize]
+        [HttpPatch]
+        public async Task<ActionResult> EditListing(EditListingRequest request)
+        {
+            var listing = await _context.Listings.FromGuid(request.ListingGuid);
+
+            if (listing == null)
+                return NotFound();
+
+            var callingUser = ((User)HttpContext.Items["User"]!);
+            if (callingUser.Role != IdentityRole.Admin && listing.UserId != callingUser.Id)
+                return Forbid();
+
+            // Apply changes to the listing object
+            listing.ApplyChanges(request);
+
+            // Apply changes to listing images, order could have changed
+            for (int i = 0; i < request.ImageGuids.Length; i++)
+            {
+                var listingImage = await _context.ListingsImages.FirstOrDefaultAsync(li => li.Guid == request.ImageGuids[i]);
+
+                if (listingImage == null)
+                    continue;
+
+                listingImage.ListingId = listing.Id;
+                listingImage.Index = i;
+            }
+
+            context.Entry(listing).DetectChanges();
+
+            await _context.SaveChangesAsync();
+
+            return Ok();
         }
     }
 }

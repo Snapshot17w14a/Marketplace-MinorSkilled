@@ -2,7 +2,7 @@ import { useNavigate } from 'react-router-dom'
 import { getActiveUser, isLoggedIn as getIsLoggedIn, logOut } from '../Auth';
 import Logo from '../assets/Subtract.svg'
 import Button from './Button'
-import { useEffect, useState } from 'react';
+import { type JSX, useEffect, useState } from 'react';
 import SidePanel from './SidePanel';
 import { getSavedListings } from '../SavedListings';
 import type { SavedListing } from '../types/savedListing';
@@ -20,8 +20,7 @@ export default function TopNavigation({ className = ''}) {
 
     const [isLoggedIn, setIsLoggedIn] = useState<boolean>(false);
     const [savedListingsVisible, setSavedListingsVisible] = useState<boolean>(false);
-
-    const savedListings = <SavedListings />;
+    const [savedListings] = useState<JSX.Element>(<SavedListings />);
 
     const handleLogOut = () => {
         logOut();
@@ -30,7 +29,7 @@ export default function TopNavigation({ className = ''}) {
 
     return(
         <>
-            <nav className={'w-screen h-16 bg-[#262626] border-b-2 border-[#484747] p-2 flex justify-between fixed top-0 drop-shadow-xl drop-shadow-rose-500/50 ' + className}>
+            <nav className={'w-screen h-16 bg-[#262626] border-b-2 border-[#484747] p-2 flex justify-between fixed top-0 drop-shadow-xl drop-shadow-rose-500/50 z-10 ' + className}>
                 <div className='h-full text-nowrap'>
                     <button type='button' className='flex items-center h-full w-12 cursor-pointer' onClick={() => navigate('/')}>
                         <img src={Logo} className='h-full object-contain aspect-square inline-block'></img>
@@ -73,14 +72,15 @@ export default function TopNavigation({ className = ''}) {
         const [listingData, setListingData] = useState<ListingDescriptor[]>([]);
 
         useEffect(() => {
-            setSavedListings(getSavedListings());
-            fetchListings();
+            const saves = getSavedListings();
+            setSavedListings(saves);
+            fetchListings(saves);
         }, [savedListings])
 
-        const fetchListings = async () => {
+        const fetchListings = async (saves: SavedListing[]) => {
             const promises: Promise<ListingDescriptor>[] = [];
 
-            savedListings.forEach(sl => {
+            saves.forEach(sl => {
                 promises.push(getAnonymous<ListingDescriptor>(`Listings/Get/${sl.listingId}`));
             })
 
@@ -101,12 +101,12 @@ export default function TopNavigation({ className = ''}) {
                 <div className='text-center mt-8'>
                     <h1 className='font-bold text-4xl'>Saved listings</h1>
                 </div>
-                <div className='flex items-center gap-4 my-8 flex-col'>
+                <div className='flex items-center gap-4 my-8 px-4 flex-col'>
                     {listingData.length !== 0 && savedListings.map((sl, index) => {
-                        const descriptor = listingData.find(ld => ld.guid === sl.listingId);
+                        const descriptor = listingData.find(ld => ld.listingId === sl.listingId);
                         if (!descriptor) return <div key={index}></div>
                         return(
-                            <ListingCard key={index} descriptor={descriptor}></ListingCard>
+                            <ListingCard key={index} descriptor={descriptor} className='min-h-96 sm:w-96 w-full'></ListingCard>
                         )
                     })}
                 </div>

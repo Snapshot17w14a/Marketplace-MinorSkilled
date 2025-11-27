@@ -12,7 +12,6 @@ using Backend.Roles;
 
 namespace Backend.Controllers
 {
-    [Authorize]
     [Route("api/[controller]/[Action]")]
     [ApiController]
     public class UserController(ApplicationDbContext context, PasswordHashService passwordHasher, JWTGeneratorService jwtGeneratorService, IEmailClient emailClient) : ControllerBase
@@ -23,6 +22,8 @@ namespace Backend.Controllers
         private readonly IEmailClient _emailClient = emailClient;
 
         [HttpGet]
+        [Authorize]
+        [Role(IdentityRole.Admin)]
         public async Task<IEnumerable<UserDTO>> Get() => _context.Users.Cast<UserDTO>();
 
         [HttpGet("{id}")]
@@ -37,6 +38,21 @@ namespace Backend.Controllers
             {
                 user = new UserDTO(user),
                 permissions = _context.PermissionClaims.Where(pc => pc.Role == user.Role).Select(pc => pc.Permission)
+            });
+        }
+
+        [AllowAnonymous]
+        [HttpGet("{guid}")]
+        public async Task<ActionResult> GetUserRole(Guid guid)
+        {
+            var user = await _context.Users.FromIdentifier(guid);
+
+            if (user == null)
+                return NotFound();
+
+            return Ok(new
+            {
+                role = user.Role
             });
         }
 
@@ -123,9 +139,7 @@ namespace Backend.Controllers
             RefreshToken? rft = await _context.RefreshTokens.Where(rft => rft.TokenId == decodedTokenId).FirstOrDefaultAsync();
 
             if (rft == null)
-            {
                 return NotFound();
-            }
 
             if (rft.Expiration < DateTime.UtcNow)
             {
@@ -137,9 +151,7 @@ namespace Backend.Controllers
             User? user = await _context.Users.FromIdentifier(rft.UserId);
 
             if (user == null)
-            {
                 return NotFound();
-            }
 
             _context.RefreshTokens.Remove(rft);
             await _context.SaveChangesAsync();
