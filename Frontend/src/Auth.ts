@@ -1,7 +1,7 @@
 import { jwtDecode } from "jwt-decode";
 import { type UserData } from "./types/userData";
 import { ParseToken as rftDecode } from "./types/refreshToken";
-import { getAnonymous, postAnonymous } from "./BackendClient";
+import { getAnonymous, getAuthorized, postAnonymous } from "./BackendClient";
 
 let loggedIn: boolean = false;
 let activeUserData: UserData | undefined;
@@ -71,6 +71,11 @@ export async function requestJWToken(loginDetails: LoginRequest, allowThrowing: 
         
         return false;
     }
+}
+
+export async function request2FASecret(): Promise<string> {
+    const data = await getAuthorized<{key: string}>('user/enable2fa');
+    return data.key;
 }
 
 export async function refreshLogin(): Promise<boolean> {
@@ -146,5 +151,6 @@ type LoginResult = {
 
 export type LoginRequest = {
     email: string,
-    password: string
+    password: string,
+    totp?: string
 }

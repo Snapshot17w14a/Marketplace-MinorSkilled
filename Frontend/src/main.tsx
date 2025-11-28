@@ -15,6 +15,8 @@ import { fetchSavedListings } from './SavedListings'
 import ForgotPassword from './Pages/ForgotPassword'
 import ChangePassword from './Pages/ChangePassword'
 import EditListing from './Pages/EditListing'
+import EnableMFA from './Pages/EnableMFA'
+import EnterMFA from './Pages/EnterMFA'
 
 await validateLogin();
 await fetchSavedListings();
@@ -33,6 +35,8 @@ createRoot(document.getElementById('root')!).render(
             <Route path='login' element={<Login/>} />
             <Route path='forgotPassword' element={<ForgotPassword/>} />
             <Route path='changePassword/:resetToken' element={<ChangePassword/>} />
+            <Route path='enableMFA' element={<EnableMFA/>} />
+            <Route path='enterMFA' element={<EnterMFA/>} />
           </Route>
           <Route path='search/:searchPhrase' element={<SearchResult/>} />
         </Routes>

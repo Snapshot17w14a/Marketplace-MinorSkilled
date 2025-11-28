@@ -1,25 +1,28 @@
 ﻿using Backend.Database;
+using Backend.Extensions;
+using Backend.Interfaces;
+using Backend.Iterfaces;
 using Backend.Models;
+using Backend.Protocols.DTOs;
+using Backend.Protocols.UserProtocols;
+using Backend.Roles;
 using Backend.Services;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
-using Backend.Protocols.UserProtocols;
-using Backend.Iterfaces;
-using Backend.Extensions;
-using Backend.Protocols.DTOs;
-using Backend.Roles;
+using OtpNet;
 
 namespace Backend.Controllers
 {
     [Route("api/[controller]/[Action]")]
     [ApiController]
-    public class UserController(ApplicationDbContext context, PasswordHashService passwordHasher, JWTGeneratorService jwtGeneratorService, IEmailClient emailClient) : ControllerBase
+    public class UserController(ApplicationDbContext context, PasswordHashService passwordHasher, JWTGeneratorService jwtGeneratorService, IEmailClient emailClient, I2FAProvider mfaProvider) : ControllerBase
     {
         private readonly ApplicationDbContext _context = context;
         private readonly PasswordHashService _passwordHasher = passwordHasher;
         private readonly JWTGeneratorService _jwtGeneratorService = jwtGeneratorService;
         private readonly IEmailClient _emailClient = emailClient;
+        private readonly I2FAProvider _mfaProivder = mfaProvider;
 
         [HttpGet]
         [Authorize]
@@ -104,20 +107,23 @@ namespace Backend.Controllers
             if (user.Password != _passwordHasher.HashPassword(loginRequest.Password))
                 return Forbid();
 
-            // If there are no tokens in the collection, the LINQ query will throw an InvalidOperationException, we can safely ignore this
-            try
+            var invalidRft = await _context.RefreshTokens.FirstOrDefaultAsync(rft => rft.UserId == user.Identifier);
+
+            if (invalidRft != null)
             {
-                var invalidRft = await _context.RefreshTokens.FirstOrDefaultAsync(rft => rft.UserId == user.Identifier);
-
-                if (invalidRft != null)
-                {
-                    _context.RefreshTokens.Remove(invalidRft);
-                    await _context.SaveChangesAsync();
-                }
+                _context.RefreshTokens.Remove(invalidRft);
+                await _context.SaveChangesAsync();
             }
-            catch (InvalidOperationException) { }
-            
 
+            if (user.IsMFAEnabled)
+            {
+                if (string.IsNullOrEmpty(loginRequest.Totp))
+                    return Unauthorized("User has MFA enabled, provide totp code to log in");
+
+                if (!_mfaProivder.ValidateOTP(loginRequest.Totp, user.MFASecret!))
+                    return Forbid();
+            }
+            
             return Ok(new {
                 accessToken = _jwtGeneratorService.GenerateJWToken(user),
                 refreshToken = await _jwtGeneratorService.GenerateRefreshToken(user),
@@ -252,5 +258,47 @@ To reset your password follow the link below.</p>
 
             return NoContent();
         }
+
+        [HttpGet]
+        public async Task<ActionResult> Enable2FA()
+        {
+            var callingUser = (User?)HttpContext.Items["User"];
+
+            if (callingUser == null)
+                return NotFound();
+
+            if (callingUser.IsMFAEnabled)
+                return BadRequest();
+
+            var key = _mfaProivder.GetSecretKey(callingUser.Identifier, callingUser.Email, callingUser.Password);
+
+            callingUser.EnableMFA(key);
+
+            _context.Entry(callingUser).DetectChanges();
+            await _context.SaveChangesAsync();
+
+            return Ok(new
+            {
+                key
+            });
+        }
+
+        [AllowAnonymous]
+        [HttpPost]
+        public async Task<ActionResult> ValidateOTP([FromBody] OTPRequest request)
+        {
+            var user = await _context.Users.FromIdentifier(request.userId);
+            if (user == null || !user.IsMFAEnabled)
+                return NotFound();
+
+            var secret = user.MFASecret!;
+
+            var totp = new Totp(Base32Encoding.ToBytes(secret));
+            var verified = totp.VerifyTotp(request.pass, out _);
+
+            return verified ? Ok() : Forbid();
+        }
+
+        public record OTPRequest(string pass, Guid userId);
     }
 }

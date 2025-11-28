@@ -29,7 +29,10 @@ export default function Login() {
 
         try {
             await requestJWToken(loginReqest, true);
-            navigate("/");
+            fade();
+            setTimeout(() => {
+                navigate("/account/enableMFA");
+            }, 500)
         }
         catch (error) {
             if (error instanceof FetchError) {
@@ -47,6 +50,17 @@ export default function Login() {
                             message: "The provided email and password do not match. Try again, or click forgot password to reset your password.",
                             type: 'error'
                         });
+                        break;
+                    case responseCodes.Unauthorized:
+                        fade();
+                        setTimeout(() => {
+                            navigate('/account/enterMFA', {
+                                state: {
+                                    email: loginReqest.email,
+                                    password: loginReqest.password
+                                }
+                            });
+                        }, 500);
                         break;
                 }
             } else {

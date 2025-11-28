@@ -1,6 +1,7 @@
 using System.Text;
 using Backend.Database;
 using Backend.Extensions;
+using Backend.Interfaces;
 using Backend.Iterfaces;
 using Backend.Middleware;
 using Backend.Services;
@@ -50,6 +51,7 @@ builder.Services.AddScoped<RoleManager>();
 builder.Services.AddSingleton<PasswordHashService>();
 builder.Services.AddScoped<JWTGeneratorService>();
 builder.Services.AddScoped<IEmailClient, BrevoEmailClient>();
+builder.Services.AddScoped<I2FAProvider, OtpNET2FAProvider>();
 
  // Allow frontend to make calls from local network with CORS
 builder.Services.AddCors(options =>

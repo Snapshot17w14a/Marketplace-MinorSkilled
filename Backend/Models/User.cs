@@ -11,5 +11,14 @@ namespace Backend.Models
         public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
         public Guid Identifier { get; set; } = Guid.NewGuid();
         public required string Role { get; set; } = IdentityRole.Member;
+
+        public bool IsMFAEnabled { get; set; } = false;
+        public string? MFASecret { get; set; }
+
+        public void EnableMFA(string secret)
+        {
+            IsMFAEnabled = true;
+            MFASecret = secret;
+        }
     }
 }

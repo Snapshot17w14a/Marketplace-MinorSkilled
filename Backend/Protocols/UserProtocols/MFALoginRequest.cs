@@ -1,9 +1,9 @@
 ﻿namespace Backend.Protocols.UserProtocols
 {
-    public class LoginRequest
+    public class MFALoginRequest
     {
         public required string Email { get; set; }
         public required string Password { get; set; }
-        public string? Totp { get; set; }
+        public required string Totp { get; set; }
     }
 }
