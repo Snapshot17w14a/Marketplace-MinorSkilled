@@ -13,6 +13,7 @@ namespace Backend.Database
         public DbSet<PasswordResetToken> ResetTokens { get; set; }
         public DbSet<UserRole> UserRoles { get; set; }
         public DbSet<PermissionClaim> PermissionClaims { get; set; }
+        public DbSet<VerificationToken> VerificationTokens { get; set; }
 
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
@@ -37,6 +38,9 @@ namespace Backend.Database
             modelBuilder.Entity<PermissionClaim>()
                 .HasKey(pc => pc.Id);
 
+            modelBuilder.Entity<VerificationToken>()
+                .HasKey(vt => vt.Id);
+
             modelBuilder.Entity<User>()
                 .HasMany<Listing>()
                 .WithOne()
@@ -60,6 +64,11 @@ namespace Backend.Database
                 .WithOne()
                 .HasForeignKey(pc => pc.Role)
                 .IsRequired();
+
+            modelBuilder.Entity<VerificationToken>()
+                .HasOne<User>()
+                .WithOne()
+                .HasPrincipalKey<VerificationToken>(vt => vt.UserId);
         }
     }
 }

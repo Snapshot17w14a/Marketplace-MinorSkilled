@@ -3,6 +3,7 @@ using System;
 using Backend.Database;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 
 #nullable disable
@@ -10,9 +11,11 @@ using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 namespace Backend.Migrations
 {
     [DbContext(typeof(ApplicationDbContext))]
-    partial class ApplicationDbContextModelSnapshot : ModelSnapshot
+    [Migration("20251201100036_isUserVerified")]
+    partial class isUserVerified
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder.HasAnnotation("ProductVersion", "9.0.9");
@@ -200,15 +203,9 @@ namespace Backend.Migrations
                         .IsRequired()
                         .HasColumnType("TEXT");
 
-                    b.Property<Guid?>("VerificationTokenUserId")
-                        .HasColumnType("TEXT");
-
                     b.HasKey("Id");
 
                     b.HasIndex("Role");
-
-                    b.HasIndex("VerificationTokenUserId")
-                        .IsUnique();
 
                     b.ToTable("Users");
                 });
@@ -221,24 +218,6 @@ namespace Backend.Migrations
                     b.HasKey("Role");
 
                     b.ToTable("UserRoles");
-                });
-
-            modelBuilder.Entity("Backend.Models.VerificationToken", b =>
-                {
-                    b.Property<int>("Id")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("INTEGER");
-
-                    b.Property<string>("Token")
-                        .IsRequired()
-                        .HasColumnType("TEXT");
-
-                    b.Property<Guid>("UserId")
-                        .HasColumnType("TEXT");
-
-                    b.HasKey("Id");
-
-                    b.ToTable("VerificationTokens");
                 });
 
             modelBuilder.Entity("Backend.Models.Listing", b =>
@@ -275,11 +254,6 @@ namespace Backend.Migrations
                         .HasForeignKey("Role")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
-
-                    b.HasOne("Backend.Models.VerificationToken", null)
-                        .WithOne()
-                        .HasForeignKey("Backend.Models.User", "VerificationTokenUserId")
-                        .HasPrincipalKey("Backend.Models.VerificationToken", "UserId");
                 });
 
             modelBuilder.Entity("Backend.Models.Listing", b =>

@@ -49,7 +49,7 @@ builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme).AddJw
 builder.Services.AddScoped<RoleManager>();
 
 builder.Services.AddSingleton<PasswordHashService>();
-builder.Services.AddScoped<JWTGeneratorService>();
+builder.Services.AddScoped<TokenService>();
 builder.Services.AddScoped<IEmailClient, BrevoEmailClient>();
 builder.Services.AddScoped<I2FAProvider, OtpNET2FAProvider>();
 
@@ -75,7 +75,7 @@ brevo_csharp.Client.Configuration.Default.ApiKey.Add("api-key", apiKey);
 app.Use(async (context, next) =>
 {
     Console.WriteLine("Incoming request:");
-    Console.WriteLine("Authorization: " + context.Request.Headers["Authorization"]);
+    Console.WriteLine("Authorization: " + context.Request.Headers.Authorization);
     await next();
 });
 

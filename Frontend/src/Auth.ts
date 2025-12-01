@@ -62,7 +62,7 @@ export async function validateLogin(): Promise<boolean> {
 
 export async function requestJWToken(loginDetails: LoginRequest, allowThrowing: boolean = false): Promise<boolean> {
     try {
-        const data = await postAnonymous<LoginResult>('user/Login', loginDetails);
+        const data = await postAnonymous<LoginResult>('users/Login', loginDetails);
         await processLoginResult(data);
         return true;
     }
@@ -74,7 +74,7 @@ export async function requestJWToken(loginDetails: LoginRequest, allowThrowing: 
 }
 
 export async function request2FASecret(): Promise<string> {
-    const data = await getAuthorized<{key: string}>('user/enable2fa');
+    const data = await getAuthorized<{key: string}>('users/enable2fa');
     return data.key;
 }
 
@@ -84,7 +84,7 @@ export async function refreshLogin(): Promise<boolean> {
     if(!refreshCookie) return false;
 
     try {
-        const data = await postAnonymous<LoginResult>('user/RefreshLogin', { "token": refreshCookie.value! });
+        const data = await postAnonymous<LoginResult>('users/RefreshLogin', { "token": refreshCookie.value! });
         await processLoginResult(data);
         return true;
     }
@@ -113,7 +113,7 @@ async function processLoginResult(data: LoginResult) {
     const jwt = jwtDecode(data.accessToken);
     const rft = rftDecode(data.refreshToken);
 
-    var response = await getAnonymous<{ role: string }>(`User/GetUserRole/${jwt.sub!}`);
+    var response = await getAnonymous<{ role: string }>(`users/GetUserRole/${jwt.sub!}`);
     userRole = response.role;
     data.userData.role = userRole;
     

@@ -94,7 +94,7 @@ function DisplayQR({ secret } : { secret: string }) {
     const navigate = useNavigate();
 
     const [showSecret, setShowSecret] = useState<boolean>(false);
-    const [progress, setProgress] = useState<boolean>(false);
+    const [progress] = useState<boolean>(false);
 
     return(
         <>

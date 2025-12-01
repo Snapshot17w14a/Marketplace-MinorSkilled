@@ -17,6 +17,7 @@ import ChangePassword from './Pages/ChangePassword'
 import EditListing from './Pages/EditListing'
 import EnableMFA from './Pages/EnableMFA'
 import EnterMFA from './Pages/EnterMFA'
+import VerifyAccount from './Pages/VerifyAccount'
 
 await validateLogin();
 await fetchSavedListings();
@@ -37,6 +38,7 @@ createRoot(document.getElementById('root')!).render(
             <Route path='changePassword/:resetToken' element={<ChangePassword/>} />
             <Route path='enableMFA' element={<EnableMFA/>} />
             <Route path='enterMFA' element={<EnterMFA/>} />
+            <Route path='verifyAccount/:verificationCode' element={<VerifyAccount/>} />
           </Route>
           <Route path='search/:searchPhrase' element={<SearchResult/>} />
         </Routes>

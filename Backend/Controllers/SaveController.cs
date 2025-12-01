@@ -67,7 +67,7 @@ namespace Backend.Controllers
             }
             catch
             {
-                savedListings = Array.Empty<SavedListing>();
+                savedListings = [];
             }
 
             return Ok(savedListings);

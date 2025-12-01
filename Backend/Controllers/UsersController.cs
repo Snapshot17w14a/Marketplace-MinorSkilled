@@ -16,11 +16,11 @@ namespace Backend.Controllers
 {
     [Route("api/[controller]/[Action]")]
     [ApiController]
-    public class UserController(ApplicationDbContext context, PasswordHashService passwordHasher, JWTGeneratorService jwtGeneratorService, IEmailClient emailClient, I2FAProvider mfaProvider) : ControllerBase
+    public class UsersController(ApplicationDbContext context, PasswordHashService passwordHasher, TokenService tokenService, IEmailClient emailClient, I2FAProvider mfaProvider) : ControllerBase
     {
         private readonly ApplicationDbContext _context = context;
         private readonly PasswordHashService _passwordHasher = passwordHasher;
-        private readonly JWTGeneratorService _jwtGeneratorService = jwtGeneratorService;
+        private readonly TokenService _tokenService = tokenService;
         private readonly IEmailClient _emailClient = emailClient;
         private readonly I2FAProvider _mfaProivder = mfaProvider;
 
@@ -30,7 +30,9 @@ namespace Backend.Controllers
         public async Task<IEnumerable<UserDTO>> Get() => _context.Users.Cast<UserDTO>();
 
         [HttpGet("{id}")]
-        public async Task<ActionResult> Get(int id)
+        [Authorize]
+        [Role(IdentityRole.Admin)]
+        public async Task<ActionResult> GetDetailed(int id)
         {
             var user = await _context.Users.FindAsync(id);
 
@@ -42,6 +44,17 @@ namespace Backend.Controllers
                 user = new UserDTO(user),
                 permissions = _context.PermissionClaims.Where(pc => pc.Role == user.Role).Select(pc => pc.Permission)
             });
+        }
+
+        [HttpGet("{guid}")]
+        public async Task<ActionResult> Get(Guid guid)
+        {
+            var user = await _context.Users.FromIdentifier(guid);
+
+            if (user == null) 
+                return NotFound();
+
+            return Ok((UserDTO)user);
         }
 
         [AllowAnonymous]
@@ -125,8 +138,8 @@ namespace Backend.Controllers
             }
             
             return Ok(new {
-                accessToken = _jwtGeneratorService.GenerateJWToken(user),
-                refreshToken = await _jwtGeneratorService.GenerateRefreshToken(user),
+                accessToken = _tokenService.GenerateJWToken(user),
+                refreshToken = await _tokenService.GenerateRefreshToken(user),
                 userData = new
                 {
                     username = user.Name,
@@ -163,8 +176,8 @@ namespace Backend.Controllers
             await _context.SaveChangesAsync();
 
             return Ok(new {
-                accessToken = _jwtGeneratorService.GenerateJWToken(user),
-                refreshToken = await _jwtGeneratorService.GenerateRefreshToken(user),
+                accessToken = _tokenService.GenerateJWToken(user),
+                refreshToken = await _tokenService.GenerateRefreshToken(user),
                 userData = new
                 {
                     username = user.Name,
@@ -212,19 +225,19 @@ namespace Backend.Controllers
             _context.ResetTokens.Add(prt);
             await _context.SaveChangesAsync();
 
-            _ = Task.Run(() => _emailClient.SendEmail(request.Email, "Password reset request",
-                string.Format(@"
-<h1>A request was made to reset your password</h1>
-<p>Dear {0}, we got a request to reset your password.
-If this was not you ignore this message.
-To reset your password follow the link below.</p>
-<small>The link expires in 5 minutes</small></br>
-<a href='http://localhost:5173/account/changePassword/{1}'>Reset link</a>
-<p>Thank you for using our marketplace! Stay awesome!</p>
-                ", user.Name, resetToken)
-                ));
+            var html = System.IO.File.ReadAllText(Directory.GetCurrentDirectory() + "/html/ForgotPassword.html");
 
-            return Ok("Reset token sent!");
+            html = html
+                .Replace("{Username}", user.Name)
+                .Replace("{ResetToken}", resetToken.ToString());
+
+            //_ = Task.Run(() =>
+            //{
+            //    _emailClient.SendEmail(request.Email, "Password reset request", html);
+            //});
+
+
+            return NoContent();
         }
 
         [HttpPost]
@@ -254,6 +267,9 @@ To reset your password follow the link below.</p>
 
             user.Password = _passwordHasher.HashPassword(request.Password);
             _context.Entry(user).Property(u => u.Password).IsModified = true;
+
+            _context.ResetTokens.Remove(prt);
+
             await _context.SaveChangesAsync();
 
             return NoContent();
@@ -285,20 +301,69 @@ To reset your password follow the link below.</p>
 
         [AllowAnonymous]
         [HttpPost]
-        public async Task<ActionResult> ValidateOTP([FromBody] OTPRequest request)
+        public async Task<ActionResult> ValidateOTP([FromBody] OTPValidateRequest request)
         {
-            var user = await _context.Users.FromIdentifier(request.userId);
+            var user = await _context.Users.FromIdentifier(request.UserId);
             if (user == null || !user.IsMFAEnabled)
                 return NotFound();
 
             var secret = user.MFASecret!;
 
             var totp = new Totp(Base32Encoding.ToBytes(secret));
-            var verified = totp.VerifyTotp(request.pass, out _);
+            var verified = totp.VerifyTotp(request.Pass, out _);
 
             return verified ? Ok() : Forbid();
         }
 
-        public record OTPRequest(string pass, Guid userId);
+        [HttpGet]
+        [Authorize]
+        public async Task<ActionResult> RequestVerification()
+        {
+            User? user = (User?)HttpContext.Items["User"];
+
+            if (user == null)
+                return NotFound();
+
+            if (user.IsVerified)
+                return Conflict();
+
+            var token = await _context.VerificationTokens.FirstOrDefaultAsync(vt => vt.UserId == user.Identifier);
+
+            if (token != null)
+                return Forbid();
+
+            var verificationCode = await _tokenService.GenerateVerificationToken(user);
+
+            var html = System.IO.File.ReadAllText(Directory.GetCurrentDirectory() + "/html/VerificaitonRequest.html")
+                .Replace("{VerificationCode}", verificationCode);
+
+            _ = Task.Run(() => _emailClient.SendEmail(user.Email, "Verify your account", html));
+
+            return NoContent();
+        }
+
+        [HttpGet("{verificationCode}")]
+        [Authorize]
+        public async Task<ActionResult> VerifyAccount(string verificationCode)
+        {
+            User? user = (User?)HttpContext.Items["User"];
+
+            if (user == null)
+                return NotFound();
+
+            var token = await _context.VerificationTokens.FirstOrDefaultAsync(vt => vt.UserId == user.Identifier);
+
+            if (token == null)
+                return NotFound();
+
+            user.IsVerified = true;
+            _context.Entry(user).DetectChanges();
+
+            _context.VerificationTokens.Remove(token);
+
+            await _context.SaveChangesAsync();
+
+            return token.Token == verificationCode ? NoContent() : Forbid();
+        }
     }
 }

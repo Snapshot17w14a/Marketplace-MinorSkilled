@@ -33,7 +33,7 @@ export default function Register(){
         }
 
         try{
-            await postAnonymous("User/Create", userData);
+            await postAnonymous("users/Create", userData);
 
             navigate("/account/login");
         }

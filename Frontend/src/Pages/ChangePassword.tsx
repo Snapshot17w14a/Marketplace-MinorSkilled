@@ -34,7 +34,7 @@ export default function ChangePassword() {
         }
 
         try {
-            await postAnonymous<string>('User/ResetPassword', data);
+            await postAnonymous<string>('users/ResetPassword', data);
         }
         catch (e) {
             if (e instanceof FetchError){

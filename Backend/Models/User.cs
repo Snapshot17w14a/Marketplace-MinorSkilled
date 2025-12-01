@@ -15,6 +15,8 @@ namespace Backend.Models
         public bool IsMFAEnabled { get; set; } = false;
         public string? MFASecret { get; set; }
 
+        public bool IsVerified { get; set; } = false;
+
         public void EnableMFA(string secret)
         {
             IsMFAEnabled = true;
