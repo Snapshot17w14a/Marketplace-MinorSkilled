@@ -5,6 +5,7 @@ using Backend.Interfaces;
 using Backend.Iterfaces;
 using Backend.Middleware;
 using Backend.Services;
+using Backend.Services.Background;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.IdentityModel.Logging;
@@ -53,6 +54,9 @@ builder.Services.AddScoped<TokenService>();
 builder.Services.AddScoped<IEmailClient, BrevoEmailClient>();
 builder.Services.AddScoped<I2FAProvider, OtpNET2FAProvider>();
 
+builder.Services.AddHostedService<TokenCleanerService>();
+builder.Services.AddHostedService<ImageCleanupService>();
+
  // Allow frontend to make calls from local network with CORS
 builder.Services.AddCors(options =>
 {
@@ -71,13 +75,6 @@ var app = builder.Build();
 var apiKey = config["Secrets:BrevoAPIKey"];
 if (string.IsNullOrEmpty(apiKey)) throw new Exception("The mail client API key could not be found in the config");
 brevo_csharp.Client.Configuration.Default.ApiKey.Add("api-key", apiKey);
-
-app.Use(async (context, next) =>
-{
-    Console.WriteLine("Incoming request:");
-    Console.WriteLine("Authorization: " + context.Request.Headers.Authorization);
-    await next();
-});
 
 //Configure the HTTP request pipeline.
 if (app.Environment.IsDevelopment())
