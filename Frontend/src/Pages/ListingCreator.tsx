@@ -6,6 +6,7 @@ import TopNavigation from "../Components/TopNavigation";
 import ProgressBar from "../Components/ProgressBar";
 import { useNavigate } from "react-router-dom";
 import DragElement from "../Components/DragElement";
+import fileConfig from '../Configs/uploads.config';
 
 export default function LisitngCreator() {
 
@@ -13,13 +14,15 @@ export default function LisitngCreator() {
     const notify = useNotify();
 
     const [topNav] = useState<JSX.Element>(<TopNavigation className="" />);
-    const [imageGuids, setImageGuids] = useState<string[]>([]);
     const [listingData, setListingData] = useState({
         title: '',
         description: '',
         price: '',
         currency: ''
     })
+
+    const [files, setFiles] = useState<UploadFile[] | null>([]);
+    const [previewElements, setPreviewElements] = useState<JSX.Element[]>([]);
 
     const onInputChange = (event: ChangeEvent<HTMLInputElement>) => {
         const { name, value } = event.target;
@@ -32,8 +35,10 @@ export default function LisitngCreator() {
     const onListingSubmit = async (event: FormEvent<HTMLFormElement>) => {
         event.preventDefault();
 
-        console.log(imageGuids);
-        if (imageGuids.length == 0)
+        const successfulGuids = await uploadFiles() ?? [];
+
+        console.log(successfulGuids);
+        if (successfulGuids.length == 0)
         {
             notify({
                 header: "No images selected!",
@@ -49,45 +54,13 @@ export default function LisitngCreator() {
             description: listingData.description,
             price: +listingData.price,
             currency: listingData.currency,
-            linkedImages: imageGuids
+            linkedImages: successfulGuids
         }
 
         const response = await (await postAuthorized('Listings/CreateListing', listing)).json();
 
         naviagate(`/listing/${response.guid}`);
     }
-
-    return(
-        <div className="h-screen min-h-screen overflow-x-hidden">
-            {topNav}
-            <div className='flex p-4 pt-16 text-center h-full flex-warp flex-col'>
-                <h1 className="font-bold text-5xl mt-4">Create a listing</h1>
-                <div className="basis-full flex flex-col md:flex-row">
-                    <ImageUpload className="basis-1/3" setImageGuids={setImageGuids}/>
-                    <div className="basis-2/3 mt-4 text-start px-4">
-                        <h1 className="font-bold text-4xl mb-4">Details</h1>
-                        <form className="flex flex-wrap justify-center gap-8" onSubmit={onListingSubmit}>
-                            <input type="text" onChange={onInputChange} required name="title" className="textinput-standard" placeholder="Title"></input>
-                            <input type="text" onChange={onInputChange} required name="description" className="textinput-standard" placeholder="Description"></input>
-                            <input type="text" onChange={onInputChange} required name="price" className="textinput-standard" placeholder="Price"></input>
-                            <input type="text" onChange={onInputChange} required name="currency" className="textinput-standard" placeholder="Currency"></input>
-                            <Button className="px-4 py-2" variant="filled" type="submit">Submit</Button>
-                        </form>
-                    </div>    
-                </div>
-            </div>
-        </div>
-    )
-}
-
-function ImageUpload( { setImageGuids, className = "" } : { setImageGuids: React.Dispatch<React.SetStateAction<string[]>>, className: string }) {
-
-    const maxSizeBytes = 5 * 1024 * 1024;
-
-    const notify = useNotify();
-
-    const [files, setFiles] = useState<UploadFile[] | null>([]);
-    const [previewElements, setPreviewElements] = useState<JSX.Element[]>([]);
 
     const onFileChange = (event: ChangeEvent<HTMLInputElement>) => {
 
@@ -107,7 +80,7 @@ function ImageUpload( { setImageGuids, className = "" } : { setImageGuids: React
                 });
                 continue;
             }
-            if (file.size > maxSizeBytes) {
+            if (file.size > fileConfig.maxFilesizeBytes) {
                 notify({
                     type: 'warning',
                     header: 'File is too large!',
@@ -141,22 +114,22 @@ function ImageUpload( { setImageGuids, className = "" } : { setImageGuids: React
     const uploadFiles = async () => {
         if (!files) return;
 
-        let uploadPromises
-        try{
+        let uploadPromises;
+        try {
             uploadPromises = files.map(async (uFile, index) => {
-            
-            const formData = new FormData();
-            formData.append('file', uFile.file);
+                
+                const formData = new FormData();
+                formData.append('file', uFile.file);
 
-            const onProgress = (event: ProgressEvent) => {
-                if (event.lengthComputable) {
-                    setFiles(updateUFileAtIndex(index, event.loaded / event.total));
-                    console.log(`progress: ${uFile.progress}`);
+                const onProgress = (event: ProgressEvent) => {
+                    if (event.lengthComputable) {
+                        setFiles(updateUFileAtIndex(index, event.loaded / event.total));
+                        console.log(`progress: ${uFile.progress}`);
+                    }
                 }
-            }
 
-            return postXmlHttp<UploadResult>('Images/UploadImage', formData, onProgress, [{ key: "index", value: `${index}` }])
-        });
+                return postXmlHttp<UploadResult>('Images/UploadImage', formData, onProgress, [{ key: "index", value: `${index}` }])
+            });
         }
         catch(e) { console.log(e); return; }
 
@@ -184,9 +157,9 @@ function ImageUpload( { setImageGuids, className = "" } : { setImageGuids: React
             }
         })
 
-        setImageGuids(successfullGuids);
+        return successfullGuids;
     };
-    
+
     const updateUFileAtIndex = (index: number, progress: number): UploadFile[] | null => {
         if (!files) return null;
 
@@ -197,6 +170,31 @@ function ImageUpload( { setImageGuids, className = "" } : { setImageGuids: React
     }
 
     return(
+        <div className="h-screen min-h-screen overflow-x-hidden">
+            {topNav}
+            <div className='flex p-4 pt-16 text-center h-full flex-warp flex-col'>
+                <h1 className="font-bold text-5xl mt-4">Create a listing</h1>
+                <div className="basis-full flex flex-col md:flex-row">
+                    <ImageUpload className="basis-1/3" onFileChange={onFileChange} previewElements={previewElements}/>
+                    <div className="basis-2/3 mt-4 text-start px-4">
+                        <h1 className="font-bold text-4xl mb-4">Details</h1>
+                        <form className="flex flex-wrap justify-center gap-8" onSubmit={onListingSubmit}>
+                            <input type="text" onChange={onInputChange} required name="title" className="textinput-standard" placeholder="Title"></input>
+                            <input type="text" onChange={onInputChange} required name="description" className="textinput-standard" placeholder="Description"></input>
+                            <input type="text" onChange={onInputChange} required name="price" className="textinput-standard" placeholder="Price"></input>
+                            <input type="text" onChange={onInputChange} required name="currency" className="textinput-standard" placeholder="Currency"></input>
+                            <Button className="px-4 py-2" variant="filled" type="submit">Submit</Button>
+                        </form>
+                    </div>    
+                </div>
+            </div>
+        </div>
+    )
+}
+
+function ImageUpload( { onFileChange, className = '', previewElements } : { onFileChange: (e: ChangeEvent<HTMLInputElement>) => void, className?: string, previewElements: JSX.Element[] }) {    
+
+    return(
         <div className={"basis-full px-4 mt-4 flex flex-col " + className}>
             <div className="flex justify-between items-center h-min mb-4">
                 <h1 className="inline-block font-bold text-4xl">Images</h1>
@@ -205,9 +203,6 @@ function ImageUpload( { setImageGuids, className = "" } : { setImageGuids: React
                         Select image
                         <input hidden multiple type="file" accept="image/*" onChange={onFileChange}></input>
                     </label>
-                    <Button className="mx-2 px-2 py-1" onClick={uploadFiles} disabled={!files}>
-                        Upload
-                    </Button>
                 </span>
             </div>
             <div className="bg-(--mid-dark) border-2 border-(--light-dark) p-2 rounded-lg grid grid-cols-1 gap-2">

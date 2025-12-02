@@ -9,4 +9,5 @@ export type ListingDescriptor = {
     currency: string,
     createdAt: string,
     listingId: string,
+    guid: string,
 }
