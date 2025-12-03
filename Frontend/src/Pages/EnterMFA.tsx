@@ -28,6 +28,9 @@ export default function EnterMFA() {
 
         // Check for specific control keys
         switch (e.key){
+            case 'Enter':
+                handleSubmit();
+                return;
             case 'Backspace':
                 const current = inputRefs[i];
                 if (!current.current)
@@ -81,8 +84,8 @@ export default function EnterMFA() {
         nextInput.current.focus();
     }
 
-    const handleSubmit = async (e: FormEvent) => {
-        e.preventDefault();
+    const handleSubmit = async (e?: FormEvent) => {
+        e?.preventDefault();
 
         var totp = '';
 
@@ -92,6 +95,9 @@ export default function EnterMFA() {
 
             totp += input.current.value;
         })
+
+        if (totp.length < 6)
+            return;
 
         try {
             await requestJWToken({
@@ -123,19 +129,23 @@ export default function EnterMFA() {
     }
 
     return(
-        <div className="flex content-start flex-wrap w-full h-full text-center py-8 px-12">
-            <h1 className="font-bold text-4xl mb-4">Enter authentication code</h1>
-            <p>Open your Google Authenticator app, and enter the 6-digit number under your marketplace account</p>
+        <div className="">
+            
+            <div className="space-y-2 text-center">
+                <h2 className="text-2xl">Enter authentication code</h2>
+                <p className="text-sm text-neutral-300">Open your Google Authenticator app, and enter the 6-digit number under your marketplace account</p>
+            </div>
+
             <form className="flex flex-col w-full items-center" onSubmit={handleSubmit}>
                 <div className="flex gap-2 my-8 justify-around">
-                    <input ref={inputRefs[0]} type="text" className="ring-2 ring-white rounded-lg size-12 text-center text-2xl" inputMode="numeric" pattern="[0-9]*" size={1} onKeyDown={e => handleKeyUp(e, 0)} required autoFocus></input>
-                    <input ref={inputRefs[1]} type="text" className="ring-2 ring-white rounded-lg size-12 text-center text-2xl" inputMode="numeric" pattern="[0-9]*" size={1} onKeyDown={e => handleKeyUp(e, 1)} required></input>
-                    <input ref={inputRefs[2]} type="text" className="ring-2 ring-white rounded-lg size-12 text-center text-2xl" inputMode="numeric" pattern="[0-9]*" size={1} onKeyDown={e => handleKeyUp(e, 2)} required></input>
-                    <input ref={inputRefs[3]} type="text" className="ring-2 ring-white rounded-lg size-12 text-center text-2xl" inputMode="numeric" pattern="[0-9]*" size={1} onKeyDown={e => handleKeyUp(e, 3)} required></input>
-                    <input ref={inputRefs[4]} type="text" className="ring-2 ring-white rounded-lg size-12 text-center text-2xl" inputMode="numeric" pattern="[0-9]*" size={1} onKeyDown={e => handleKeyUp(e, 4)} required></input>
-                    <input ref={inputRefs[5]} type="text" className="ring-2 ring-white rounded-lg size-12 text-center text-2xl" inputMode="numeric" pattern="[0-9]*" size={1} onKeyDown={e => handleKeyUp(e, 5)} required></input>
+                    <input ref={inputRefs[0]} type="text" className="authcode" inputMode="numeric" pattern="[0-9]*" size={1} onKeyDown={e => handleKeyUp(e, 0)} required autoFocus></input>
+                    <input ref={inputRefs[1]} type="text" className="authcode" inputMode="numeric" pattern="[0-9]*" size={1} onKeyDown={e => handleKeyUp(e, 1)} required></input>
+                    <input ref={inputRefs[2]} type="text" className="authcode" inputMode="numeric" pattern="[0-9]*" size={1} onKeyDown={e => handleKeyUp(e, 2)} required></input>
+                    <input ref={inputRefs[3]} type="text" className="authcode" inputMode="numeric" pattern="[0-9]*" size={1} onKeyDown={e => handleKeyUp(e, 3)} required></input>
+                    <input ref={inputRefs[4]} type="text" className="authcode" inputMode="numeric" pattern="[0-9]*" size={1} onKeyDown={e => handleKeyUp(e, 4)} required></input>
+                    <input ref={inputRefs[5]} type="text" className="authcode" inputMode="numeric" pattern="[0-9]*" size={1} onKeyDown={e => handleKeyUp(e, 5)} required></input>
                 </div>
-                <Button className="w-24 px-4 py-2 hover:scale-110" type="submit" variant="filled">Enter</Button>
+                <Button className="w-24" type="submit" variant="filled">Enter</Button>
             </form>
         </div>
     )

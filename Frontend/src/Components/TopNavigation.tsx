@@ -1,7 +1,5 @@
 import { useNavigate } from 'react-router-dom'
 import { getActiveUser, isLoggedIn as getIsLoggedIn, logOut } from '../Auth';
-import Logo from '../assets/Subtract.svg'
-import Button from './Button'
 import { type JSX, useEffect, useState } from 'react';
 import SidePanel from './SidePanel';
 import { getSavedListings } from '../SavedListings';
@@ -9,6 +7,9 @@ import type { SavedListing } from '../types/savedListing';
 import ListingCard from './ListingCard';
 import { type ListingDescriptor } from '../types/listingDescriptor';
 import { getAnonymous } from '../BackendClient';
+import { usePopup, type PopupContent } from './PopupProvider';
+import { Heart, User } from 'lucide-react';
+import PillButton from './PillButton';
 
 export default function TopNavigation({ className = ''}) {
 
@@ -17,9 +18,11 @@ export default function TopNavigation({ className = ''}) {
     }, []);
 
     const navigate = useNavigate();
+    const popup = usePopup();
+
+    const user = getActiveUser();
 
     const [isLoggedIn, setIsLoggedIn] = useState<boolean>(false);
-    const [savedListingsVisible, setSavedListingsVisible] = useState<boolean>(false);
     const [savedListings] = useState<JSX.Element>(<SavedListings />);
 
     const handleLogOut = () => {
@@ -27,42 +30,27 @@ export default function TopNavigation({ className = ''}) {
         setIsLoggedIn(false);
     };
 
+    const logoutPopupContent: PopupContent = {
+        title: "Are you sure",
+        message: "You are about to log out. If you do this, you must enter your credentials next time to access content on the website.",
+        onAccept: handleLogOut
+    };
+
     return(
         <>
-            <nav className={'w-screen h-16 bg-[#262626] border-b-2 border-[#484747] p-2 flex justify-between fixed top-0 drop-shadow-xl drop-shadow-rose-500/50 z-10 ' + className}>
-                <div className='h-full text-nowrap'>
-                    <button type='button' className='flex items-center h-full w-12 cursor-pointer' onClick={() => navigate('/')}>
-                        <img src={Logo} className='h-full object-contain aspect-square inline-block'></img>
-                        <p className='mx-2 text-3xl font-bold text-rose-500 invisible w-0 sm:w-auto sm:visible inline-block'>Kev's marketplace</p>
-                    </button>
+            <nav className={'w-screen bg-(--dark) border-b border-(--light-dark) px-3 py-3 flex justify-between fixed top-0 z-10 ' + className}>
+
+                <p className='text-xl font-bold text-rose-500 my-auto cursor-pointer' onClick={() => navigate('/')}>Kev's marketplace</p>
+                    
+                <div className='flex gap-2 select-none'>
+
+                    <PillButton icon={<Heart/>} text='Saves' className='h-8' onClick={() => popup(logoutPopupContent)}/>
+
+                    <PillButton icon={<User/>} text={(isLoggedIn ? user?.username : "Log In") ?? ''} className='h-8' onClick={() => {isLoggedIn ? popup(logoutPopupContent) : navigate('/account/login')}}/>
+
                 </div>
-                {
-                    isLoggedIn ? 
-                    <div className='flex h-full'> 
-                        <div className='flex items-center h-full'>
-                            <Button variant='filled' className='px-2.5 py-1 object-contain aspect-square h-full' onClick={() => setSavedListingsVisible(prev => !prev)}>
-                                <svg className='w-full h-full' xmlns="http://www.w3.org/2000/svg" x="0px" y="0px" viewBox="0,0,256,256">
-                                    <g fill="#ffffff" fillRule="nonzero" stroke="#ffffff" strokeWidth="2" strokeLinecap="butt" strokeLinejoin="miter" strokeMiterlimit="10" strokeDasharray="" strokeDashoffset="0" fontFamily="none" fontWeight="none" fontSize="none" textAnchor={undefined} style={{mixBlendMode: 'normal'}}><g transform="scale(4,4)"><path d="M41.148,14h-18.296c-0.47,0 -0.852,0.382 -0.852,0.852v32.36c0,0.297 0.357,0.448 0.57,0.241l8.557,-8.303c0.487,-0.472 1.26,-0.472 1.747,0l8.557,8.303c0.212,0.207 0.569,0.056 0.569,-0.24v-32.36c0,-0.471 -0.382,-0.853 -0.852,-0.853zM41.148,10c2.679,0 4.852,2.173 4.852,4.852v37.46c0,1.925 -2.314,2.903 -3.695,1.563l-10.305,-9.998l-10.305,9.999c-1.381,1.34 -3.695,0.361 -3.695,-1.563v-37.46c0,-2.68 2.173,-4.853 4.852,-4.853z"></path></g></g>
-                                </svg>
-                            </Button>
-                            <div className='mx-2 border-1 border-(--light-dark) h-full rounded-lg' />
-                            
-                        </div>
-                        <div className='flex justify-around items-center'>
-                            <p className='font-bold text-lg w-min sm:w-auto'>Logged in as {getActiveUser()?.username}</p>
-                            <Button variant='filled' className='px-4 py-2.5 ml-4' onClick={handleLogOut}>Log out</Button>
-                        </div>
-                    </div> 
-                    :
-                    <div className='flex justify-around items-center'>
-                        <Button className='px-4 py-2.5 mx-2' variant='filled' onClick={() => navigate('/account/register')}>Register</Button>
-                        <Button className='px-4 py-2 mx-2' onClick={() => navigate('/account/login')}>Log in</Button>
-                    </div>
-                }
+
             </nav>
-            <SidePanel topPadding={15.5} innerContainerClass='overflow-y-scroll' enabled={savedListingsVisible}>
-                {savedListings}
-            </SidePanel>
         </>
     )
 

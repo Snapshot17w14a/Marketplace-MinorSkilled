@@ -44,15 +44,20 @@ export default function ForgotPassword() {
     return(
         <>
             {success ? <CheckInbox /> :
-            <div className="flex content-start flex-wrap w-full h-full text-center py-8 px-12">
-                <Button className="mb-6 w-16 text-2xl font-bold" onClick={() => {fade(); setTimeout(() => history.back(), 500)}}>🡐</Button>
-                <h1 className="text-4xl font-bold mb-6 basis-full">Reset password</h1>
-                <p className="mb-6">Enter the email address associated with your account, and we will send you a link to reset your password!</p>
-                <form className="flex flex-wrap basis-full min-w-0 justify-center" onSubmit={submitReset}>
-                    <input type="email" className="textinput-standard mb-6" placeholder="Email" ref={emailRef}></input>
-                    <Button type="submit" variant="filled" className="px-2 py-2">Send reset link</Button>
+            <>
+                <div className="mb-6">
+                    <h2 className="text-2xl font-bold">Reset password</h2>
+                    <p className="text-sm text-neutral-400">Enter the email address associated with your account, and we will send you a link to reset your password!</p>
+
+                </div>
+                <form className="space-y-6" onSubmit={submitReset}>
+                    <div>
+                        <label className="label-standard">Email address</label>
+                        <input type="email" className="textinput-standard" placeholder="john@example.com" ref={emailRef}></input>
+                    </div>
+                    <Button type="submit" variant="filled" className="w-full">Send reset link</Button>
                 </form>
-            </div>
+            </>
             }
         </>
     )
@@ -63,11 +68,13 @@ function CheckInbox() {
     const fade = useFade();
 
     return(
-        <div className="flex content-start justify-center flex-wrap w-full h-full text-center py-8 px-12">
-            <h1 className="text-4xl font-bold mb-6">Reset link sent</h1>
-            <p>Check the mailbox of the email you provided, if an account exists with the given email the reset link will be sent.</p>
-            <p>If you cannot find the email, make sure to check your spam folder!</p>
-            <Button variant="filled" className="px-4 py-2 mt-2" onClick={() => {fade(); setTimeout(() => {history.back();}, 500)}}>Back to login</Button>
-        </div>
+        <>
+            <div className="mb-4 space-y-2">
+                <h1 className="text-2xl font-bold">Reset link sent</h1>
+                <p className="text-sm text-neutral-400">Check the mailbox of the email you provided, if an account exists with the given email the reset link will be sent.</p>
+                <p className="text-sm text-neutral-400">If you cannot find the email, make sure to check your spam folder!</p>
+            </div>
+            <Button variant="filled" className="w-full" onClick={() => fade('/account/login')}>Back to login</Button>
+        </>
     )
 }

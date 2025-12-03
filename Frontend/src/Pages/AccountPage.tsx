@@ -1,7 +1,7 @@
-import { Outlet } from "react-router-dom";
+import { Outlet, useNavigate } from "react-router-dom";
 import { createContext, useContext, useEffect, useRef, useState } from 'react';
 
-const FadeContext = createContext<() => void>(() => {});
+const FadeContext = createContext<(destination?: string) => void>(() => {});
 
 export function AccountPage() {
 
@@ -10,13 +10,17 @@ export function AccountPage() {
 
     const outletDiv = useRef<HTMLDivElement>(null);
 
+    const navigate = useNavigate();
+
     useEffect(() => {
         setContainerHeight(outletDiv.current?.clientHeight ?? 0);
     }, [outletDiv])
 
-    const fadeDiv = () => {
+    const fadeDiv = (destination?: string) => {
         setVisible(false);
         setTimeout(() => {
+            if (destination)
+                navigate(destination);
             setVisible(true);
             setTimeout(() => {
                 setContainerHeight(outletDiv.current?.clientHeight ?? 0);
@@ -26,12 +30,13 @@ export function AccountPage() {
 
     return(
         <FadeContext.Provider value={fadeDiv}>
-            <div className="flex justify-center content-start h-screen">
-                <div className={`flex flex-wrap shrink-1 bg-neutral-300 dark:bg-neutral-800 rounded-lg self-center max-w-[480px] text-center drop-shadow-2xl drop-shadow-rose-500/50 transition-all mx-8`}
-                    style={{height: containerHeight}}
-                >
-                    <div className={`w-full h-min transition-all duration-500`} style={{opacity: visible ? 100 : 0}} ref={outletDiv}>
-                        <Outlet />
+            <div className="flex items-center justify-center min-h-screen p-4">
+                <div className="relative w-full max-w-md transition-height duration-1000" style={{height: containerHeight + 64}}>
+                    <div className="absolute -inset-1 rounded-lg bg-gradient-to-r from-rose-600 to-pink-600 opacity-30 blur-2xl"/>
+                    <div className='w-full h-full overflow-clip relative rounded-2xl bg-neutral-900/90 p-8 border border-white/10 backdrop-blur-xl shadow-2xl'>
+                        <div className={`w-full h-min transition-all duration-500`} style={{opacity: visible ? 100 : 0}} ref={outletDiv}>
+                            <Outlet />
+                        </div>
                     </div>
                 </div>
             </div>

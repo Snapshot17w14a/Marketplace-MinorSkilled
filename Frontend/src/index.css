@@ -51,9 +51,21 @@
 }
 
 .textinput-standard{
-    @apply bg-neutral-300 dark:bg-neutral-800 py-2 px-4 mx-[2px] rounded-lg caret-rose-500 ring-2 ring-white invalid:ring-rose-500 focus:ring-rose-300 focus:outline-none basis-full transition ease-in-out duration-300 min-w-0;
+    @apply w-full rounded-lg bg-neutral-800 px-4 py-3 text-white placeholder-neutral-500 outline-none ring-1 ring-transparent transition-all focus:bg-neutral-800 focus:ring-2 focus:ring-rose-500;
+}
+
+.authcode{
+    @apply w-1/6 aspect-square rounded-lg bg-neutral-800 py-4 text-white placeholder-neutral-500 outline-none ring-1 ring-transparent transition-all focus:bg-neutral-800 focus:ring-2 focus:ring-rose-500 text-center text-xl;
+}
+
+.label-standard{
+    @apply text-xs font-medium text-neutral-300;
 }
 
 .transition-width{
     transition-property: width;
+}
+
+.transition-height{
+    transition-property: height;
 }

@@ -18,30 +18,35 @@ import EditListing from './Pages/EditListing'
 import EnableMFA from './Pages/EnableMFA'
 import EnterMFA from './Pages/EnterMFA'
 import VerifyAccount from './Pages/VerifyAccount'
+import PopupProvider from './Components/PopupProvider'
+import Empty from './Pages/Empty'
 
 await validateLogin();
-await fetchSavedListings();
+//await fetchSavedListings();
 
 createRoot(document.getElementById('root')!).render(
   <StrictMode>
     <BrowserRouter>
       <NotificationProvider>
-        <Routes>
-          <Route index element={<Home />}/>
-          <Route path='listing/:listingId' element={<Listing/>} />
-          <Route path='listing/creator' element={<LisitngCreator/>} />
-          <Route path='listing/edit/:listingId' element={<EditListing/>} />
-          <Route path='account' element={<AccountPage/>}>
-            <Route path='register' element={<Register/>} />
-            <Route path='login' element={<Login/>} />
-            <Route path='forgotPassword' element={<ForgotPassword/>} />
-            <Route path='changePassword/:resetToken' element={<ChangePassword/>} />
-            <Route path='enableMFA' element={<EnableMFA/>} />
-            <Route path='enterMFA' element={<EnterMFA/>} />
-            <Route path='verifyAccount/:verificationCode' element={<VerifyAccount/>} />
-          </Route>
-          <Route path='search/:searchPhrase' element={<SearchResult/>} />
-        </Routes>
+        <PopupProvider>
+          <Routes>
+            <Route index element={<Home />}/>
+            <Route path='empty' element={<Empty/>} />
+            <Route path='listing/:listingId' element={<Listing/>} />
+            <Route path='listing/creator' element={<LisitngCreator/>} />
+            <Route path='listing/edit/:listingId' element={<EditListing/>} />
+            <Route path='account' element={<AccountPage/>}>
+              <Route path='register' element={<Register/>} />
+              <Route path='login' element={<Login/>} />
+              <Route path='forgotPassword' element={<ForgotPassword/>} />
+              <Route path='changePassword/:resetToken' element={<ChangePassword/>} />
+              <Route path='enableMFA' element={<EnableMFA/>} />
+              <Route path='enterMFA' element={<EnterMFA/>} />
+              <Route path='verifyAccount/:verificationCode' element={<VerifyAccount/>} />
+            </Route>
+            <Route path='search/:searchPhrase' element={<SearchResult/>} />
+          </Routes>
+        </PopupProvider>
       </NotificationProvider>
     </BrowserRouter>
   </StrictMode>

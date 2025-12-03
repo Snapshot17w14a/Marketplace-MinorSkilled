@@ -10,6 +10,7 @@ import type { QueryResult } from "../types/queryResult";
 import { useNotify } from "../Components/NotificationProvider";
 import filterParameters from "../Configs/filters.confg";
 import SidePanel from "../Components/SidePanel";
+import ProductCard from "../Components/ProductCard";
 
 export default function SearchResult() {
 
@@ -120,8 +121,9 @@ function Results({ parameters, setResultCount } : { parameters: SearchQueryParam
 function PageResults({ listings, page } : { listings: ListingDescriptor[], page: number }){
     return(
         <>
-            <div className="flex flex-wrap w-full px-2 justify-around">
-                {listings !== undefined && listings.map((listingData, index) => {return(<div className="p-1 h-96 sm:w-96 w-full shrink-0 flex justify-center mb-2" key={index}><ListingCard className="h-full" descriptor={listingData}/></div>)})}
+            <div className="flex flex-wrap gap-4 justify-evenly">
+                {/* {listings !== undefined && listings.map((listingData, index) => {return(<div className="p-1 h-96 sm:w-96 w-full shrink-0 flex justify-center mb-2" key={index}><ListingCard className="h-full" descriptor={listingData}/></div>)})} */}
+                {listings && listings.map((data, index) => <ProductCard descriptor={data} key={index}/>)}
             </div>
             <Separator text={`Page ${page + 1}`} />
         </>

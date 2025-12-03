@@ -64,34 +64,58 @@ export default function Register(){
     }
 
     return(
-        <div className="flex flex-wrap w-full h-full text-center py-8 px-12">
-            <Button className="mb-6 w-16 text-2xl font-bold" onClick={() => {fade(); setTimeout(() => history.back(), 500)}}>🡐</Button>
-            <h1 className="basis-full text-4xl font-bold mb-6">Let's create an account!</h1>
-            <form className="flex flex-wrap basis-full min-w-0" onSubmit={handleSubmit}>
-                <div className="flex basis-full flex-wrap min-w-0 text-start">
-                    <input className="textinput-standard my-4" type="email" placeholder="Email address"  required    ref={emailRef}></input>
-                    <input className="textinput-standard my-4" type="text"  placeholder="Password"       required    ref={passwordRef} minLength={8}></input>
-                    <small className="basis-full -mt-2 pl-4">Password must be at least 8 characters long</small>
-                    <input className="textinput-standard my-4" type="text"  placeholder="Username"       required    ref={usernameRef}></input>
+        <div className="w-full h-full">
+
+            <div className="mb-6">
+                <h2 className="text-2xl font-bold">Let's create an account!</h2>
+                <p className="text-sm text-neutral-400">With an account you can create listings, and message others for more information</p>
+            </div>
+            
+            <form className="space-y-6" onSubmit={handleSubmit}>
+
+                <div className="space-y-1">
+                    <label className="label-standard">Email address</label>
+                    <input 
+                        className="textinput-standard" 
+                        type="email" 
+                        placeholder="john@example.com"  
+                        required    
+                        ref={emailRef}
+                    />
                 </div>
-                <div className="flex flex-wrap justify-between basis-full mt-4">
-                    <Button className="basis-2/3 px-4 py-2 hover:scale-110 disabled:bg-rose-950 disabled:cursor-not-allowed disabled:scale-100" variant="filled" type="submit" ref={registerButtonRef}>
-                        {registerButtonRef.current?.disabled ? 
-                                <svg className="-mr-5 size-5 animate-spin text-blue-500 relative float-left" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24">
-                                    <path fill="white" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
-                                </svg> :
-                                <></>
-                        }
-                        Create account
-                    </Button>
-                    <Button className="px-4 py-2" onClick={() => {fade(); setTimeout(() => navigate("/account/login"), 500)}} type="button">
-                        Login
-                    </Button>
+
+                <div className="space-y-1">
+                    <div className="flex justify-between">
+                        <label className="label-standard">Password</label>
+                        <small className="label-standard">Password must be at least 8 characters long</small>
+                    </div>
+                    <input 
+                        className="textinput-standard" 
+                        type="text"  
+                        placeholder="••••••••"       
+                        required    
+                        ref={passwordRef} 
+                        minLength={8}
+                    />
                 </div>
+
+                <div className="space-y-1">
+                    <label className="label-standard">Username</label>
+                    <input 
+                        className="textinput-standard" 
+                        type="text"  
+                        placeholder="John Smith"       
+                        required    
+                        ref={usernameRef}
+                    />
+                </div>
+
+                <Button variant="filled" className="w-full">Register</Button>
             </form>
-            {/* <div>
-                <QRCode value="otpauth://totp/Kevin's%20Marketplace:kevin.mullner@icloud.com?secret=RM6UZPEU23ZNBWNR&issuer=Kevin's%20Marketplace" />
-            </div> */}
+
+            <p className="text-center text-sm text-neutral-500 mt-6">
+                Already have an account? <a className="cursor-pointer text-white underline decoration-rose-500 underline-offset-4 hover:text-rose-400" onClick={() => fade('/account/login')}>Log in</a>
+            </p>
         </div>
     )
 }
