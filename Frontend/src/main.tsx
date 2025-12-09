@@ -11,7 +11,6 @@ import LisitngCreator from './Pages/ListingCreator'
 import { validateLogin } from './Auth'
 import Listing from './Pages/Listing'
 import SearchResult from './Pages/SearchResult'
-import { fetchSavedListings } from './SavedListings'
 import ForgotPassword from './Pages/ForgotPassword'
 import ChangePassword from './Pages/ChangePassword'
 import EditListing from './Pages/EditListing'
@@ -20,15 +19,18 @@ import EnterMFA from './Pages/EnterMFA'
 import VerifyAccount from './Pages/VerifyAccount'
 import PopupProvider from './Components/PopupProvider'
 import Empty from './Pages/Empty'
+import TopNavigation from './Components/TopNavigation'
+import { fetchSavedListings } from './SavedListings'
 
 await validateLogin();
-//await fetchSavedListings();
+await fetchSavedListings();
 
 createRoot(document.getElementById('root')!).render(
   <StrictMode>
     <BrowserRouter>
       <NotificationProvider>
         <PopupProvider>
+          <TopNavigation/>
           <Routes>
             <Route index element={<Home />}/>
             <Route path='empty' element={<Empty/>} />

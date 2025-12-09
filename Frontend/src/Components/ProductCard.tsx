@@ -1,14 +1,18 @@
-import { Heart } from 'lucide-react'; // Assuming you use lucide-react or similar icons
+import { Heart } from 'lucide-react';
 import type { ListingDescriptor } from '../types/listingDescriptor';
 import backendConfig from '../Configs/endpoints.config'
 import { useNavigate } from 'react-router-dom';
+import CategoryLabel from './CategoryLabel';
+import categoriesConfig from '../Configs/categories.config';
+import { isListingSaved } from '../SavedListings';
 
 export default function ProductCard({ descriptor }: { descriptor: ListingDescriptor}) {
 
   const navigate = useNavigate();
 
+  const isSaved = isListingSaved(descriptor.guid);
+
   return (
-    // Card Container: No border, lighter background than page, subtle shadow
     <div className="group relative w-72 overflow-hidden rounded-xl bg-(--mid-dark) shadow-md transition-all duration-300 hover:-translate-y-1 hover:shadow-xl hover:shadow-rose-500/10 cursor-pointer inline-block" onClick={() => navigate(`/listing/${descriptor.guid}`)}>
       
       {/* Image Section */}
@@ -43,13 +47,11 @@ export default function ProductCard({ descriptor }: { descriptor: ListingDescrip
         
         {/* Footer: Categories or Actions */}
         <div className="mt-4 flex items-center justify-between border-t border-white/5 pt-3">
-          <span className="text-xs font-medium text-rose-400 bg-rose-400/10 px-2 py-1 rounded">
-            Gaming
-          </span>
+            <CategoryLabel category={categoriesConfig.categories[0]} />
           
           {/* Icon Button instead of text button */}
-          <button className="text-neutral-400 hover:text-white transition-colors">
-            <Heart size={20} />
+          <button className={`hover:text-white transition-colors ${isSaved ? "text-rose-400" : "text-neutral-400"}`}>
+            <Heart size={20} fill={isSaved ? "oklch(71.2% 0.194 13.428)" : "#00000000"}/>
           </button>
         </div>
       </div>

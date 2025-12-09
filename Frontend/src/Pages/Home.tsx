@@ -3,7 +3,6 @@ import TopNavigation from '../Components/TopNavigation'
 import { isLoggedIn } from '../Auth'
 import { useNavigate } from 'react-router-dom'
 import { useCallback, useState, useRef, type FormEvent, useEffect, type JSX } from 'react';
-import ListingCard from '../Components/ListingCard';
 import ProductAnimator from '../Components/ProductAnimator';
 import { getAnonymous } from '../BackendClient';
 import type { ListingDescriptor } from '../types/listingDescriptor';
@@ -58,38 +57,34 @@ export default function Home() {
     };
 
     return(
-        <>
-            <TopNavigation/>
-            
-            <div className='w-full p-2 sm:p-8 text-center mt-24 space-y-12'>
+        <div className='w-full p-2 sm:p-8 text-center mt-24 space-y-12'>
 
-                <div className='space-y-4'>
-                    <h1 className='font-bold text-6xl'>Modern marketplace for modern people</h1>
-                    <h2 className='font-medium text-2xl'>Create beautiful listings and find the right audience for your products</h2>
-                </div>
-
-                <Button variant='filled' className='text-2xl px-8 py-4' onClick={handleCreateListing}>Create a listing</Button>
-
-                <div className='w-full flex justify-center items-center flex-wrap'>
-                    <h2 className='text-2xl inline-block'>Search for </h2>
-                    <ProductAnimator interval={2000} className='text-2xl from-rose-950 to-rose-50 bg-linear-to-r bg-clip-text text-transparent animate-progtext inline-block' />
-                    <h2 className='text-2xl inline-block'>and see what others are selling</h2>
-                </div>
-
-                <form className='w-full sm:w-2/3 mx-auto relative flex z-0' onSubmit={onSearchSubmit}>
-                    <input className='textinput-standard' placeholder='Search for anything...' ref={searchRef} required/>
-                    {/* <Button className='px-2 absolute right-1.5 top-1' variant='filled'>Search</Button> */}
-                    {/* <div className='absolute right-1.5 px-2 py-1 my-2 border border-(--light-dark) rounded-full cursor-pointer'>Search</div> */}
-                    <PillButton className='absolute right-1.5 px-2 py-1 my-2' text='Search' icon={<Search/>} />
-                </form>
-
-                <h2 className='text-2xl mt-12'>Or check out our latest listings below</h2>
-
-                <div className='w-full rounded-lg my-12 p-2 overflow-x-auto overflow-y-clip grid grid-rows-1 grid-flow-col gap-2'>
-                    {latestListings}
-                </div>
-
+            <div className='space-y-4'>
+                <h1 className='font-bold text-6xl'>Modern marketplace for modern people</h1>
+                <h2 className='font-medium text-2xl'>Create beautiful listings and find the right audience for your products</h2>
             </div>
-        </>
+
+            <Button variant='filled' className='text-2xl px-8 py-4' onClick={handleCreateListing}>Create a listing</Button>
+
+            <div className='w-full flex justify-center items-center flex-wrap'>
+                <h2 className='text-2xl inline-block'>Search for </h2>
+                <ProductAnimator interval={2000} className='text-2xl from-rose-950 to-rose-50 bg-linear-to-r bg-clip-text text-transparent animate-progtext inline-block' />
+                <h2 className='text-2xl inline-block'>and see what others are selling</h2>
+            </div>
+
+            <form className='w-full sm:w-2/3 mx-auto relative flex z-0' onSubmit={onSearchSubmit}>
+                <input className='textinput-standard' placeholder='Search for anything...' ref={searchRef} required/>
+                {/* <Button className='px-2 absolute right-1.5 top-1' variant='filled'>Search</Button> */}
+                {/* <div className='absolute right-1.5 px-2 py-1 my-2 border border-(--light-dark) rounded-full cursor-pointer'>Search</div> */}
+                <PillButton className='absolute right-1.5 px-2 py-1 my-2' text='Search' icon={<Search/>} />
+            </form>
+
+            <h2 className='text-2xl mt-12'>Or check out our latest listings below</h2>
+
+            <div className='w-full rounded-lg my-12 p-2 overflow-x-auto overflow-y-clip grid grid-rows-1 grid-flow-col gap-2'>
+                {latestListings}
+            </div>
+
+        </div>
     )
 }
