@@ -7,7 +7,6 @@ import Register from './Pages/Register'
 import Login from './Pages/Login'
 import { AccountPage } from './Pages/AccountPage'
 import NotificationProvider from './Components/NotificationProvider'
-import LisitngCreator from './Pages/ListingCreator'
 import { validateLogin } from './Auth'
 import Listing from './Pages/Listing'
 import SearchResult from './Pages/SearchResult'
@@ -21,6 +20,7 @@ import PopupProvider from './Components/PopupProvider'
 import Empty from './Pages/Empty'
 import TopNavigation from './Components/TopNavigation'
 import { fetchSavedListings } from './SavedListings'
+import CreateListing from './Pages/CreateListing'
 
 await validateLogin();
 await fetchSavedListings();
@@ -35,7 +35,7 @@ createRoot(document.getElementById('root')!).render(
             <Route index element={<Home />}/>
             <Route path='empty' element={<Empty/>} />
             <Route path='listing/:listingId' element={<Listing/>} />
-            <Route path='listing/creator' element={<LisitngCreator/>} />
+            <Route path='listing/creator' element={<CreateListing/>} />
             <Route path='listing/edit/:listingId' element={<EditListing/>} />
             <Route path='account' element={<AccountPage/>}>
               <Route path='register' element={<Register/>} />

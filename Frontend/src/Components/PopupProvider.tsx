@@ -23,7 +23,7 @@ export default function PopupProvider({ children } : { children: React.ReactNode
     return(
         <PopupContext.Provider value={showPopup}>
             {children}
-            <div className="absolute top-0 left-0 w-full h-full bg-neutral-700/50 flex justify-center items-center transition-opacity duration-500 p-4" style={{opacity: opacity, zIndex: popup ? 100 : -100}}>
+            <div className="fixed top-0 left-0 w-full h-full bg-neutral-700/50 flex justify-center items-center transition-opacity duration-500 p-4" style={{opacity: opacity, zIndex: popup ? 100 : -100}}>
                 {popup}
             </div> 
         </PopupContext.Provider>
