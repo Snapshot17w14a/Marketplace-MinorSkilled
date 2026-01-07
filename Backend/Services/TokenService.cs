@@ -4,10 +4,11 @@ using Microsoft.IdentityModel.Tokens;
 using Backend.Models;
 using Backend.Database;
 using System.Text;
+using System.Security.Cryptography;
 
 namespace Backend.Services
 {
-    public class JWTGeneratorService(ApplicationDbContext context, IConfiguration config)
+    public class TokenService(ApplicationDbContext context, IConfiguration config)
     {
         private readonly ApplicationDbContext _context = context;
         private readonly IConfiguration _config = config;
@@ -52,6 +53,22 @@ namespace Backend.Services
             await _context.SaveChangesAsync();
 
             return Base64UrlEncoder.Encode(token.ToString());
+        }
+
+        public async Task<string> GenerateVerificationToken(User user)
+        {
+            var content = Base64UrlEncoder.Encode(string.Format("{0},{1}", user.Identifier, user.Email));
+
+            var token = new VerificationToken
+            {
+                UserId = user.Identifier,
+                Token = content
+            };
+
+            _context.VerificationTokens.Add(token);
+            await _context.SaveChangesAsync();
+
+            return content;
         }
     }
 }

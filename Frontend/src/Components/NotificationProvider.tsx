@@ -1,7 +1,7 @@
 import { createContext, useContext, useState, type JSX } from "react";
 import Notification from "./Notification";
 
-const notificationContext = createContext<(notifDesc: NotificationDescription) => void>(() => {});
+const NotificationContext = createContext<(notifDesc: NotificationDescription) => void>(() => {});
 
 export default function NotificationProvider({ children } : { children: React.ReactNode}){
 
@@ -31,7 +31,7 @@ export default function NotificationProvider({ children } : { children: React.Re
     }
 
     return(
-        <notificationContext.Provider value={addNotification}>
+        <NotificationContext.Provider value={addNotification}>
             {children}
             <div className="absolute bottom-2 right-2 flex flex-col-reverse">
                 {notifications && notifications.map(notification => {
@@ -39,16 +39,16 @@ export default function NotificationProvider({ children } : { children: React.Re
                     })
                 }
             </div>
-        </notificationContext.Provider>
+        </NotificationContext.Provider>
     )
 }
 
 export function useNotify(){
-    return useContext(notificationContext);
+    return useContext(NotificationContext);
 }
 
 export interface NotificationDescription {
-    type: "info" | "warning" | "error",
+    type: "info" | "warning" | "error" | "success",
     header: string,
     message: string
 };

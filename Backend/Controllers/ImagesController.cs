@@ -21,7 +21,7 @@ namespace Backend.Controllers
         ];
 
         [HttpPost]
-        public async Task<ActionResult> UploadImage(IFormFile file)
+        public async Task<ActionResult> UploadImage(IFormFile file, [FromHeader(Name = "index")]int index)
         {
             //Check the file for problems
             if (file == null) return BadRequest("File not sent!");
@@ -56,7 +56,8 @@ namespace Backend.Controllers
                 Guid = guid,
                 RelativePath = relativePath,
                 ContentType = file.ContentType,
-                Size = file.Length
+                Size = file.Length,
+                Index = index
             };
 
             //Write it to the database and save the changes

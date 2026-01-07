@@ -2,25 +2,56 @@ import endpointConfig from './Configs/endpoints.config'
 import { getJWT, validateLogin } from './Auth';
 import { FetchError } from './classes/FetchError';
 
-export async function postAnonymous<T>(endpoint: string, data: any, responseHandler?: (response: Response) => void): Promise<any> {
+// ---------- Authorized fetches ----------
+
+export async function postAuthorized(endpoint: string, data: any): Promise<Response> {
+
+    return fetchAuthorized(endpoint, "POST", data);
+
+}
+
+export async function patchAuthorized(endpoint: string, data: any): Promise<Response> {
+
+    return fetchAuthorized(endpoint, "PATCH", data);
+
+}
+
+export async function getAuthorized<T>(endpoint: string): Promise<T> {
+
+    const response = await fetchAuthorized(endpoint, "GET");
+
+    const data = await response.json() as T;
+    return data;
+}
+
+async function fetchAuthorized(endpoint: string, method: string, data?: any): Promise<Response> {
+
+    if (!validateLogin()) {
+        throw new Error("Auth expired");
+    }
 
     const response = await fetch(endpointConfig.BackendBaseUrl + endpoint, {
-        method: "POST",
+        method: method,
         headers: {
-            "Content-Type": "application/json"
+            "Content-Type": "application/json",
+            "Authorization": `Bearer ${await getJWT()}`
         },
         body: JSON.stringify(data)
-    });
+    })
 
-    if (!response.ok){
-        if (responseHandler !== undefined && !response.ok) {
-            responseHandler(response);
-        }
-        else{
-            const errorText = await response.text();
-            throw new FetchError(response.status, errorText);
-        }
+    if (!response.ok) {
+        const errorText = await response.text();
+        throw new FetchError(response.status, errorText);
     }
+
+    return response
+}
+
+// ---------- Anonymous fetches ----------
+
+export async function postAnonymous<T>(endpoint: string, data: any): Promise<any> {
+
+    const response = await fetchAnonymous(endpoint, "POST", data);
 
     if (response.status === 204) {
         return undefined as unknown as T;
@@ -29,71 +60,33 @@ export async function postAnonymous<T>(endpoint: string, data: any, responseHand
     return result;
 }
 
-export async function postAuthorized(endpoint: string, data: any, responseHandler? : (response: Response) => void): Promise<Response> {
+export async function getAnonymous<T>(endpoint: string): Promise<T> {
 
-    if (!validateLogin()) {
-        throw new Error("Auth expired");
-    }
+    return (await fetchAnonymous(endpoint, "GET")).json() as T;
+
+}
+
+async function fetchAnonymous(endpoint: string, method: string, data?: any): Promise<Response> {
 
     const response = await fetch(endpointConfig.BackendBaseUrl + endpoint, {
-        method: "POST",
+        method: method,
         headers: {
-            "Content-Type": "application/json",
-            "Authorization": `Bearer ${await getJWT()}`
+            "Content-Type": "application/json"
         },
         body: JSON.stringify(data)
     });
 
     if (!response.ok) {
-        if (responseHandler !== undefined) {
-            responseHandler(response);
-        }
-        else {
-            const errorText = await response.text();
-            throw new FetchError(response.status, errorText);
-        }
-    }
-
-    return response
-}
-
-export async function getAnonymous<T>(endpoint: string): Promise<T> {
-    const response = await fetch(endpointConfig.BackendBaseUrl + endpoint, {
-        method: 'GET',
-    });
-
-    if (!response.ok) {
         const errorText = await response.text();
         throw new FetchError(response.status, errorText);
     }
 
-    const data = await response.json() as T;
-    return data;
+    return response;
 }
 
-export async function getAuthorized<T>(endpoint: string): Promise<T> {
+// ---------- XML fetches ----------
 
-    if (!validateLogin()) {
-        throw new Error("Auth expired");
-    }
-
-    const response = await fetch(endpointConfig.BackendBaseUrl + endpoint, {
-        method: 'GET',
-        headers: {
-            "Authorization": `Bearer ${await getJWT()}`
-        }
-    });
-
-    if (!response.ok) {
-        const errorText = await response.text();
-        throw new FetchError(response.status, errorText);
-    }
-
-    const data = await response.json() as T;
-    return data;
-}
-
-export async function postXmlHttp<T>(endpoint: string, formData: FormData, onProgress?: (ev: ProgressEvent) => void): Promise<T> {
+export async function postXmlHttp<T>(endpoint: string, formData: FormData, onProgress?: (ev: ProgressEvent) => void, headers: [{key: string, value: string}] | undefined = undefined): Promise<T> {
     return new Promise<T>(async (resolve, reject) => {
 
         const xhr = new XMLHttpRequest();
@@ -102,6 +95,12 @@ export async function postXmlHttp<T>(endpoint: string, formData: FormData, onPro
 
         const jwt = await getJWT();
         xhr.setRequestHeader("Authorization", `Bearer ${jwt}`);
+
+        if (headers !== undefined) {
+            headers.forEach(header => {
+                xhr.setRequestHeader(header.key, header.value);
+            });
+        }
 
         if (onProgress){
             xhr.upload.onprogress = onProgress;

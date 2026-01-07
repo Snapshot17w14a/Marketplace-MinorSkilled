@@ -1,6 +1,7 @@
 import { useCallback, useEffect, useRef, useState } from "react";
 import type { NotificationDescription } from "./NotificationProvider";
 import { useHover } from "@uidotdev/usehooks";
+import notificationsConfig from "../Configs/notifications.config";
 
 export default function Notification({ info, removeCallback }: { info: { id: number, descObj: NotificationDescription}, removeCallback: (id: NotificationDescription) => void}) {
 
@@ -13,13 +14,15 @@ export default function Notification({ info, removeCallback }: { info: { id: num
     const styles: { [id: string]: string } = {
         info: "bg-(--info)/80 border-(--info) ",
         warning: "bg-(--warning)/80 border-(--warning) ",
-        error: "bg-(--error)/80 border-(--error) "
+        error: "bg-(--error)/80 border-(--error) ",
+        success: "bg-(--success)/80 border-(--success) "
     }
 
     const closeHoverStyles: { [id: string]: string } = {
         info: "hover:bg-(--info)",
         warning: "hover:bg-(--warning)",
-        error: "hover:bg-(--error)"
+        error: "hover:bg-(--error)",
+        success: "hover:bg-(--success)"
     }
 
     const stopTimeouts = () => {
@@ -39,7 +42,7 @@ export default function Notification({ info, removeCallback }: { info: { id: num
     const startAutoclose = useCallback(() => {
         const timeoutId = window.setTimeout(() => {
             close();
-        }, 1000);
+        }, notificationsConfig.autoCloseDelay);
         autocloseRef.current = timeoutId;
     }, [])
 
@@ -70,7 +73,7 @@ export default function Notification({ info, removeCallback }: { info: { id: num
         setVisibility(false);
         const timeoutId = window.setTimeout(() => {
             removeCallback(info.descObj);
-        }, 500)
+        }, notificationsConfig.fadeDuration)
         fadeRef.current = timeoutId;
     }
 
@@ -82,12 +85,12 @@ export default function Notification({ info, removeCallback }: { info: { id: num
         setVisibility(false);
         const timeoutId = window.setTimeout(() => {
             removeCallback(info.descObj);
-        }, 500);
+        }, notificationsConfig.fadeDuration);
         fadeRef.current = timeoutId;
     }
 
     return(
-        <div ref={ref} className={styles[info.descObj.type] + `basis-full mt-2 p-3 rounded-lg border-2 text-black select-none transition-opacity duration-500 w-md text-pretty`} style={{opacity: visibility ? 1 : 0}}>
+        <div ref={ref} className={styles[info.descObj.type] + `basis-full mt-2 p-3 rounded-lg border-2 text-black select-none transition-opacity duration-1000 w-md text-pretty`} style={{opacity: visibility ? 1 : 0}}>
             <button className={`float-right font-bold px-1 rounded-lg transition-colors ${closeHoverStyles[info.descObj.type]}`} onClick={instantClose}>X</button>
             <h1 className="font-bold text-2xl">{info.descObj.header}</h1>
             <p className="text-base">{info.descObj.message}</p>

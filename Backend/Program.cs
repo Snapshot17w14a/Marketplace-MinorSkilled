@@ -1,7 +1,11 @@
 using System.Text;
 using Backend.Database;
+using Backend.Extensions;
+using Backend.Interfaces;
 using Backend.Iterfaces;
+using Backend.Middleware;
 using Backend.Services;
+using Backend.Services.Background;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.IdentityModel.Logging;
@@ -15,7 +19,7 @@ builder.Configuration
 
 var config = builder.Configuration;
 
-IdentityModelEventSource.ShowPII = true;
+IdentityModelEventSource.ShowPII = builder.Environment.IsDevelopment();
 
 // Add services to the container.
 builder.Services.AddDbContext<ApplicationDbContext>(options =>
@@ -43,39 +47,42 @@ builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme).AddJw
     };
 });
 
-builder.Services.AddSingleton<PasswordHashService>();
-builder.Services.AddScoped<JWTGeneratorService>();
-builder.Services.AddScoped<IEmailClient, BrevoEmailClient>();
+builder.Services.AddScoped<RoleManager>();
 
-if (builder.Environment.IsDevelopment())
+builder.Services.AddSingleton<PasswordHashService>();
+builder.Services.AddScoped<TokenService>();
+builder.Services.AddScoped<IEmailClient, BrevoEmailClient>();
+builder.Services.AddScoped<I2FAProvider, OtpNET2FAProvider>();
+
+builder.Services.AddHostedService<TokenCleanerService>();
+builder.Services.AddHostedService<ImageCleanupService>();
+
+ // Allow frontend to make calls from local network with CORS
+builder.Services.AddCors(options =>
 {
-    // Allow frontend to make calls from local network with CORS
-    builder.Services.AddCors(options =>
+    options.AddPolicy("AllowFrontend", policy =>
     {
-        options.AddPolicy("AllowFrontend", policy =>
-        {
-            policy.WithOrigins("http://localhost:5173")
-                .AllowAnyHeader()
-                .AllowAnyMethod()
-                .AllowCredentials();
-        });
-    });
-}
-else
-{
-    builder.Services.AddCors(options =>
-    {
-        options.AddPolicy("AllowFrontend", policy =>
-        {
-            policy.WithOrigins("https://marketplace.mkev.dev")
+        policy.WithOrigins(builder.Environment.IsDevelopment() ? "http://localhost:5173" : "https://marketplace.mkev.dev")
             .AllowAnyHeader()
             .AllowAnyMethod()
             .AllowCredentials();
-        });
     });
-}
+});
 
-    var app = builder.Build();
+var app = builder.Build();
+
+if (args.Contains("--migrate-database"))
+{
+    var scope = app.Services.CreateScope().ServiceProvider;
+
+    var logger = scope.GetRequiredService<ILogger<Program>>();
+
+    logger.LogInformation("Migrating database...");
+    scope.GetRequiredService<ApplicationDbContext>().Database.Migrate();
+    logger.LogInformation("Database migration completed successfully");
+
+    Environment.Exit(0);
+}
 
 // Configure brevo client configuration
 var apiKey = config["Secrets:BrevoAPIKey"];
@@ -87,27 +94,20 @@ if (app.Environment.IsDevelopment())
 {
     app.UseSwagger();
     app.UseSwaggerUI();
-
-    
 }
 
 // Enable CORS for same origin fronend access
 app.UseCors("AllowFrontend");
 
-app.UseStaticFiles((new StaticFileOptions
-{
-    OnPrepareResponse = ctx =>
-    {
-        ctx.Context.Response.Headers.Append("Access-Control-Allow-Origin", "http://localhost:5173");
-        ctx.Context.Response.Headers.Append("Access-Control-Allow-Methods", "GET,HEAD,OPTIONS");
-        ctx.Context.Response.Headers.Append("Access-Control-Allow-Headers", "Content-Type");
-    }
-}));
+app.UseStaticFiles();
 
 app.UseHttpsRedirection();
 
 app.UseAuthentication();
 app.UseAuthorization();
+
+await app.SeedPermissionRoles();
+app.UseMiddleware<SimpleAuthorization>();
 
 app.MapControllers();
 

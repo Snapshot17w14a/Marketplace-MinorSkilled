@@ -1,4 +1,4 @@
-import { useNavigate, useParams } from "react-router-dom";
+import { useParams } from "react-router-dom";
 import Button from "../Components/Button";
 import { useFade } from "./AccountPage";
 import { useRef, useState, type FormEvent } from "react";
@@ -12,7 +12,6 @@ export default function ChangePassword() {
 
     const fade = useFade();
     const notify = useNotify();
-    const navigate = useNavigate();
 
     const [incorrectText, setIncorrectText] = useState<boolean>(false);
     const passwordRef = useRef<HTMLInputElement>(null);
@@ -34,7 +33,7 @@ export default function ChangePassword() {
         }
 
         try {
-            await postAnonymous<string>('User/ResetPassword', data);
+            await postAnonymous<string>('users/ResetPassword', data);
         }
         catch (e) {
             if (e instanceof FetchError){
@@ -69,25 +68,32 @@ export default function ChangePassword() {
         notify({
             header: "Password was reset!",
             message: `Use your email address and new password to log in!`,
-            type: 'info'
+            type: 'success'
         });
 
-        fade();
-        setTimeout(() => {
-            navigate("/account/login");
-        }, 500);
+        fade("/account/login");
     };
 
     return(
-        <div className="flex content-start flex-wrap w-full h-full text-center py-8 px-12">
-            <Button className="mb-6 w-16 text-2xl font-bold" onClick={() => {fade(); setTimeout(() => history.back(), 500)}}>🡐</Button>
-            <h1 className="text-4xl font-bold mb-6 basis-full">Enter new password</h1>
-            <form className="flex flex-wrap basis-full min-w-0 justify-center" onSubmit={resetPassword}>
-                <input type="text" className="textinput-standard mb-6" placeholder="New password" required min={8} ref={passwordRef}></input>
-                <input type="text" className="textinput-standard mb-6" placeholder="Repeat password" required min={8} ref={verifyRef}></input>
-                {incorrectText && <p className="basis-full mb-6">Password fields do not match!</p>}
-                <Button type="submit" variant="filled" className="px-2 py-2">Change password</Button>
+        <>
+            <h2 className="text-2xl font-bold mb-6">Change password</h2>
+
+            <form className="space-y-6" onSubmit={resetPassword}>
+
+                <div>
+                    <label className="label-standard">New password</label>
+                    <input type="password" className="textinput-standard" placeholder="••••••••" required min={8} ref={passwordRef}></input>
+                </div>
+
+                <div>
+                    <label className="label-standard">Repeat password</label>
+                    <input type="password" className="textinput-standard" placeholder="••••••••" required min={8} ref={verifyRef}></input>
+                </div>
+
+                {incorrectText && <p className="text-sm">Password fields do not match!</p>}
+
+                <Button type="submit" variant="filled" className="w-full">Change password</Button>
             </form>
-        </div>
+        </>
     )
 }

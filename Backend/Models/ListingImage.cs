@@ -9,6 +9,7 @@ namespace Backend.Models
         public long Size { get; set; }
         public string RelativePath { get; set; } = null!;
         public string ContentType { get; set; } = null!;
+        public int Index { get; set; }
         public int? ListingId { get; set; }
 
         [JsonIgnore]

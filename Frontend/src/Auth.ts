@@ -1,17 +1,28 @@
 import { jwtDecode } from "jwt-decode";
-import { decodeUserData, encodeUserData, type UserData as UserData } from "./types/userData";
+import { type UserData } from "./types/userData";
 import { ParseToken as rftDecode } from "./types/refreshToken";
-import { postAnonymous } from "./BackendClient";
+import { getAnonymous, getAuthorized, postAnonymous } from "./BackendClient";
 
 let loggedIn: boolean = false;
 let activeUserData: UserData | undefined;
+let userRole: string | undefined;
+
+const onLoginSubscribers: ((data: UserData) => void)[] = [];
 
 export function getActiveUser(): UserData | undefined {
     return activeUserData;
 }
 
+export function getUserRole(): string | undefined {
+    return userRole;
+}
+
 export function isLoggedIn(): boolean {
     return loggedIn;
+}
+
+export function onLogin(callback: (data: UserData) => void) {
+    onLoginSubscribers.push(callback);
 }
 
 export async function logOut() {
@@ -21,6 +32,7 @@ export async function logOut() {
 
     loggedIn = false;
     activeUserData = undefined;
+    userRole = undefined;
 }
 
 export async function getJWT(): Promise<string | null> {
@@ -38,19 +50,22 @@ export async function validateLogin(): Promise<boolean> {
     if (!access) {
         const success = await refreshLogin();
 
-        if (!success) return false;
+        if (!success){
+            //window.location.href = '/account/login';
+            return false;
+        }
     }
 
     loggedIn = true;
     const userCookie = await cookieStore.get('user');
-    activeUserData = decodeUserData(userCookie!.value!);
+    activeUserData = JSON.parse(userCookie!.value!);
 
     return true;
 }
 
 export async function requestJWToken(loginDetails: LoginRequest, allowThrowing: boolean = false): Promise<boolean> {
     try {
-        const data = await postAnonymous<LoginResult>('user/Login', loginDetails);
+        const data = await postAnonymous<LoginResult>('users/Login', loginDetails);
         await processLoginResult(data);
         return true;
     }
@@ -61,13 +76,18 @@ export async function requestJWToken(loginDetails: LoginRequest, allowThrowing: 
     }
 }
 
+export async function request2FASecret(): Promise<string> {
+    const data = await getAuthorized<{key: string}>('users/enable2fa');
+    return data.key;
+}
+
 export async function refreshLogin(): Promise<boolean> {
 
     const refreshCookie = await cookieStore.get('refresh');
     if(!refreshCookie) return false;
 
     try {
-        const data = await postAnonymous<LoginResult>('user/RefreshLogin', { "token": refreshCookie.value! });
+        const data = await postAnonymous<LoginResult>('users/RefreshLogin', { "token": refreshCookie.value! });
         await processLoginResult(data);
         return true;
     }
@@ -95,13 +115,17 @@ async function processLoginResult(data: LoginResult) {
     
     const jwt = jwtDecode(data.accessToken);
     const rft = rftDecode(data.refreshToken);
+
+    var response = await getAnonymous<{ role: string }>(`users/GetUserRole/${jwt.sub!}`);
+    userRole = response.role;
+    data.userData.role = userRole;
     
     await cookieStore.set({
         name: "access",
         value: data.accessToken,
         expires: jwt.exp! * 1000,
         path: '/',
-    });
+    }); 
 
     await cookieStore.set({
         name: "refresh",
@@ -112,21 +136,24 @@ async function processLoginResult(data: LoginResult) {
 
     await cookieStore.set({
         name: "user",
-        value: encodeUserData(data.userData),
+        value: JSON.stringify(data.userData),
         path: '/'
     });
 
     loggedIn = true;
     activeUserData = data.userData;
+
+    onLoginSubscribers.forEach(ls => ls(data.userData));
 }
 
 type LoginResult = {
     accessToken: string,
     refreshToken: string,
-    userData: UserData
+    userData: UserData,
 }
 
 export type LoginRequest = {
     email: string,
-    password: string
+    password: string,
+    totp?: string
 }

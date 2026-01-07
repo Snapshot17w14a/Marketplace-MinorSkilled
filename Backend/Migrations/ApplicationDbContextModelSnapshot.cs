@@ -15,7 +15,7 @@ namespace Backend.Migrations
         protected override void BuildModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
-            modelBuilder.HasAnnotation("ProductVersion", "9.0.9");
+            modelBuilder.HasAnnotation("ProductVersion", "10.0.1");
 
             modelBuilder.Entity("Backend.Models.Listing", b =>
                 {
@@ -54,6 +54,36 @@ namespace Backend.Migrations
                     b.ToTable("Listings");
                 });
 
+            modelBuilder.Entity("Backend.Models.ListingCategory", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("INTEGER");
+
+                    b.Property<string>("Category")
+                        .IsRequired()
+                        .HasColumnType("TEXT");
+
+                    b.HasKey("Id");
+
+                    b.ToTable("ListingCategories");
+                });
+
+            modelBuilder.Entity("Backend.Models.ListingCategoryRelation", b =>
+                {
+                    b.Property<int>("ListingId")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<int>("CategoryId")
+                        .HasColumnType("INTEGER");
+
+                    b.HasKey("ListingId", "CategoryId");
+
+                    b.HasIndex("CategoryId");
+
+                    b.ToTable("ListingCategoryRelation");
+                });
+
             modelBuilder.Entity("Backend.Models.ListingImage", b =>
                 {
                     b.Property<int>("Id")
@@ -66,6 +96,9 @@ namespace Backend.Migrations
 
                     b.Property<Guid>("Guid")
                         .HasColumnType("TEXT");
+
+                    b.Property<int>("Index")
+                        .HasColumnType("INTEGER");
 
                     b.Property<int?>("ListingId")
                         .HasColumnType("INTEGER");
@@ -103,6 +136,27 @@ namespace Backend.Migrations
                     b.HasKey("Id");
 
                     b.ToTable("ResetTokens");
+                });
+
+            modelBuilder.Entity("Backend.Models.PermissionClaim", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("INTEGER");
+
+                    b.Property<string>("Permission")
+                        .IsRequired()
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("Role")
+                        .IsRequired()
+                        .HasColumnType("TEXT");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("Role");
+
+                    b.ToTable("PermissionClaims");
                 });
 
             modelBuilder.Entity("Backend.Models.RefreshToken", b =>
@@ -155,6 +209,15 @@ namespace Backend.Migrations
                     b.Property<Guid>("Identifier")
                         .HasColumnType("TEXT");
 
+                    b.Property<bool>("IsMFAEnabled")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<bool>("IsVerified")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<string>("MFASecret")
+                        .HasColumnType("TEXT");
+
                     b.Property<string>("Name")
                         .IsRequired()
                         .HasColumnType("TEXT");
@@ -163,9 +226,49 @@ namespace Backend.Migrations
                         .IsRequired()
                         .HasColumnType("TEXT");
 
+                    b.Property<string>("Role")
+                        .IsRequired()
+                        .HasColumnType("TEXT");
+
+                    b.Property<Guid?>("VerificationTokenUserId")
+                        .HasColumnType("TEXT");
+
                     b.HasKey("Id");
 
+                    b.HasIndex("Role");
+
+                    b.HasIndex("VerificationTokenUserId")
+                        .IsUnique();
+
                     b.ToTable("Users");
+                });
+
+            modelBuilder.Entity("Backend.Models.UserRole", b =>
+                {
+                    b.Property<string>("Role")
+                        .HasColumnType("TEXT");
+
+                    b.HasKey("Role");
+
+                    b.ToTable("UserRoles");
+                });
+
+            modelBuilder.Entity("Backend.Models.VerificationToken", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("INTEGER");
+
+                    b.Property<string>("Token")
+                        .IsRequired()
+                        .HasColumnType("TEXT");
+
+                    b.Property<Guid>("UserId")
+                        .HasColumnType("TEXT");
+
+                    b.HasKey("Id");
+
+                    b.ToTable("VerificationTokens");
                 });
 
             modelBuilder.Entity("Backend.Models.Listing", b =>
@@ -177,6 +280,25 @@ namespace Backend.Migrations
                         .IsRequired();
                 });
 
+            modelBuilder.Entity("Backend.Models.ListingCategoryRelation", b =>
+                {
+                    b.HasOne("Backend.Models.ListingCategory", "Category")
+                        .WithMany("ListingRelations")
+                        .HasForeignKey("CategoryId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.HasOne("Backend.Models.Listing", "Listing")
+                        .WithMany("CategoryRelations")
+                        .HasForeignKey("ListingId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("Category");
+
+                    b.Navigation("Listing");
+                });
+
             modelBuilder.Entity("Backend.Models.ListingImage", b =>
                 {
                     b.HasOne("Backend.Models.Listing", "Listing")
@@ -186,9 +308,44 @@ namespace Backend.Migrations
                     b.Navigation("Listing");
                 });
 
+            modelBuilder.Entity("Backend.Models.PermissionClaim", b =>
+                {
+                    b.HasOne("Backend.Models.UserRole", null)
+                        .WithMany("Permissions")
+                        .HasForeignKey("Role")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+                });
+
+            modelBuilder.Entity("Backend.Models.User", b =>
+                {
+                    b.HasOne("Backend.Models.UserRole", null)
+                        .WithMany()
+                        .HasForeignKey("Role")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.HasOne("Backend.Models.VerificationToken", null)
+                        .WithOne()
+                        .HasForeignKey("Backend.Models.User", "VerificationTokenUserId")
+                        .HasPrincipalKey("Backend.Models.VerificationToken", "UserId");
+                });
+
             modelBuilder.Entity("Backend.Models.Listing", b =>
                 {
+                    b.Navigation("CategoryRelations");
+
                     b.Navigation("Images");
+                });
+
+            modelBuilder.Entity("Backend.Models.ListingCategory", b =>
+                {
+                    b.Navigation("ListingRelations");
+                });
+
+            modelBuilder.Entity("Backend.Models.UserRole", b =>
+                {
+                    b.Navigation("Permissions");
                 });
 #pragma warning restore 612, 618
         }
