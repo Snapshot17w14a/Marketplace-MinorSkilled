@@ -211,7 +211,7 @@ function Results({ parameters, setResultCount } : { parameters: SearchQueryParam
             setListingPage(prev => {
                 return([
                     ...prev,
-                    { listings: <PageResults listings={data.listings} page={data.page} key={data.page}/> }
+                    { listings: <PageResults listings={data.listings} key={data.page}/> }
                 ])
             })
             setResultCount(data.listingCount);
@@ -248,7 +248,7 @@ function Results({ parameters, setResultCount } : { parameters: SearchQueryParam
         )
 }
 
-function PageResults({ listings, page } : { listings: ListingDescriptor[], page: number }){
+function PageResults({ listings } : { listings: ListingDescriptor[] }){
     return(<>{listings && listings.map((data, index) => <ProductCard descriptor={data} key={index}/>)}</>)
 }
 

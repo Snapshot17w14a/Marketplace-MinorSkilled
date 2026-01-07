@@ -1,4 +1,3 @@
-import { useNavigate } from "react-router-dom";
 import Button from "../Components/Button";
 import { useFade } from "./AccountPage";
 import { useState } from "react";

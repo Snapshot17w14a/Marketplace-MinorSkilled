@@ -17,7 +17,7 @@ import EnableMFA from './Pages/EnableMFA'
 import EnterMFA from './Pages/EnterMFA'
 import VerifyAccount from './Pages/VerifyAccount'
 import PopupProvider from './Components/PopupProvider'
-import Empty from './Pages/Empty'
+//import Empty from './Pages/Empty'
 import TopNavigation from './Components/TopNavigation'
 import { fetchSavedListings } from './SavedListings'
 import CreateListing from './Pages/CreateListing'
@@ -37,7 +37,7 @@ createRoot(document.getElementById('root')!).render(
           <TopNavigation/>
           <Routes>
             <Route index element={<Home />}/>
-            <Route path='empty' element={<Empty/>} />
+            {/* <Route path='empty' element={<Empty/>} /> */}
             <Route path='listing/:listingId' element={<Listing/>} />
             <Route path='listing/creator' element={<CreateListing/>} />
             <Route path='listing/edit/:listingId' element={<EditListing/>} />
