@@ -71,6 +71,19 @@ builder.Services.AddCors(options =>
 
 var app = builder.Build();
 
+if (args.Contains("--migrate-database"))
+{
+    var scope = app.Services.CreateScope().ServiceProvider;
+
+    var logger = scope.GetRequiredService<ILogger<Program>>();
+
+    logger.LogInformation("Migrating database...");
+    scope.GetRequiredService<ApplicationDbContext>().Database.Migrate();
+    logger.LogInformation("Database migration completed successfully");
+
+    Environment.Exit(0);
+}
+
 // Configure brevo client configuration
 var apiKey = config["Secrets:BrevoAPIKey"];
 if (string.IsNullOrEmpty(apiKey)) throw new Exception("The mail client API key could not be found in the config");
