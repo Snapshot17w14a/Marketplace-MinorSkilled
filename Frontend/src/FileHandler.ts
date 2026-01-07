@@ -36,11 +36,11 @@ export async function UploadFilesToServer(files: File[]): Promise<string[]>
 {
     var promises: Promise<UploadResult>[] = [];
 
-    files.forEach(file => {
+    files.forEach((file, index) => {
         const formData = new FormData();
         formData.append("file", file);
 
-        const uploadPromise = postXmlHttp<UploadResult>("Images/UploadImage", formData);
+        const uploadPromise = postXmlHttp<UploadResult>("Images/UploadImage", formData, () => {}, [{ key: "index", value: index.toString() }]);
         promises.push(uploadPromise);
     });
 

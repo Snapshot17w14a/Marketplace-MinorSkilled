@@ -38,7 +38,6 @@ export default function Home() {
             const data = await getAnonymous<ListingDescriptor[]>("listings/GetLatest/8");
 
             const ListingCards: JSX.Element[] = data.map((listing, index) => {
-                //return(<ListingCard className='h-full' key={index} descriptor={listing} />)
                 return(<ProductCard key={index} descriptor={listing}/>)
             });
 

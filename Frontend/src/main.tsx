@@ -22,8 +22,12 @@ import TopNavigation from './Components/TopNavigation'
 import { fetchSavedListings } from './SavedListings'
 import CreateListing from './Pages/CreateListing'
 
-await validateLogin();
-await fetchSavedListings();
+try {
+  await validateLogin();
+  await fetchSavedListings();
+} catch (error) {
+  console.error("Error during initial auth or saved listings fetch:", error);
+}
 
 createRoot(document.getElementById('root')!).render(
   <StrictMode>

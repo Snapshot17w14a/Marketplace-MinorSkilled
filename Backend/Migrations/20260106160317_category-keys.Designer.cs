@@ -3,6 +3,7 @@ using System;
 using Backend.Database;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 
 #nullable disable
@@ -10,12 +11,14 @@ using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 namespace Backend.Migrations
 {
     [DbContext(typeof(ApplicationDbContext))]
-    partial class ApplicationDbContextModelSnapshot : ModelSnapshot
+    [Migration("20260106160317_category-keys")]
+    partial class categorykeys
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
-            modelBuilder.HasAnnotation("ProductVersion", "10.0.1");
+            modelBuilder.HasAnnotation("ProductVersion", "9.0.9");
 
             modelBuilder.Entity("Backend.Models.Listing", b =>
                 {
@@ -64,24 +67,35 @@ namespace Backend.Migrations
                         .IsRequired()
                         .HasColumnType("TEXT");
 
+                    b.Property<int?>("ListingId")
+                        .HasColumnType("INTEGER");
+
                     b.HasKey("Id");
+
+                    b.HasIndex("ListingId");
 
                     b.ToTable("ListingCategories");
                 });
 
-            modelBuilder.Entity("Backend.Models.ListingCategoryRelation", b =>
+            modelBuilder.Entity("Backend.Models.ListingCategoryConnector", b =>
                 {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("INTEGER");
+
+                    b.Property<int>("ListingCategoryId")
+                        .HasColumnType("INTEGER");
+
                     b.Property<int>("ListingId")
                         .HasColumnType("INTEGER");
 
-                    b.Property<int>("CategoryId")
-                        .HasColumnType("INTEGER");
+                    b.HasKey("Id");
 
-                    b.HasKey("ListingId", "CategoryId");
+                    b.HasIndex("ListingCategoryId");
 
-                    b.HasIndex("CategoryId");
+                    b.HasIndex("ListingId");
 
-                    b.ToTable("ListingCategoryRelation");
+                    b.ToTable("ListingCategoryConnectors");
                 });
 
             modelBuilder.Entity("Backend.Models.ListingImage", b =>
@@ -280,23 +294,26 @@ namespace Backend.Migrations
                         .IsRequired();
                 });
 
-            modelBuilder.Entity("Backend.Models.ListingCategoryRelation", b =>
+            modelBuilder.Entity("Backend.Models.ListingCategory", b =>
                 {
-                    b.HasOne("Backend.Models.ListingCategory", "Category")
-                        .WithMany("ListingRelations")
-                        .HasForeignKey("CategoryId")
+                    b.HasOne("Backend.Models.Listing", null)
+                        .WithMany("Categories")
+                        .HasForeignKey("ListingId");
+                });
+
+            modelBuilder.Entity("Backend.Models.ListingCategoryConnector", b =>
+                {
+                    b.HasOne("Backend.Models.ListingCategory", null)
+                        .WithMany()
+                        .HasForeignKey("ListingCategoryId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
 
-                    b.HasOne("Backend.Models.Listing", "Listing")
-                        .WithMany("CategoryRelations")
+                    b.HasOne("Backend.Models.Listing", null)
+                        .WithMany()
                         .HasForeignKey("ListingId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
-
-                    b.Navigation("Category");
-
-                    b.Navigation("Listing");
                 });
 
             modelBuilder.Entity("Backend.Models.ListingImage", b =>
@@ -333,14 +350,9 @@ namespace Backend.Migrations
 
             modelBuilder.Entity("Backend.Models.Listing", b =>
                 {
-                    b.Navigation("CategoryRelations");
+                    b.Navigation("Categories");
 
                     b.Navigation("Images");
-                });
-
-            modelBuilder.Entity("Backend.Models.ListingCategory", b =>
-                {
-                    b.Navigation("ListingRelations");
                 });
 
             modelBuilder.Entity("Backend.Models.UserRole", b =>

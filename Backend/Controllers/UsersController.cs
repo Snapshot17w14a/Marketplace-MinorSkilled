@@ -27,7 +27,7 @@ namespace Backend.Controllers
         [HttpGet]
         [Authorize]
         [Role(IdentityRole.Admin)]
-        public async Task<IEnumerable<UserDTO>> Get() => _context.Users.Cast<UserDTO>();
+        public IEnumerable<UserDTO> Get() => _context.Users.Cast<UserDTO>();
 
         [HttpGet("{id}")]
         [Authorize]

@@ -1,5 +1,6 @@
 ﻿using System.IdentityModel.Tokens.Jwt;
 using Backend.Database;
+using Backend.Extensions;
 using Backend.Models;
 using Backend.Protocols;
 using Backend.Protocols.ListingProtocols;
@@ -19,14 +20,15 @@ namespace Backend.Controllers
         [HttpPost]
         public async Task<ActionResult> SaveListing(ListingSaveSelector saveListingRequest)
         {
-            var callingUser = (User)HttpContext.Items["User"]!;
+            var callingUser = HttpContext.AuthenticatedUser();
+
+            if (callingUser == null)
+                return NotFound();
 
             var existingSave = await _context.SavedListings.FirstOrDefaultAsync(sl => sl.UserId == callingUser.Identifier && sl.ListingId == saveListingRequest.ListingId);
 
             if (existingSave != null)
-            {
                 return Conflict(existingSave);
-            }
 
             SavedListing savedListing = new()
             {

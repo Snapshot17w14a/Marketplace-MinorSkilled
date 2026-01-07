@@ -14,6 +14,7 @@ namespace Backend.Models
         public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
 
         public ICollection<ListingImage> Images { get; set; } = [];
+        public ICollection<ListingCategoryRelation> CategoryRelations { get; set; } = [];
 
         public void ApplyChanges(EditListingRequest request)
         {

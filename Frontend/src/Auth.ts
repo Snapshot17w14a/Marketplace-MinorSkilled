@@ -50,7 +50,10 @@ export async function validateLogin(): Promise<boolean> {
     if (!access) {
         const success = await refreshLogin();
 
-        if (!success) return false;
+        if (!success){
+            //window.location.href = '/account/login';
+            return false;
+        }
     }
 
     loggedIn = true;

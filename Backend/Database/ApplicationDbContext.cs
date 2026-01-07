@@ -14,6 +14,7 @@ namespace Backend.Database
         public DbSet<UserRole> UserRoles { get; set; }
         public DbSet<PermissionClaim> PermissionClaims { get; set; }
         public DbSet<VerificationToken> VerificationTokens { get; set; }
+        public DbSet<ListingCategory> ListingCategories { get; set; }
 
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
@@ -40,6 +41,9 @@ namespace Backend.Database
 
             modelBuilder.Entity<VerificationToken>()
                 .HasKey(vt => vt.Id);
+
+            modelBuilder.Entity<ListingCategory>()
+                .HasKey(lc => lc.Id);
 
             modelBuilder.Entity<User>()
                 .HasMany<Listing>()
@@ -69,6 +73,19 @@ namespace Backend.Database
                 .HasOne<User>()
                 .WithOne()
                 .HasPrincipalKey<VerificationToken>(vt => vt.UserId);
+
+            modelBuilder.Entity<ListingCategoryRelation>()
+                .HasKey(x => new { x.ListingId, x.CategoryId });
+
+            modelBuilder.Entity<ListingCategoryRelation>()
+                .HasOne(x => x.Listing)
+                .WithMany(l => l.CategoryRelations)
+                .HasForeignKey(x => x.ListingId);
+
+            modelBuilder.Entity<ListingCategoryRelation>()
+                .HasOne(x => x.Category)
+                .WithMany(c => c.ListingRelations)
+                .HasForeignKey(x => x.CategoryId);
         }
     }
 }

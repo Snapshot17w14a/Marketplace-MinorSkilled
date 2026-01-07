@@ -2,7 +2,9 @@
 {
     public class ListingQueryParameters
     {
-        public string Phrase { get; set; } = null!;
+        public int[]? Categories { get; set; }
+
+        public required string Phrase { get; set; }
         public string SortBy { get; set; } = "CreatedAt";
         public bool Descending { get; set; } = true;
 

@@ -3,6 +3,7 @@ using System;
 using Backend.Database;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 
 #nullable disable
@@ -10,9 +11,11 @@ using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 namespace Backend.Migrations
 {
     [DbContext(typeof(ApplicationDbContext))]
-    partial class ApplicationDbContextModelSnapshot : ModelSnapshot
+    [Migration("20260106161049_categories-simple-mtm")]
+    partial class categoriessimplemtm
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder.HasAnnotation("ProductVersion", "10.0.1");
@@ -67,21 +70,6 @@ namespace Backend.Migrations
                     b.HasKey("Id");
 
                     b.ToTable("ListingCategories");
-                });
-
-            modelBuilder.Entity("Backend.Models.ListingCategoryRelation", b =>
-                {
-                    b.Property<int>("ListingId")
-                        .HasColumnType("INTEGER");
-
-                    b.Property<int>("CategoryId")
-                        .HasColumnType("INTEGER");
-
-                    b.HasKey("ListingId", "CategoryId");
-
-                    b.HasIndex("CategoryId");
-
-                    b.ToTable("ListingCategoryRelation");
                 });
 
             modelBuilder.Entity("Backend.Models.ListingImage", b =>
@@ -271,6 +259,36 @@ namespace Backend.Migrations
                     b.ToTable("VerificationTokens");
                 });
 
+            modelBuilder.Entity("ListingListingCategory", b =>
+                {
+                    b.Property<int>("CategoriesId")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<int>("ListingsId")
+                        .HasColumnType("INTEGER");
+
+                    b.HasKey("CategoriesId", "ListingsId");
+
+                    b.HasIndex("ListingsId");
+
+                    b.ToTable("ListingListingCategory");
+                });
+
+            modelBuilder.Entity("ListingListingCategory1", b =>
+                {
+                    b.Property<int>("ListingCategoryId")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<int>("ListingId")
+                        .HasColumnType("INTEGER");
+
+                    b.HasKey("ListingCategoryId", "ListingId");
+
+                    b.HasIndex("ListingId");
+
+                    b.ToTable("ListingCategoriesRelations", (string)null);
+                });
+
             modelBuilder.Entity("Backend.Models.Listing", b =>
                 {
                     b.HasOne("Backend.Models.User", null)
@@ -278,25 +296,6 @@ namespace Backend.Migrations
                         .HasForeignKey("UserId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
-                });
-
-            modelBuilder.Entity("Backend.Models.ListingCategoryRelation", b =>
-                {
-                    b.HasOne("Backend.Models.ListingCategory", "Category")
-                        .WithMany("ListingRelations")
-                        .HasForeignKey("CategoryId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
-
-                    b.HasOne("Backend.Models.Listing", "Listing")
-                        .WithMany("CategoryRelations")
-                        .HasForeignKey("ListingId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
-
-                    b.Navigation("Category");
-
-                    b.Navigation("Listing");
                 });
 
             modelBuilder.Entity("Backend.Models.ListingImage", b =>
@@ -331,16 +330,39 @@ namespace Backend.Migrations
                         .HasPrincipalKey("Backend.Models.VerificationToken", "UserId");
                 });
 
-            modelBuilder.Entity("Backend.Models.Listing", b =>
+            modelBuilder.Entity("ListingListingCategory", b =>
                 {
-                    b.Navigation("CategoryRelations");
+                    b.HasOne("Backend.Models.ListingCategory", null)
+                        .WithMany()
+                        .HasForeignKey("CategoriesId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
 
-                    b.Navigation("Images");
+                    b.HasOne("Backend.Models.Listing", null)
+                        .WithMany()
+                        .HasForeignKey("ListingsId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
                 });
 
-            modelBuilder.Entity("Backend.Models.ListingCategory", b =>
+            modelBuilder.Entity("ListingListingCategory1", b =>
                 {
-                    b.Navigation("ListingRelations");
+                    b.HasOne("Backend.Models.ListingCategory", null)
+                        .WithMany()
+                        .HasForeignKey("ListingCategoryId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.HasOne("Backend.Models.Listing", null)
+                        .WithMany()
+                        .HasForeignKey("ListingId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+                });
+
+            modelBuilder.Entity("Backend.Models.Listing", b =>
+                {
+                    b.Navigation("Images");
                 });
 
             modelBuilder.Entity("Backend.Models.UserRole", b =>

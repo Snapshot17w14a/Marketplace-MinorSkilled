@@ -1,8 +1,6 @@
-﻿using System.IdentityModel.Tokens.Jwt;
-using Backend.Database;
+﻿using Backend.Database;
 using Backend.Extensions;
 using Backend.Models;
-using Backend.Protocols;
 using Backend.Protocols.DTOs;
 using Backend.Protocols.ListingProtocols;
 using Backend.Roles;
@@ -14,13 +12,14 @@ namespace Backend.Controllers
 {
     [Route("api/[controller]/[Action]")]
     [ApiController]
-    public class ListingsController(ApplicationDbContext context) : ControllerBase
+    public class ListingsController(ApplicationDbContext context, IConfiguration config) : ControllerBase
     {
         private readonly ApplicationDbContext _context = context;
+        private readonly IConfiguration _config = config;
 
         [HttpPost]
         [Authorize]
-        public async Task<ActionResult> CreateListing([FromBody] CreateListingRequest createListingRequest, [FromHeader] AuthorizationHeader auth)
+        public async Task<ActionResult> CreateListing([FromBody] CreateListingRequest createListingRequest)
         {
             var listingImages = Array.Empty<ListingImage>();
 
@@ -28,15 +27,21 @@ namespace Backend.Controllers
             {
                 listingImages = [.. _context.ListingsImages.Where(li => createListingRequest.LinkedImages.Contains(li.Guid))];
             }
-            catch (Exception ex)
+            catch
             {
-                return BadRequest($"One or more of the provided Guids for images was incorrect.\n{ex.Message}");
+                return BadRequest($"One or more of the provided Guids for images was incorrect");
             }
 
-            User? creatingUser = (User?)HttpContext.Items["User"];
+            User? creatingUser = HttpContext.AuthenticatedUser();
 
             if (creatingUser == null)
                 return BadRequest("The user specified in the authorization token was not found!");
+
+            var allowedCurrencyCodes = _config["Currencies"];
+            if (allowedCurrencyCodes != null && !allowedCurrencyCodes.Contains(createListingRequest.Currency))
+                return BadRequest("The provided currency code is not supported, please select a currency from the listing creator's dropdown");
+
+            var categories = _context.ListingCategories.Where(cat => createListingRequest.Categories.Contains(cat.Id)).ToArray();
 
             var listing = new Listing()
             {
@@ -45,27 +50,27 @@ namespace Backend.Controllers
                 Description = createListingRequest.Description,
                 Price = createListingRequest.Price,
                 Currency = createListingRequest.Currency,
-                Images = listingImages
+                Images = listingImages,
+                CategoryRelations = [.. categories.Select(cat => new ListingCategoryRelation()
+                {
+                    Category = cat,
+                    CategoryId = cat.Id,
+                })],
             };
-
-            foreach (var img in listingImages)
-            {
-                img.Listing = listing;
-                img.ListingId = listing.Id;
-            }
 
             await _context.Listings.AddAsync(listing);
             await _context.SaveChangesAsync();
 
-            return CreatedAtAction(nameof(Get), new { guid = listing.Guid }, listing);
+            return CreatedAtAction(nameof(Get), new { guid = listing.Guid }, new ListingDTO(listing, null));
         }
 
         [HttpGet("{guid}")]
         public async Task<ActionResult<ListingDTO>> Get(Guid guid)
         {
             var listing = await _context.Listings
-                .Include(l => l.Images
-                .OrderBy(li => li.Index))
+                .Include(l => l.Images.OrderBy(li => li.Index))
+                .Include(l => l.CategoryRelations)
+                .ThenInclude(lcr => lcr.Category)
                 .FirstOrDefaultAsync(l => l.Guid == guid);
 
             if (listing == null)
@@ -77,17 +82,19 @@ namespace Backend.Controllers
         }
 
         [HttpGet("{count}")]
-        public async Task<ActionResult<ICollection<Listing>>> GetLatest(int count)
+        public async Task<ActionResult<ICollection<ListingDTO>>> GetLatest(int count)
         {
             var listingsCount = await _context.Listings.CountAsync();
 
             var listings = await _context.Listings
                 .Include(l => l.Images.Where(li => li.Index == 0))
+                .Include(l => l.CategoryRelations)
+                .ThenInclude(lcr => lcr.Category)
                 .OrderByDescending(li => li.CreatedAt)
                 .Take(listingsCount < count ? listingsCount : count)
                 .ToListAsync();
 
-            return Ok(listings);
+            return Ok(listings.ConvertAll<ListingDTO>(l => new(l, null)));
         }
 
         [HttpGet]
@@ -101,6 +108,14 @@ namespace Backend.Controllers
                 listings = listings.Where(l =>
                     l.Title.Contains(query.Phrase) || l.Description.Contains(query.Phrase)
                 );
+
+                // Filter by categories
+                if (query.Categories != null)
+                {
+                    listings = listings.Where(l =>
+                        l.CategoryRelations.Any(lcr => query.Categories.Contains(lcr.CategoryId))
+                    );
+                }
 
                 // Order by sorting method
                 listings = query.SortBy.Trim().ToLower() switch
@@ -120,12 +135,14 @@ namespace Backend.Controllers
                 // Get the final listings, include images, skip pages, and take a page's worth of listings
                 var finalListings = listings
                     .Include(l => l.Images.Where(li => li.Index == 0))
+                    .Include(l => l.CategoryRelations)
+                    .ThenInclude(lcr => lcr.Category)
                     .Skip(query.Page * query.PageCount)
                     .Take(query.PageCount);
 
                 return Ok(new
                 {
-                    listings = finalListings.ToArray(),
+                    listings = finalListings.ToList().ConvertAll<ListingDTO>(l => new(l, null)),
                     query.Page,
                     pageCount,
                     listingCount,

@@ -45,6 +45,11 @@
 
 
 @layer base {
+
+    html{
+        @apply scroll-smooth max-w-screen;
+    }
+
     :root{
         @apply bg-neutral-100 dark:bg-[#1c1c1d] min-h-screen min-w-screen block box-border font-[Sansation] text-black dark:text-white;
     }

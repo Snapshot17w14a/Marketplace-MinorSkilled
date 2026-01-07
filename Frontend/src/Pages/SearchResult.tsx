@@ -66,6 +66,33 @@ export default function SearchResult() {
         })
     }
 
+    const handleCategorySelection = (isSelected: boolean, categoryId?: number) => {
+
+        if (categoryId === undefined) return
+
+        setQueryFilters(prev => {
+            const obj: SearchQueryParameters = {
+                ...prev
+            }
+
+            if (!obj.categories)
+                obj.categories = [];
+
+            if (isSelected && obj.categories.find(e => e === categoryId) === undefined) {
+                obj.categories.push(categoryId);
+            }
+            else if (!isSelected && obj.categories.find(e => e === categoryId) !== undefined) {
+                obj.categories = obj.categories.filter(e => e !== categoryId);
+            }
+
+            if (obj.categories.length === 0)
+                delete obj.categories;
+
+            return obj;
+        })
+    };
+    
+
     useEffect(() => {
         setQueryFilters(prev => {
             if (prev.phrase === searchPhrase) return prev;
@@ -121,12 +148,20 @@ export default function SearchResult() {
                         <ul className="space-y-2 text-sm">
                             {categoriesConfig.categories.map((category, index) => {
                                 return(
-                                    <li className="flex gap-2" key={index}>
-                                        <input 
-                                            className=""
-                                            type="checkbox"
-                                        />
-                                        <CategoryLabel category={category} />
+                                    <li key={index}>
+                                        <label 
+                                            className="flex gap-2 select-none" 
+                                        >
+                                            <input 
+                                                className=""
+                                                type="checkbox"
+                                                onChange={(e) => handleCategorySelection(
+                                                    e.target.checked, 
+                                                    categoriesConfig.categoryIds.find(cat => cat.name === category.name)?.id
+                                                )}
+                                            />
+                                            <CategoryLabel category={category} />
+                                        </label>
                                     </li>
                                 )
                             })}
@@ -185,7 +220,7 @@ function Results({ parameters, setResultCount } : { parameters: SearchQueryParam
         catch (error) {
             notify({
                 type: "error",
-                header: `An error occured while trying gathering data!`,
+                header: `An error occured while trying to gather data!`,
                 message: `${error}`
             });
         }
@@ -222,7 +257,13 @@ function buildQueryString(queryParams: SearchQueryParameters): string {
 
     Object.entries(queryParams).forEach(([key, value]) => {
         if (key !== null && value !== null && value !== '') {
-            builder.append(key, value);
+            if(value instanceof Array) {
+                value.forEach(v => {
+                    builder.append(key, v.toString());
+                })}
+            else{
+                builder.append(key, value);
+            }
         }
     })
 
@@ -230,6 +271,8 @@ function buildQueryString(queryParams: SearchQueryParameters): string {
 }
 
 interface SearchQueryParameters {
+    categories?: number[]
+
     phrase: string,
     sortBy?: string,
     descending?: boolean,

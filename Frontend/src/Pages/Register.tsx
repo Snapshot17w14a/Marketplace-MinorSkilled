@@ -6,7 +6,6 @@ import { useFade as useFade } from "./AccountPage";
 import { useNotify as useNotify } from "../Components/NotificationProvider";
 import { FetchError } from "../classes/FetchError";
 import responseCodes from "../types/responseCodes";
-import QRCode from "react-qr-code";
 
 export default function Register(){
     const emailRef = useRef<HTMLInputElement>(null);
