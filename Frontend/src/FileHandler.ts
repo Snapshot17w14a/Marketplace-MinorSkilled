@@ -32,28 +32,34 @@ export function ValidateFileTypeAndSize(files: File[], notify: (descriptor: Noti
     return filesPass;
 }
 
-export async function UploadFilesToServer(files: File[]): Promise<string[]>
+export async function UploadFilesToServer(endpoint: string, files: File[]): Promise<UploadResult[]>
 {
-    var promises: Promise<UploadResult>[] = [];
+    const promises: Promise<UploadResult>[] = [];
 
     files.forEach((file, index) => {
-        const formData = new FormData();
-        formData.append("file", file);
-
-        const uploadPromise = postXmlHttp<UploadResult>("Images/UploadImage", formData, () => {}, [{ key: "index", value: index.toString() }]);
+        const uploadPromise = UploadFileToServer(endpoint, file, [{ key: "index", value: index.toString() }])
         promises.push(uploadPromise);
     });
 
-    await Promise.allSettled(promises);
+    const results = await Promise.allSettled(promises);
+    const successfulUploads: UploadResult[] = []
+    
+    results.forEach(result => {
+        if (result.status != 'fulfilled')
+            return;
 
-    const successfulUploads: string[] = [];
-
-    for (let i = 0; i < promises.length; i++) {
-        const result = await promises[i];
-        successfulUploads.push(result.id);
-    }
+        successfulUploads.push(result.value);
+    })
 
     return successfulUploads;
+}
+
+export async function UploadFileToServer(endpoint: string, file: File, headerData?: [{ key: string, value: string}]): Promise<UploadResult> {
+    
+    const formData = new FormData();
+    formData.append('file', file);
+
+    return postXmlHttp<UploadResult>(endpoint, formData, () => {}, headerData);
 }
 
 export type UploadResult = {

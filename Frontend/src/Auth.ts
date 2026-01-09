@@ -2,12 +2,14 @@ import { jwtDecode } from "jwt-decode";
 import { type UserData } from "./types/userData";
 import { ParseToken as rftDecode } from "./types/refreshToken";
 import { getAnonymous, getAuthorized, postAnonymous } from "./BackendClient";
+import { Event } from "./classes/Event";
 
 let loggedIn: boolean = false;
 let activeUserData: UserData | undefined;
 let userRole: string | undefined;
 
-const onLoginSubscribers: ((data: UserData) => void)[] = [];
+export const onLogin: Event<UserData> = new Event<UserData>();
+export const onLogout: Event<{}> = new Event<{}>();
 
 export function getActiveUser(): UserData | undefined {
     return activeUserData;
@@ -21,10 +23,6 @@ export function isLoggedIn(): boolean {
     return loggedIn;
 }
 
-export function onLogin(callback: (data: UserData) => void) {
-    onLoginSubscribers.push(callback);
-}
-
 export async function logOut() {
     await cookieStore.delete('access');
     await cookieStore.delete('refresh');
@@ -33,6 +31,8 @@ export async function logOut() {
     loggedIn = false;
     activeUserData = undefined;
     userRole = undefined;
+
+    onLogout.invoke({});
 }
 
 export async function getJWT(): Promise<string | null> {
@@ -143,7 +143,7 @@ async function processLoginResult(data: LoginResult) {
     loggedIn = true;
     activeUserData = data.userData;
 
-    onLoginSubscribers.forEach(ls => ls(data.userData));
+    onLogin.invoke(data.userData);
 }
 
 type LoginResult = {

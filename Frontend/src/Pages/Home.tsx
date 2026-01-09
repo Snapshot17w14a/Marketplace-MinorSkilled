@@ -55,7 +55,7 @@ export default function Home() {
     };
 
     return(
-        <div className='w-full p-2 sm:p-8 text-center mt-24 space-y-12'>
+        <div className='w-full p-2 sm:p-8 text-center mt-24 space-y-12 hide-scrollbar'>
 
             <div className='space-y-4'>
                 <h1 className='font-bold text-6xl'>Modern marketplace for modern people</h1>

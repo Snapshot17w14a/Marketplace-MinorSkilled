@@ -365,5 +365,19 @@ namespace Backend.Controllers
 
             return token.Token == verificationCode ? NoContent() : Forbid();
         }
+
+        [Authorize]
+        [HttpPatch]
+        public async Task<ActionResult> UpdateUserData(UpdateUserDetailsRequest request)
+        {
+            User? user = HttpContext.AuthenticatedUser();
+            if (user == null) return NotFound();
+
+            user.ApplyChanges(request);
+            _context.Entry(user).DetectChanges();
+            await _context.SaveChangesAsync();
+
+            return NoContent();
+        }
     }
 }

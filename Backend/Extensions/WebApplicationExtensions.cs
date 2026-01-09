@@ -1,6 +1,8 @@
 ﻿using Backend.Database;
+using Backend.Models;
 using Backend.Roles;
 using Backend.Services;
+using Microsoft.EntityFrameworkCore;
 
 namespace Backend.Extensions
 {
@@ -32,6 +34,31 @@ namespace Backend.Extensions
             }
 
             await roleManager.WriteToDatabase();
+        }
+
+        public static async Task SeedCategories(this WebApplication app)
+        {
+            var scope = app.Services.CreateScope();
+            var dbContext = scope.ServiceProvider.GetRequiredService<ApplicationDbContext>();
+
+            var categories = new List<ListingCategory>()
+            {
+                new() { Category = "Gaming",        Id = 0 },
+                new() { Category = "Electronics",   Id = 1 },
+                new() { Category = "Books",         Id = 2 },
+                new() { Category = "Clothing",      Id = 3 },
+                new() { Category = "Furniture",     Id = 4 },
+            };
+
+            foreach(var category in categories)
+            {
+                if ((await dbContext.ListingCategories.FirstOrDefaultAsync(cat => cat.Category == category.Category)) != null)
+                    continue;
+
+                dbContext.ListingCategories.Add(category);
+            }
+
+            await dbContext.SaveChangesAsync();
         }
     }
 }

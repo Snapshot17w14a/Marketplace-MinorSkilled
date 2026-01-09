@@ -3,24 +3,24 @@ import { createRoot } from 'react-dom/client'
 import { BrowserRouter, Route, Routes } from 'react-router-dom'
 import './index.css'
 import Home from './Pages/Home'
-import Register from './Pages/Register'
-import Login from './Pages/Login'
-import { AccountPage } from './Pages/AccountPage'
+import Register from './Pages/AccountManagement/Register'
+import Login from './Pages/AccountManagement/Login'
+import { AccountPage } from './Pages/AccountManagement/AccountPage'
 import NotificationProvider from './Components/NotificationProvider'
 import { validateLogin } from './Auth'
-import Listing from './Pages/Listing'
+import { fetchSavedListings } from './SavedListings'
+import Listing from './Pages/Listings/Listing'
 import SearchResult from './Pages/SearchResult'
-import ForgotPassword from './Pages/ForgotPassword'
-import ChangePassword from './Pages/ChangePassword'
-import EditListing from './Pages/EditListing'
-import EnableMFA from './Pages/EnableMFA'
-import EnterMFA from './Pages/EnterMFA'
+import ForgotPassword from './Pages/AccountManagement/ForgotPassword'
+import ChangePassword from './Pages/AccountManagement/ChangePassword'
+import EditListing from './Pages/Listings/EditListing'
+import EnableMFA from './Pages/AccountManagement/EnableMFA'
+import EnterMFA from './Pages/AccountManagement/EnterMFA'
 import VerifyAccount from './Pages/VerifyAccount'
 import PopupProvider from './Components/PopupProvider'
-//import Empty from './Pages/Empty'
 import TopNavigation from './Components/TopNavigation'
-import { fetchSavedListings } from './SavedListings'
-import CreateListing from './Pages/CreateListing'
+import CreateListing from './Pages/Listings/CreateListing'
+import Management from './Pages/Management'
 
 try {
   await validateLogin();
@@ -37,10 +37,10 @@ createRoot(document.getElementById('root')!).render(
           <TopNavigation/>
           <Routes>
             <Route index element={<Home />}/>
-            {/* <Route path='empty' element={<Empty/>} /> */}
             <Route path='listing/:listingId' element={<Listing/>} />
             <Route path='listing/creator' element={<CreateListing/>} />
             <Route path='listing/edit/:listingId' element={<EditListing/>} />
+            <Route path='management/:page' element={<Management/>} />
             <Route path='account' element={<AccountPage/>}>
               <Route path='register' element={<Register/>} />
               <Route path='login' element={<Login/>} />

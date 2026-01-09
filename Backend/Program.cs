@@ -71,6 +71,7 @@ builder.Services.AddCors(options =>
 
 var app = builder.Build();
 
+// Handle arguments
 if (args.Contains("--migrate-database"))
 {
     var scope = app.Services.CreateScope().ServiceProvider;
@@ -106,7 +107,10 @@ app.UseHttpsRedirection();
 app.UseAuthentication();
 app.UseAuthorization();
 
+// Seed required tables
 await app.SeedPermissionRoles();
+await app.SeedCategories();
+
 app.UseMiddleware<SimpleAuthorization>();
 
 app.MapControllers();

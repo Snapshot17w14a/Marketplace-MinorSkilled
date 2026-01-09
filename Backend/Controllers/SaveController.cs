@@ -1,8 +1,7 @@
-﻿using System.IdentityModel.Tokens.Jwt;
-using Backend.Database;
+﻿using Backend.Database;
 using Backend.Extensions;
 using Backend.Models;
-using Backend.Protocols;
+using Backend.Protocols.DTOs;
 using Backend.Protocols.ListingProtocols;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
@@ -43,9 +42,12 @@ namespace Backend.Controllers
         }
 
         [HttpPost]
-        public async Task<ActionResult> RemoveSaveListing(ListingSaveSelector removeSaveRequest, [FromHeader] AuthorizationHeader auth)
+        public async Task<ActionResult> RemoveSaveListing(ListingSaveSelector removeSaveRequest)
         {
-            var savedListing = await _context.SavedListings.FirstOrDefaultAsync(sl => sl.UserId == ExtractUserGuid(auth) && sl.ListingId == removeSaveRequest.ListingId);
+            User? user = HttpContext.AuthenticatedUser();
+            if (user == null) return NotFound();
+
+            var savedListing = await _context.SavedListings.FirstOrDefaultAsync(sl => sl.UserId == user.Identifier && sl.ListingId == removeSaveRequest.ListingId);
 
             if (savedListing == null)
             {
@@ -59,7 +61,7 @@ namespace Backend.Controllers
         }
 
         [HttpGet("{userId}")]
-        public async Task<ActionResult<SavedListing[]>> GetSavedListings(Guid userId)
+        public async Task<ActionResult<SavedListing[]>> GetSaves(Guid userId)
         {
             SavedListing[] savedListings;
 
@@ -75,14 +77,25 @@ namespace Backend.Controllers
             return Ok(savedListings);
         }
 
-        private Guid ExtractUserGuid(AuthorizationHeader auth)
+        [HttpGet]
+        [Authorize]
+        public async Task<ActionResult<Listing[]>> GetSavedListings()
         {
-            var tokenHandler = new JwtSecurityTokenHandler();
-            var jwt = auth.Authorization;
-            jwt = jwt[7..]; // Ignore the "Bearer " part of the header
-            var decodedToken = tokenHandler.ReadJwtToken(jwt);
-            var guid = Guid.Parse(decodedToken.Claims.FirstOrDefault(c => c.Type == "sub")?.Value ?? "");
-            return guid;
+            User? user = HttpContext.AuthenticatedUser();
+            if (user == null) return NotFound();
+
+            var savedListingObjects = _context.SavedListings.Where(sl => sl.UserId == user.Identifier);
+            if (savedListingObjects == null) return Ok(Array.Empty<Listing>());
+
+            var savedListings = await _context.Listings
+                .Where(l => savedListingObjects.Any(slo => slo.ListingId == l.Guid))
+                .Include(l => l.Images.Where(i => i.Index == 0))
+                .Include(l => l.CategoryRelations)
+                .ThenInclude(lcr => lcr.Category)
+                .OrderBy(l => l.CreatedAt)
+                .ToListAsync();
+
+            return Ok(savedListings.ConvertAll<ListingDTO>(l => new(l, null)));
         }
     }
 }

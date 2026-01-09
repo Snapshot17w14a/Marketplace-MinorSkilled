@@ -1,38 +1,68 @@
 import { useNavigate } from 'react-router-dom'
-import { getActiveUser, isLoggedIn as getIsLoggedIn, logOut } from '../Auth';
-import { useEffect, useState } from 'react';
-// import { getSavedListings } from '../SavedListings';
-// import type { SavedListing } from '../types/savedListing';
-// import { type ListingDescriptor } from '../types/listingDescriptor';
-// import { getAnonymous } from '../BackendClient';
-import { usePopup, type PopupContent } from './PopupProvider';
-import { Heart, User } from 'lucide-react';
+import { getActiveUser, isLoggedIn, onLogin, onLogout } from '../Auth';
+import { useEffect, useRef, useState } from 'react';
+import { Contact, Heart, LogIn, Menu } from 'lucide-react';
 import PillButton from './PillButton';
+import ManagementMenu from './ManagementMenu';
+import type { UserData } from '../types/userData';
 
 export default function TopNavigation({ className = ''}) {
 
-    useEffect(() => {
-        setIsLoggedIn(getIsLoggedIn());
-    }, []);
-
     const navigate = useNavigate();
-    const popup = usePopup();
 
-    const user = getActiveUser();
+    const [user, setUser] = useState<UserData | undefined>(getActiveUser);
 
-    const [isLoggedIn, setIsLoggedIn] = useState<boolean>(false);
-    // const [savedListings] = useState<JSX.Element>(<SavedListings />);
+    const [loggedIn, setIsLoggedIn] = useState<boolean>(isLoggedIn);
+    const [showManagementMenu, setShowManagementMenu] = useState<boolean>(false);
+    const [managementOpacity, setManagementOpacity] = useState<number>(0);
+
+    const fadeHandle = useRef<number | undefined>(undefined);
+    
+    const managementElement = <ManagementMenu closeMenu={() => setShowManagementMenu(false)} opacity={managementOpacity}/>;
+
+    const handleOnLogin = (userData: UserData) => {
+        setUser(userData);
+        setIsLoggedIn(true);
+    }
 
     const handleLogOut = () => {
-        logOut();
+        setUser(undefined);
         setIsLoggedIn(false);
-    };
+    }
 
-    const logoutPopupContent: PopupContent = {
-        title: "Are you sure",
-        message: "You are about to log out. If you do this, you must enter your credentials next time to access content on the website.",
-        onAccept: handleLogOut
-    };
+    useEffect(() => {
+        onLogin.subscribe(handleOnLogin);
+        onLogout.subscribe(handleLogOut);
+
+        return () => {
+            onLogin.unsubscribe(handleOnLogin);
+            onLogout.unsubscribe(handleLogOut);
+        }
+    }, []);
+
+    const toggleManagementMenu = () => {
+        if (fadeHandle.current != undefined)
+        {
+            window.clearTimeout(fadeHandle.current);
+            fadeHandle.current = undefined;
+            setShowManagementMenu(true);
+            setManagementOpacity(1);
+            return;
+        }
+
+        if (showManagementMenu){
+            setManagementOpacity(0);
+            fadeHandle.current = window.setTimeout(() => {
+                setShowManagementMenu(false);
+                fadeHandle.current = undefined;
+            }, 500);
+        } else {
+            setShowManagementMenu(true);
+            window.setTimeout(() => {
+                setManagementOpacity(1);
+            }, 10)
+        }
+    }
 
     return(
         <>
@@ -40,63 +70,25 @@ export default function TopNavigation({ className = ''}) {
 
                 <p className='text-xl font-bold text-rose-500 my-auto cursor-pointer' onClick={() => navigate('/')}>Kev's marketplace</p>
                     
-                <div className='flex gap-2 select-none'>
+                <div className='flex gap-2 select-none relative'>
+                    
+                    {loggedIn ? 
+                        <>
+                            <PillButton icon={<Heart/>} text='Saves' className='h-8' onClick={() => navigate('management/saves')}/>
+                            <PillButton icon={<Menu/>} text='Menu' className='h-8' onClick={toggleManagementMenu}/>
+                        </>
+                        :
+                        <>
+                            <PillButton icon={<Contact/>} text='Register' className='h-8' onClick={() => navigate('account/register')}/>
+                            <PillButton icon={<LogIn/>} text='Log In' className='h-8' onClick={() => navigate('account/login')}/>
+                        </>
+                    }
 
-                    <PillButton icon={<Heart/>} text='Saves' className='h-8' onClick={() => popup(logoutPopupContent)}/>
-
-                    <PillButton icon={<User/>} text={(isLoggedIn ? user?.username : "Log In") ?? ''} className='h-8' onClick={() => {isLoggedIn ? popup(logoutPopupContent) : navigate('/account/login')}}/>
+                    {showManagementMenu && managementElement}
 
                 </div>
 
             </nav>
         </>
     )
-
-    // function SavedListings() {
-
-    //     const [savedListings, setSavedListings] = useState<SavedListing[]>([]);
-    //     const [listingData, setListingData] = useState<ListingDescriptor[]>([]);
-
-    //     useEffect(() => {
-    //         const saves = getSavedListings();
-    //         setSavedListings(saves);
-    //         fetchListings(saves);
-    //     }, [savedListings])
-
-    //     const fetchListings = async (saves: SavedListing[]) => {
-    //         const promises: Promise<ListingDescriptor>[] = [];
-
-    //         saves.forEach(sl => {
-    //             promises.push(getAnonymous<ListingDescriptor>(`Listings/Get/${sl.listingId}`));
-    //         })
-
-    //         const result = await Promise.allSettled(promises);
-    //         const descriptors: ListingDescriptor[] = [];
-            
-    //         result.forEach(res => {
-    //             if (res.status === "fulfilled") {
-    //                 descriptors.push(res.value);
-    //             }
-    //         })
-
-    //         setListingData(descriptors);
-    //     }
-
-    //     return(
-    //         <>
-    //             <div className='text-center mt-8'>
-    //                 <h1 className='font-bold text-4xl'>Saved listings</h1>
-    //             </div>
-    //             <div className='flex items-center gap-4 my-8 px-4 flex-col'>
-    //                 {listingData.length !== 0 && savedListings.map((sl, index) => {
-    //                     const descriptor = listingData.find(ld => ld.listingId === sl.listingId);
-    //                     if (!descriptor) return <div key={index}></div>
-    //                     return(
-    //                         <></>
-    //                     )
-    //                 })}
-    //             </div>
-    //         </>
-    //     )
-    // }
 }
