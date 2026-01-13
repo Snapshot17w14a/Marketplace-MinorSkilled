@@ -1,6 +1,5 @@
 import { useState, useEffect, useRef, type RefObject } from "react";
 import { useParams, useNavigate } from "react-router-dom";
-import { getActiveUser, isLoggedIn } from "../../Auth";
 import { type ListingDescriptor } from "../../types/listingDescriptor";
 import { getAnonymous, patchAuthorized } from "../../BackendClient";
 import Button from "../../Components/Button";
@@ -9,6 +8,7 @@ import { useNotify } from "../../Components/NotificationProvider";
 import { FetchError } from "../../classes/FetchError";
 import type { ListingImage } from "../../types/listingImage";
 import endpointsConfig from "../../Configs/endpoints.config";
+import { useAuth } from "../../Components/AuthProvider";
 
 export default function EditListing() {
     
@@ -141,14 +141,15 @@ export default function EditListing() {
 function ListingNav({ className = '' }){
 
     const navigate = useNavigate();
+    const auth = useAuth();
 
     return(
         <div className={"bg-(--mid-dark) ring-2 ring-(--light-dark) rounded-lg h-16 flex justify-between items-center drop-shadow-2xl drop-shadow-rose-500/50 " + className}>
             <button className="p-2 h-full cursor-pointer" type="button" onClick={() => navigate("/")}>
                 <img className="h-full object-contain" src={Logo}></img>
             </button>
-            {isLoggedIn() ? 
-                <p className="mr-2 text-xl">Logged in as {getActiveUser()?.username}</p> :
+            {auth?.isLoggedIn ? 
+                <p className="mr-2 text-xl">Logged in as {auth?.activeUser?.username}</p> :
                 <Button className="p-2 mr-2" variant="filled" type="button" onClick={() => navigate('/account/login')}>Log in</Button>
             }
         </div>

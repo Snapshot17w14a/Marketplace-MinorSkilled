@@ -1,18 +1,16 @@
 import { useNavigate } from 'react-router-dom'
-import { getActiveUser, isLoggedIn, onLogin, onLogout } from '../Auth';
 import { useEffect, useRef, useState } from 'react';
 import { Contact, Heart, LogIn, Menu } from 'lucide-react';
 import PillButton from './PillButton';
 import ManagementMenu from './ManagementMenu';
-import type { UserData } from '../types/userData';
+import { useAuth } from './AuthProvider';
 
 export default function TopNavigation({ className = ''}) {
 
     const navigate = useNavigate();
+    const auth = useAuth();
 
-    const [user, setUser] = useState<UserData | undefined>(getActiveUser);
-
-    const [loggedIn, setIsLoggedIn] = useState<boolean>(isLoggedIn);
+    const [loggedIn, setIsLoggedIn] = useState<boolean>(false);
     const [showManagementMenu, setShowManagementMenu] = useState<boolean>(false);
     const [managementOpacity, setManagementOpacity] = useState<number>(0);
 
@@ -20,25 +18,12 @@ export default function TopNavigation({ className = ''}) {
     
     const managementElement = <ManagementMenu closeMenu={() => setShowManagementMenu(false)} opacity={managementOpacity}/>;
 
-    const handleOnLogin = (userData: UserData) => {
-        setUser(userData);
-        setIsLoggedIn(true);
-    }
-
-    const handleLogOut = () => {
-        setUser(undefined);
-        setIsLoggedIn(false);
-    }
-
     useEffect(() => {
-        onLogin.subscribe(handleOnLogin);
-        onLogout.subscribe(handleLogOut);
+        if (!auth)
+            return;
 
-        return () => {
-            onLogin.unsubscribe(handleOnLogin);
-            onLogout.unsubscribe(handleLogOut);
-        }
-    }, []);
+        setIsLoggedIn(auth.isLoggedIn);
+    }, [auth?.isLoggedIn])
 
     const toggleManagementMenu = () => {
         if (fadeHandle.current != undefined)

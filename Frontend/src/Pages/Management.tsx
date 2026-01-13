@@ -1,7 +1,6 @@
-import { Heart, LogOut, Pencil, User } from "lucide-react";
+import { Heart, LogOut, MessageSquare, Pencil, User } from "lucide-react";
 import { useEffect, useRef, useState, type ChangeEvent, type FormEvent, type JSX } from "react";
 import { useNavigate, useParams } from "react-router-dom";
-import { getActiveUser, logOut } from "../Auth";
 import { MenuButton } from "../Components/MenuButton";
 import { type ListingDescriptor } from "../types/listingDescriptor";
 import { getSavedListingDescriptors } from "../SavedListings";
@@ -14,14 +13,18 @@ import { UploadFileToServer } from "../FileHandler";
 import { getAnonymous, patchAuthorized } from "../BackendClient";
 import endpointsConfig from "../Configs/endpoints.config";
 import { type UserData } from "../types/userData";
+import { useSignalR } from "../Components/SignalRProvider";
+import { useAuth } from "../Components/AuthProvider";
 
 export default function Management() {
 
     const {page} = useParams();
+    const auth = useAuth();
 
     const subPages: { [id: string]: JSX.Element } = {
         "profile": <Profile />,
-        "saves": <Saves />
+        "saves": <Saves />,
+        "chats": <Chats />
     }
 
     const [renderedSubpage, setRenderedSubpage] = useState<JSX.Element>();
@@ -53,10 +56,11 @@ export default function Management() {
                     <fieldset ref={fieldsetRef} className="space-y-2">
                         <PageButton icon={<User/>}  title="Profile" radioName="management-page" onClick={() => setRenderedSubpage(subPages["profile"])}/>
                         <PageButton icon={<Heart/>} title="Saves"   radioName="management-page" onClick={() => setRenderedSubpage(subPages["saves"])}/>
+                        <PageButton icon={<MessageSquare/>} title="Chats"   radioName="management-page" onClick={() => setRenderedSubpage(subPages["chats"])}/>
                     </fieldset>
                 </div>
                 <div>
-                    <MenuButton className="hover:bg-(--mid-dark) transition-colors" icon={<LogOut/>} title="Log Out" onClick={logOut} />
+                    <MenuButton className="hover:bg-(--mid-dark) transition-colors" icon={<LogOut/>} title="Log Out" onClick={() => auth?.logOut()} />
                 </div>
             </aside>
 
@@ -83,6 +87,7 @@ function Profile() {
 
     const navigate = useNavigate();
     const notify = useNotify();
+    const auth = useAuth();
 
     const [user, setUser] = useState<UserData | undefined>(undefined);
     const [uploadedProfilePicture, setUploadedProfilePicture] = useState<File | null>(null);
@@ -91,7 +96,11 @@ function Profile() {
     const emailRef = useRef<HTMLInputElement | null>(null);
 
     useEffect(() => {
-        getAnonymous<UserData>(`users/get/${getActiveUser()?.guid}`)
+
+        if (!auth?.activeUser)
+            return;
+
+        getAnonymous<UserData>(`users/get/${auth.activeUser.guid}`)
             .then(result => {
                 console.log(result)
                 setUser(result);
@@ -101,7 +110,7 @@ function Profile() {
                 message: 'Could not fetch user data from server. ' + reason,
                 type: 'error'
             }))
-    }, [])
+    }, [auth?.activeUser])
 
     const onFileChange = (event: ChangeEvent<HTMLInputElement>) => {
 
@@ -237,6 +246,30 @@ function Saves() {
                     })
                 }
             </div>
+        </>
+    )
+}
+
+function Chats() {
+
+    const chatContext = useSignalR();
+
+    const [messages, setMessages] = useState<string[]>([]);
+
+    useEffect(() => {
+        chatContext?.connection?.on('SendMessage', (args) => {
+            console.log(args);
+            setMessages(prev => [...prev, args]);
+        })
+    }, [chatContext.connection])
+
+    return(
+        <>
+            {messages.length > 0 &&
+                messages.map((message, index) => {
+                    return <p key={index}>{message}</p>
+                })
+            }
         </>
     )
 }

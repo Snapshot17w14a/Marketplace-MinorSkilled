@@ -1,7 +1,7 @@
-import { getActiveUser, validateLogin } from "./Auth";
 import { getAuthorized, postAuthorized } from "./BackendClient";
 import type { ListingDescriptor } from "./types/listingDescriptor";
 import type { SavedListing } from "./types/savedListing";
+import type { UserData } from "./types/userData";
 
 var savedListings: SavedListing[] = [];
 
@@ -26,9 +26,6 @@ function removeSavedListing(listingId: string) {
 }
 
 async function removeSaveBackend(listingId: string) {
-    const login = await validateLogin();
-    if (!login) return;
-
     await postAuthorized('Save/RemoveSaveListing', { listingId: listingId });
 }
 
@@ -40,9 +37,6 @@ function addSavedListing(listingId: string) {
 }
 
 async function addSaveBackend(listingId: string) {
-    const login = await validateLogin();
-    if (!login) return;
-
     await postAuthorized('Save/SaveListing', { listingId: listingId });
 }
 
@@ -54,12 +48,9 @@ export function isListingSaved(listingId: string): boolean {
     return savedListings.some(sl => sl.listingId === listingId);
 }
 
-export async function fetchSavedListings() {
+export async function fetchSavedListings(user: UserData) {
     savedListings = JSON.parse(localStorage.getItem('saves') ?? "[]");
 
-    const login = await validateLogin();
-    if (!login) return;
-    const user = getActiveUser();
 
     savedListings = await getAuthorized<SavedListing[]>(`Save/GetSaves/${user!.guid}`);
     localStorage.setItem('saves', JSON.stringify(savedListings));

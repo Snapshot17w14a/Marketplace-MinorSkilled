@@ -1,15 +1,14 @@
 import { Heart, LogOut, User } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { usePopup, type PopupContent } from "./PopupProvider";
-import { getActiveUser, logOut } from "../Auth";
 import { MenuButton } from "./MenuButton";
+import { useAuth } from "./AuthProvider";
 
 export default function ManagementMenu({ closeMenu, opacity } : { closeMenu: () => void, opacity: number }) {
 
     const navigate = useNavigate();
     const popup = usePopup();
-
-    const user = getActiveUser();
+    const auth = useAuth();
 
     const handleNavigation = (link: string) => {
         closeMenu();
@@ -18,7 +17,7 @@ export default function ManagementMenu({ closeMenu, opacity } : { closeMenu: () 
     
     const handleLogOut = () => {
         closeMenu();
-        logOut();    
+        auth?.logOut();    
     }
 
     const logoutPopupContent: PopupContent = {
@@ -32,7 +31,7 @@ export default function ManagementMenu({ closeMenu, opacity } : { closeMenu: () 
             className="absolute border-2 border-(--light-dark) w-64 z-20 top-13 -right-0.5 rounded-lg bg-(--mid-dark) overflow-clip shadow-xl p-2 transition-all space-y-2"
             style={{ opacity: opacity, transform: `translateX(${(1 - opacity) * 100}px)` }}
         >
-            <p className="px-2 pt-1 text-xl font-bold">Hello, {user?.username}</p>
+            <p className="px-2 pt-1 text-xl font-bold">Hello, {auth?.activeUser?.username}</p>
 
             <MenuSeparator />
 

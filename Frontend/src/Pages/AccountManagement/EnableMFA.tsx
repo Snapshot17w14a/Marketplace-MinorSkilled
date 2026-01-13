@@ -1,7 +1,7 @@
+import { useAuth } from "../../Components/AuthProvider";
 import Button from "../../Components/Button";
 import { useFade } from "./AccountPage";
 import { useState } from "react";
-import { getActiveUser, request2FASecret } from "../../Auth";
 import QRCode from "react-qr-code";
 
 export default function EnableMFA() {
@@ -59,11 +59,15 @@ function Prompt({ handleEnable } : { handleEnable: () => void }) {
 function EnableProcess() {
 
     const fade = useFade();
+    const auth = useAuth();
     const [secret, setSecret] = useState<string>('');
 
     const handleRequest = async () => {
 
-        const requestedSecret = await request2FASecret();
+        if (!auth)
+            return;
+
+        const requestedSecret = await auth.request2FASecret();
 
         fade();
         setTimeout(() => {
@@ -96,6 +100,7 @@ function EnableProcess() {
 function DisplayQR({ secret } : { secret: string }) {
 
     const fade = useFade();
+    const auth = useAuth();
 
     const [showSecret, setShowSecret] = useState<boolean>(false);
     const [progress] = useState<boolean>(false);
@@ -110,7 +115,7 @@ function DisplayQR({ secret } : { secret: string }) {
                     <p className="text-sm text-neutral-400">Simply open the app. Click the + on the bottom right, and hit 'Scan a QR code'</p>
                 </div>
                 
-                <QRCode className="my-4 mx-auto ring-2 ring-(--light-dark) rounded-lg" fgColor="#1c1c1d" value={`otpauth://totp/Kevin's%20Marketplace:${getActiveUser()?.email}?secret=${secret}&issuer=Kevin's%20Marketplace`}></QRCode>
+                <QRCode className="my-4 mx-auto ring-2 ring-(--light-dark) rounded-lg" fgColor="#1c1c1d" value={`otpauth://totp/Kevin's%20Marketplace:${auth?.activeUser?.email}?secret=${secret}&issuer=Kevin's%20Marketplace`}></QRCode>
 
                 <div className="mb-6 space-y-2">
                     <p className="text-sm text-neutral-400">If the QR code fails to scan, you can also enter the secret key manually in the key field.</p>

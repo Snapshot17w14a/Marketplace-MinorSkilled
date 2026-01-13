@@ -1,16 +1,18 @@
 import { useRef, type FormEvent, type RefObject } from "react";
 import Button from "../../Components/Button";
 import { useLocation, useNavigate } from "react-router-dom";
-import { requestJWToken } from "../../Auth";
 import { FetchError } from "../../classes/FetchError";
 import { useNotify } from "../../Components/NotificationProvider";
 import responseCodes from "../../types/responseCodes";
+import { useAuth } from "../../Components/AuthProvider";
 
 export default function EnterMFA() {
 
     const { email, password } = useLocation().state;
+
     const notify = useNotify();
     const navigate = useNavigate();
+    const auth = useAuth();
 
     const validKeys = ['1', '2', '3', '4', '5', '6', '7', '8', '9', '0'];
 
@@ -100,7 +102,10 @@ export default function EnterMFA() {
             return;
 
         try {
-            await requestJWToken({
+            if (!auth)
+                return;
+
+            await auth?.requestAuthToken({
                 email: email,
                 password: password,
                 totp: totp

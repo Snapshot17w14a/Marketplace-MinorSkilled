@@ -3,9 +3,9 @@ import Button from '../../Components/Button';
 import { useFade } from './AccountPage';
 import { useNavigate } from 'react-router-dom';
 import { useNotify } from '../../Components/NotificationProvider';
-import { requestJWToken, type LoginRequest } from '../../Auth';
 import { FetchError } from '../../classes/FetchError';
 import responseCodes from '../../types/responseCodes';
+import { useAuth, type LoginRequest } from '../../Components/AuthProvider';
 
 export default function Login() {
     const emailRef = useRef<HTMLInputElement | null>(null);
@@ -15,6 +15,7 @@ export default function Login() {
     const notify = useNotify();
     const navigate = useNavigate();
     const fade = useFade();
+    const auth = useAuth();
 
     const handleSubmit = async (event: FormEvent<HTMLFormElement>) => {
         event.preventDefault();
@@ -28,7 +29,7 @@ export default function Login() {
         }
 
         try {
-            await requestJWToken(loginReqest, true);
+            await auth?.requestAuthToken(loginReqest, true);
             fade("/account/enableMFA");
         }
         catch (error) {
