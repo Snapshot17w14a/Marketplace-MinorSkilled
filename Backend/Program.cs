@@ -33,42 +33,42 @@ builder.Services.AddControllers();
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen();
 
-builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
-    .AddJwtBearer(options => {
-        string? JWTSymKeySecret = config["Secrets:JWTSymKeySecret"];
-        if (string.IsNullOrEmpty(JWTSymKeySecret)) throw new Exception("JWTSymKeySecret was not found in configuration");
+builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme).AddJwtBearer(options => 
+{
+    string? JWTSymKeySecret = config["Secrets:JWTSymKeySecret"];
+    if (string.IsNullOrEmpty(JWTSymKeySecret)) throw new Exception("JWTSymKeySecret was not found in configuration");
 
-        options.TokenValidationParameters = new()
-        {
-            IssuerSigningKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(JWTSymKeySecret)),
-            ValidIssuer = "https://api.mkev.dev",
-            ValidAudience = "https://marketplace.mkev.dev",
-            ValidateLifetime = true,
-            ValidateIssuerSigningKey = true,
-        };
+    options.TokenValidationParameters = new()
+    {
+        IssuerSigningKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(JWTSymKeySecret)),
+        ValidIssuer = "https://api.mkev.dev",
+        ValidAudience = "https://marketplace.mkev.dev",
+        ValidateLifetime = true,
+        ValidateIssuerSigningKey = true,
+    };
 
-        options.Events = new JwtBearerEvents
+    options.Events = new JwtBearerEvents
+    {
+        OnMessageReceived = context =>
         {
-            OnMessageReceived = context =>
+            var accessToken = context.Request.Query["access_token"];
+
+            // If the request is for our hub...
+            var path = context.HttpContext.Request.Path;
+            if (!string.IsNullOrEmpty(accessToken) &&
+                (path.StartsWithSegments("/api/chatHub"))) // Ensure this matches your hub endpoint
             {
-                var accessToken = context.Request.Query["access_token"];
-
-                // If the request is for our hub...
-                var path = context.HttpContext.Request.Path;
-                if (!string.IsNullOrEmpty(accessToken) &&
-                    (path.StartsWithSegments("/api/chatHub"))) // Ensure this matches your hub endpoint
-                {
-                    // Read the token out of the query string
-                    context.Token = accessToken;
-                }
-                return Task.CompletedTask;
+                // Read the token out of the query string
+                context.Token = accessToken;
             }
-        };
-    });
-
-builder.Services.AddScoped<RoleManager>();
+            return Task.CompletedTask;
+        }
+    };
+});
 
 builder.Services.AddSingleton<PasswordHashService>();
+
+builder.Services.AddScoped<RoleManager>();
 builder.Services.AddScoped<TokenService>();
 builder.Services.AddScoped<IEmailClient, BrevoEmailClient>();
 builder.Services.AddScoped<I2FAProvider, OtpNET2FAProvider>();

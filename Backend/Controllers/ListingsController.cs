@@ -94,7 +94,19 @@ namespace Backend.Controllers
                 .Take(listingsCount < count ? listingsCount : count)
                 .ToListAsync();
 
-            return Ok(listings.ConvertAll<ListingDTO>(l => new(l, null)));
+            Dictionary<int, Guid> userIdtoGuid = [];
+
+            listings.ForEach(l =>
+            {
+                var listingOwner = _context.Users.Find(l.UserId);
+
+                if (listingOwner == null)
+                    return;
+
+                userIdtoGuid.TryAdd(l.UserId, listingOwner.Identifier);
+            });
+
+            return Ok(listings.ConvertAll<ListingDTO>(l => new(l, userIdtoGuid[l.UserId])));
         }
 
         [HttpGet]

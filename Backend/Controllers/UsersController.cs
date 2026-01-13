@@ -140,12 +140,7 @@ namespace Backend.Controllers
             return Ok(new {
                 accessToken = _tokenService.GenerateJWToken(user),
                 refreshToken = await _tokenService.GenerateRefreshToken(user),
-                userData = new
-                {
-                    username = user.Name,
-                    email = user.Email,
-                    guid = user.Identifier
-                }
+                userData = new UserDTO(user)
             });
         }
 

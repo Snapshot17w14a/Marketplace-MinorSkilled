@@ -13,8 +13,9 @@ import { UploadFileToServer } from "../FileHandler";
 import { getAnonymous, patchAuthorized } from "../BackendClient";
 import endpointsConfig from "../Configs/endpoints.config";
 import { type UserData } from "../types/userData";
-import { useSignalR } from "../Components/SignalRProvider";
 import { useAuth } from "../Components/AuthProvider";
+import { Chats } from "./Chats";
+import { PageButton } from "./PageButton";
 
 export default function Management() {
 
@@ -49,8 +50,8 @@ export default function Management() {
     }, [page])
 
     return(
-        <div className="min-h-screen pt-16 flex flex-col lg:flex-row gap-8">
-            <aside className="flex flex-col justify-between w-full lg:w-64 p-4">
+        <div className="min-h-screen pt-16 flex flex-col lg:flex-row lg:gap-8">
+            <aside className="flex flex-col justify-between w-full lg:w-64 p-4 gap-4 lg:gap-0">
                 <div className="space-y-8 w-full">
                     <p className="text-2xl font-bold">Management Menu</p>
                     <fieldset ref={fieldsetRef} className="space-y-2">
@@ -71,18 +72,6 @@ export default function Management() {
     )
 }
 
-function PageButton({ icon, title, radioName, onClick } : { icon: JSX.Element, title: string, radioName: string, onClick?: () => void}) {
-    return(
-        <label id={title.toLocaleLowerCase()} className="flex items-center justify-between select-none has-checked:bg-(--light-dark) hover:bg-(--mid-dark) p-2 rounded-lg transition-all active:scale-[0.98] has-checked:border-l-4 border-rose-500" onClick={onClick}>
-            <div className="flex gap-2">
-                {icon}
-                <p>{title}</p>
-            </div>
-            <input className="hidden" type="radio" name={radioName}/>
-        </label>
-    )
-}
-
 function Profile() {
 
     const navigate = useNavigate();
@@ -100,16 +89,8 @@ function Profile() {
         if (!auth?.activeUser)
             return;
 
-        getAnonymous<UserData>(`users/get/${auth.activeUser.guid}`)
-            .then(result => {
-                console.log(result)
-                setUser(result);
-            })
-            .catch(reason => notify({
-                header: 'Something went wrong',
-                message: 'Could not fetch user data from server. ' + reason,
-                type: 'error'
-            }))
+        setUser(auth.activeUser);
+
     }, [auth?.activeUser])
 
     const onFileChange = (event: ChangeEvent<HTMLInputElement>) => {
@@ -238,7 +219,7 @@ function Saves() {
     return(
         <>
             <h2 className="text-4xl font-bold mb-8">Saved listings</h2>
-            <div className="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5 w-fit">
+            <div className="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5 w-fit mx-auto">
                 {savedListings &&
                     savedListings.map((descriptor, index) => {
                         console.log('mapping listing: ' + descriptor);
@@ -250,26 +231,3 @@ function Saves() {
     )
 }
 
-function Chats() {
-
-    const chatContext = useSignalR();
-
-    const [messages, setMessages] = useState<string[]>([]);
-
-    useEffect(() => {
-        chatContext?.connection?.on('SendMessage', (args) => {
-            console.log(args);
-            setMessages(prev => [...prev, args]);
-        })
-    }, [chatContext.connection])
-
-    return(
-        <>
-            {messages.length > 0 &&
-                messages.map((message, index) => {
-                    return <p key={index}>{message}</p>
-                })
-            }
-        </>
-    )
-}

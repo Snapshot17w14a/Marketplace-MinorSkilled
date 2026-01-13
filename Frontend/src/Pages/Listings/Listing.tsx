@@ -1,7 +1,7 @@
-import { useParams } from "react-router-dom"
+import { useNavigate, useParams } from "react-router-dom"
 import type { ListingDescriptor } from "../../types/listingDescriptor";
 import { useEffect, useRef, useState } from "react";
-import { getAnonymous } from "../../BackendClient";
+import { getAnonymous, postAuthorized } from "../../BackendClient";
 import endpointsConfig from "../../Configs/endpoints.config";
 import type { ListingImage } from "../../types/listingImage";
 import { formatDateString } from "../../CSharpDate";
@@ -11,10 +11,13 @@ import categoriesConfig from "../../Configs/categories.config";
 import DefProfile from '../../assets/DefaultProfile.svg';
 import { isListingSaved, toggleSavedListing } from "../../SavedListings";
 import type { UserData } from "../../types/userData";
+import { useAuth } from "../../Components/AuthProvider";
 
 export default function Listing() {
 
     const {listingId} = useParams();
+    const auth = useAuth();
+    const navigate = useNavigate();
 
     const [listingData, setListingData] = useState<ListingDescriptor>();
     const [listingOwner, setListingOwner] = useState<UserData>();
@@ -24,9 +27,11 @@ export default function Listing() {
 
         const fetchData = async () => {
             const listing = await getAnonymous<ListingDescriptor>(`Listings/Get/${listingId}`)
+            console.log(listing);
             setListingData(listing);
 
             const owner = await getAnonymous<UserData>(`users/Get/${listing.userId}`);
+            console.log(owner);
             setListingOwner(owner);
         }
         fetchData();
@@ -35,6 +40,18 @@ export default function Listing() {
 
     const handleSave = () => {
         setIsSaved(toggleSavedListing(listingId!));
+    }
+
+    const handleMessageRequest = async () => {
+
+        console.log(listingOwner);
+
+        await postAuthorized('chat/CreateConversation', {
+            listingId: listingId,
+            ListingOwnerId: listingOwner?.identifier
+        });
+
+        navigate('/management/chats');
     }
 
     return(
@@ -58,7 +75,11 @@ export default function Listing() {
                     <p className="text-neutral-400">Listed on: {formatDateString(listingData?.createdAt || '', 'full')}</p>
 
                     <fieldset className="flex gap-4 flex-wrap lg:flex-nowrap">
-                        <Button className="px-4 flex-2 basis-full lg:basis-0" variant="filled">Message</Button>
+
+                        {listingData?.userId === auth?.activeUser?.identifier ?
+                            <Button className="px-4 flex-2 basis-full lg:basis-0" variant="filled" onClick={() => navigate(`/listing/edit/${listingId}`)}>Edit</Button> :
+                            <Button className="px-4 flex-2 basis-full lg:basis-0" variant="filled" onClick={handleMessageRequest}>Message</Button>
+                        }
 
                         <div className="flex flex-1 gap-4">
                             <Button className="px-4 flex-1" variant={isSaved ? 'filled' : 'standard'} onClick={handleSave}>{isSaved ? 'Saved' : 'Save'}</Button>

@@ -52,7 +52,7 @@ export async function fetchSavedListings(user: UserData) {
     savedListings = JSON.parse(localStorage.getItem('saves') ?? "[]");
 
 
-    savedListings = await getAuthorized<SavedListing[]>(`Save/GetSaves/${user!.guid}`);
+    savedListings = await getAuthorized<SavedListing[]>(`Save/GetSaves/${user!.identifier}`);
     localStorage.setItem('saves', JSON.stringify(savedListings));
 }
 

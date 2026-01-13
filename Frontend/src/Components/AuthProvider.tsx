@@ -115,7 +115,7 @@ export default function AuthProvider({ children } : { children: JSX.Element }) {
 
         var response = await getAnonymous<{ role: string }>(`users/GetUserRole/${jwt.sub!}`);
         setUserRole(response.role);
-        data.userData.role = userRole??'';
+        data.userData.role = userRole ?? 'Member';
         
         await cookieStore.set({
             name: "access",

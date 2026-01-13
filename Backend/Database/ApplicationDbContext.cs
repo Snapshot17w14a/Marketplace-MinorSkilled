@@ -15,6 +15,8 @@ namespace Backend.Database
         public DbSet<PermissionClaim> PermissionClaims { get; set; }
         public DbSet<VerificationToken> VerificationTokens { get; set; }
         public DbSet<ListingCategory> ListingCategories { get; set; }
+        public DbSet<Conversation> Conversations { get; set; }
+        public DbSet<Message> Messages { get; set; }
 
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
@@ -86,6 +88,7 @@ namespace Backend.Database
                 .HasOne(x => x.Category)
                 .WithMany(c => c.ListingRelations)
                 .HasForeignKey(x => x.CategoryId);
+                
         }
     }
 }

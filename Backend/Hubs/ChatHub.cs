@@ -1,11 +1,12 @@
-﻿using Microsoft.AspNetCore.Authorization;
+﻿using Backend.Models;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.SignalR;
 
 namespace Backend.Hubs
 {
     public interface IChatHubClient
     {
-        public Task SendMessage(string message);
+        public Task SendMessage(Message message);
     }
 
     [Authorize]
