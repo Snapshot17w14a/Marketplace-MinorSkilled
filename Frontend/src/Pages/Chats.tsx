@@ -7,6 +7,7 @@ import { MessageCircle, Send } from "lucide-react";
 import type { Message } from "../types/message";
 import { useAuth } from "../Components/AuthProvider";
 import PillButton from "../Components/PillButton";
+import type { UserData } from "../types/userData";
 
 export function Chats() {
 
@@ -15,6 +16,7 @@ export function Chats() {
 
     const [messages, setMessages] = useState<Message[]>([]);
     const [conversations, setConversations] = useState<Conversation[]>([]);
+    const [user, setUser] = useState<UserData | null>(null);
 
     const conversationId = useRef<number>(0);
     const messageRef = useRef<HTMLInputElement | null>(null);
@@ -31,6 +33,15 @@ export function Chats() {
 
         fetchConversations();
     }, []);
+
+    useEffect(() => {
+
+        if (!auth?.activeUser)
+            return;
+
+        setUser(auth.activeUser);
+
+    }, [auth?.activeUser]);
 
     const onConversationSelect = async (id: number) => {
         const data = await getAuthorized<Message[]>('chat/GetConversationMessages/' + id);
@@ -67,7 +78,7 @@ export function Chats() {
         const localMessage: Message = {
             conversationId: conversationId.current,
             content: messageRef.current.value,
-            senderId: auth?.activeUser?.identifier ?? ""
+            senderId: user?.identifier ?? ""
         }
 
         setMessages(prev => [...prev, localMessage]);
@@ -89,20 +100,17 @@ export function Chats() {
 
                 <div className="flex flex-col mx-4 flex-1 gap-4">
 
+                    <h2 className="text-2xl font-bold">Conversation</h2>
+
                     <div className="flex-1 rounded-lg bg-(--mid-dark) p-4 space-y-2">
                         {messages.length > 0 &&
                             messages.map((message, index) => {
 
-                                const isUsersMessage = message.senderId === auth?.activeUser?.identifier;
-                                console.log(`${message.senderId} | ${auth?.activeUser?.identifier} | ${isUsersMessage}`)
+                                const isUsersMessage = message.senderId === user?.identifier;
+                                console.log(`${message.senderId} | ${user?.identifier} | ${isUsersMessage}`)
                                 
                                 return(
-                                    <p key={index} className={isUsersMessage ? "text-end" : 'text-start'}>
-                                        {isUsersMessage ? 
-                                            message.content + " - You" :
-                                            "Seller - " + message.content
-                                        }
-                                    </p>
+                                    <ChatBubble key={index} isLocalUsersMessage={isUsersMessage} content={message.content} />
                                 )
                             })
                         }
@@ -125,4 +133,24 @@ export function Chats() {
             } */}
         </>
     );
+}
+
+function ChatBubble({ isLocalUsersMessage, content }: { isLocalUsersMessage: boolean, content: string }) {
+    return(
+        <div className="p-4">
+            {isLocalUsersMessage ?
+                <div className="w-full text-end">
+                    <span className="bg-rose-500/50 p-4 rounded-lg">
+                        {content}
+                    </span>
+                </div> 
+                :
+                <div className="w-full text-start">
+                    <span className="bg-(--light-dark) p-4 rounded-lg">
+                        {content}
+                    </span>
+                </div>
+            }
+        </div>
+    )
 }
