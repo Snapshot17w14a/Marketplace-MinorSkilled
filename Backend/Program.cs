@@ -1,6 +1,7 @@
 using System.Text;
 using Backend.Database;
 using Backend.Extensions;
+using Backend.Hubs;
 using Backend.Interfaces;
 using Backend.Iterfaces;
 using Backend.Middleware;
@@ -32,7 +33,7 @@ builder.Services.AddControllers();
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen();
 
-builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme).AddJwtBearer(options =>
+builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme).AddJwtBearer(options => 
 {
     string? JWTSymKeySecret = config["Secrets:JWTSymKeySecret"];
     if (string.IsNullOrEmpty(JWTSymKeySecret)) throw new Exception("JWTSymKeySecret was not found in configuration");
@@ -45,17 +46,37 @@ builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme).AddJw
         ValidateLifetime = true,
         ValidateIssuerSigningKey = true,
     };
+
+    options.Events = new JwtBearerEvents
+    {
+        OnMessageReceived = context =>
+        {
+            var accessToken = context.Request.Query["access_token"];
+
+            // If the request is for our hub...
+            var path = context.HttpContext.Request.Path;
+            if (!string.IsNullOrEmpty(accessToken) &&
+                (path.StartsWithSegments("/api/chatHub"))) // Ensure this matches your hub endpoint
+            {
+                // Read the token out of the query string
+                context.Token = accessToken;
+            }
+            return Task.CompletedTask;
+        }
+    };
 });
 
-builder.Services.AddScoped<RoleManager>();
-
 builder.Services.AddSingleton<PasswordHashService>();
+
+builder.Services.AddScoped<RoleManager>();
 builder.Services.AddScoped<TokenService>();
 builder.Services.AddScoped<IEmailClient, BrevoEmailClient>();
 builder.Services.AddScoped<I2FAProvider, OtpNET2FAProvider>();
 
 builder.Services.AddHostedService<TokenCleanerService>();
 builder.Services.AddHostedService<ImageCleanupService>();
+
+builder.Services.AddSignalR();
 
  // Allow frontend to make calls from local network with CORS
 builder.Services.AddCors(options =>
@@ -71,6 +92,7 @@ builder.Services.AddCors(options =>
 
 var app = builder.Build();
 
+// Handle arguments
 if (args.Contains("--migrate-database"))
 {
     var scope = app.Services.CreateScope().ServiceProvider;
@@ -106,9 +128,13 @@ app.UseHttpsRedirection();
 app.UseAuthentication();
 app.UseAuthorization();
 
+// Seed required tables
 await app.SeedPermissionRoles();
+await app.SeedCategories();
+
 app.UseMiddleware<SimpleAuthorization>();
 
 app.MapControllers();
+app.MapHub<ChatHub>("/api/chatHub");
 
 app.Run();

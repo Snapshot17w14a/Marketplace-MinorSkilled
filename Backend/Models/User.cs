@@ -1,4 +1,5 @@
-﻿using Backend.Roles;
+﻿using Backend.Protocols.UserProtocols;
+using Backend.Roles;
 
 namespace Backend.Models
 {
@@ -10,6 +11,7 @@ namespace Backend.Models
         public required string Password { get; set; }
         public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
         public Guid Identifier { get; set; } = Guid.NewGuid();
+        public Guid? ProfilePictureId { get; set; }
         public required string Role { get; set; } = IdentityRole.Member;
 
         public bool IsMFAEnabled { get; set; } = false;
@@ -21,6 +23,15 @@ namespace Backend.Models
         {
             IsMFAEnabled = true;
             MFASecret = secret;
+        }
+
+        public void ApplyChanges(UpdateUserDetailsRequest request)
+        {
+            if (request.Username != null)
+                Name = request.Username;
+
+            if (request?.Email != null)
+                Email = request.Email;
         }
     }
 }

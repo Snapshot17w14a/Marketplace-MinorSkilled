@@ -1,6 +1,11 @@
 import endpointConfig from './Configs/endpoints.config'
-import { getJWT, validateLogin } from './Auth';
 import { FetchError } from './classes/FetchError';
+
+let globalAuthToken: string | null = null;
+
+export function setGlobalAuthToken(authToken: string) {
+    globalAuthToken = authToken;
+}
 
 // ---------- Authorized fetches ----------
 
@@ -26,15 +31,14 @@ export async function getAuthorized<T>(endpoint: string): Promise<T> {
 
 async function fetchAuthorized(endpoint: string, method: string, data?: any): Promise<Response> {
 
-    if (!validateLogin()) {
-        throw new Error("Auth expired");
-    }
+    if (!globalAuthToken)
+        throw new Error('Auth token not set');
 
     const response = await fetch(endpointConfig.BackendBaseUrl + endpoint, {
         method: method,
         headers: {
             "Content-Type": "application/json",
-            "Authorization": `Bearer ${await getJWT()}`
+            "Authorization": `Bearer ${globalAuthToken}`
         },
         body: JSON.stringify(data)
     })
@@ -93,8 +97,7 @@ export async function postXmlHttp<T>(endpoint: string, formData: FormData, onPro
 
         xhr.open("POST", endpointConfig.BackendBaseUrl + endpoint);
 
-        const jwt = await getJWT();
-        xhr.setRequestHeader("Authorization", `Bearer ${jwt}`);
+        xhr.setRequestHeader("Authorization", `Bearer ${globalAuthToken}`);
 
         if (headers !== undefined) {
             headers.forEach(header => {

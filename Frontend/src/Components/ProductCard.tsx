@@ -4,8 +4,8 @@ import backendConfig from '../Configs/endpoints.config'
 import { useNavigate } from 'react-router-dom';
 import CategoryLabel from './CategoryLabel';
 import categoriesConfig from '../Configs/categories.config';
-import { addSavedListing, isListingSaved, removeSavedListing } from '../SavedListings';
 import { useState } from 'react';
+import { isListingSaved, toggleSavedListing } from '../SavedListings';
 
 export default function ProductCard({ descriptor }: { descriptor: ListingDescriptor}) {
 
@@ -16,14 +16,7 @@ export default function ProductCard({ descriptor }: { descriptor: ListingDescrip
   const handleSaveClick = (event: React.MouseEvent<HTMLButtonElement, MouseEvent>) => {
     event.stopPropagation();
 
-    if (isSaved) {
-      removeSavedListing(descriptor.listingId);
-      setIsSaved(false);
-    }
-    else {
-      addSavedListing(descriptor.listingId);
-      setIsSaved(true);
-    }
+    setIsSaved(toggleSavedListing(descriptor.listingId));
   }
 
   return (
@@ -35,7 +28,7 @@ export default function ProductCard({ descriptor }: { descriptor: ListingDescrip
       {/* Image Section */}
       <div className="relative aspect-video w-full overflow-hidden">
         <img 
-          src={backendConfig.BackendStaticUrl + descriptor.images[0].relativePath}
+          src={backendConfig.BackendStaticUrl + descriptor.images[0]?.relativePath}
           alt="Product" 
           className="h-full w-full object-cover transition-transform duration-500 group-hover:scale-105"
         />
@@ -69,7 +62,7 @@ export default function ProductCard({ descriptor }: { descriptor: ListingDescrip
         {/* Footer: Categories or Actions */}
         <div className="mt-4 flex items-center justify-between border-t border-white/5 pt-3 min-h-10 gap-2">
 
-            <div className='space-x-2 max-w-64 overflow-x-scroll'>
+            <div className='space-x-2 max-w-64 overflow-x-scroll hide-scrollbar'>
               {descriptor.categories.map((catDTO) => {
                 return <CategoryLabel category={categoriesConfig.categories.find(cat => cat.name === catDTO.categoryName)} key={catDTO.categoryName} />
               })}

@@ -17,6 +17,26 @@ namespace Backend.Migrations
 #pragma warning disable 612, 618
             modelBuilder.HasAnnotation("ProductVersion", "10.0.1");
 
+            modelBuilder.Entity("Backend.Models.Conversation", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("INTEGER");
+
+                    b.Property<Guid>("BuyerId")
+                        .HasColumnType("TEXT");
+
+                    b.Property<Guid>("ListingId")
+                        .HasColumnType("TEXT");
+
+                    b.Property<Guid>("SellerId")
+                        .HasColumnType("TEXT");
+
+                    b.HasKey("Id");
+
+                    b.ToTable("Conversations");
+                });
+
             modelBuilder.Entity("Backend.Models.Listing", b =>
                 {
                     b.Property<int>("Id")
@@ -115,6 +135,30 @@ namespace Backend.Migrations
                     b.HasIndex("ListingId");
 
                     b.ToTable("ListingsImages");
+                });
+
+            modelBuilder.Entity("Backend.Models.Message", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("INTEGER");
+
+                    b.Property<string>("Content")
+                        .IsRequired()
+                        .HasColumnType("TEXT");
+
+                    b.Property<int>("ConversationId")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<Guid>("SenderId")
+                        .HasColumnType("TEXT");
+
+                    b.Property<DateTime>("SentAt")
+                        .HasColumnType("TEXT");
+
+                    b.HasKey("Id");
+
+                    b.ToTable("Messages");
                 });
 
             modelBuilder.Entity("Backend.Models.PasswordResetToken", b =>
@@ -224,6 +268,9 @@ namespace Backend.Migrations
 
                     b.Property<string>("Password")
                         .IsRequired()
+                        .HasColumnType("TEXT");
+
+                    b.Property<Guid?>("ProfilePictureId")
                         .HasColumnType("TEXT");
 
                     b.Property<string>("Role")

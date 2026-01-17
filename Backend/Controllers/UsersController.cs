@@ -140,12 +140,7 @@ namespace Backend.Controllers
             return Ok(new {
                 accessToken = _tokenService.GenerateJWToken(user),
                 refreshToken = await _tokenService.GenerateRefreshToken(user),
-                userData = new
-                {
-                    username = user.Name,
-                    email = user.Email,
-                    guid = user.Identifier
-                }
+                userData = new UserDTO(user)
             });
         }
 
@@ -364,6 +359,20 @@ namespace Backend.Controllers
             await _context.SaveChangesAsync();
 
             return token.Token == verificationCode ? NoContent() : Forbid();
+        }
+
+        [Authorize]
+        [HttpPatch]
+        public async Task<ActionResult> UpdateUserData(UpdateUserDetailsRequest request)
+        {
+            User? user = HttpContext.AuthenticatedUser();
+            if (user == null) return NotFound();
+
+            user.ApplyChanges(request);
+            _context.Entry(user).DetectChanges();
+            await _context.SaveChangesAsync();
+
+            return NoContent();
         }
     }
 }

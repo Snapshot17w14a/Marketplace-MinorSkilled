@@ -13,7 +13,7 @@ const months: { [id: string]: string } = {
     '12': "December"
 }
 
-export function formatDateString(csharpDateTime: string, formatSetting: 'year-month-day' |'full') {
+export function formatDateString(csharpDateTime: string, formatSetting: 'year-month-day' | 'full') {
     const year = csharpDateTime.slice(0, 4);
     const month = csharpDateTime.slice(5, 7);
     const day = csharpDateTime.slice(8, 10);

@@ -1,5 +1,4 @@
 import Button from '../Components/Button'
-import { isLoggedIn } from '../Auth'
 import { useNavigate } from 'react-router-dom'
 import { useCallback, useState, useRef, type FormEvent, useEffect, type JSX } from 'react';
 import ProductAnimator from '../Components/ProductAnimator';
@@ -9,6 +8,7 @@ import PreviewListingCard from '../Components/PreviewListingCard';
 import ProductCard from '../Components/ProductCard';
 import PillButton from '../Components/PillButton';
 import { Search } from 'lucide-react';
+import { useAuth } from '../Components/AuthProvider';
 
 export default function Home() {
 
@@ -27,10 +27,12 @@ export default function Home() {
     const searchRef = useRef<HTMLInputElement | null>(null);
 
     const navigate = useNavigate();
+    const auth = useAuth();
+
 
     const handleCreateListing = useCallback(() => {
-        navigate(isLoggedIn() ? 'listing/creator' : 'account/register');
-    }, [isLoggedIn]);
+        navigate(auth?.isLoggedIn ? 'listing/creator' : 'account/register');
+    }, [auth?.isLoggedIn]);
 
     useEffect(() => {
         const fetchListngs = async () => {
@@ -55,7 +57,7 @@ export default function Home() {
     };
 
     return(
-        <div className='w-full p-2 sm:p-8 text-center mt-24 space-y-12'>
+        <div className='w-full p-2 sm:p-8 text-center mt-24 space-y-12 hide-scrollbar'>
 
             <div className='space-y-4'>
                 <h1 className='font-bold text-6xl'>Modern marketplace for modern people</h1>

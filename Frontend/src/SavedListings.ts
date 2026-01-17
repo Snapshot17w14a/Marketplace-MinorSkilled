@@ -1,10 +1,24 @@
-import { getActiveUser, validateLogin } from "./Auth";
 import { getAuthorized, postAuthorized } from "./BackendClient";
+import type { ListingDescriptor } from "./types/listingDescriptor";
 import type { SavedListing } from "./types/savedListing";
+import type { UserData } from "./types/userData";
 
 var savedListings: SavedListing[] = [];
 
-export function removeSavedListing(listingId: string) {
+export function toggleSavedListing(listingId: string): boolean {
+    const isSaved = isListingSaved(listingId);
+
+    if(isSaved){
+        removeSavedListing(listingId);
+    }
+    else{
+        addSavedListing(listingId);
+    }
+
+    return !isSaved;
+}
+
+function removeSavedListing(listingId: string) {
     savedListings = savedListings.filter((sl) => sl.listingId != listingId);
     localStorage.setItem('saves', JSON.stringify(savedListings));
 
@@ -12,13 +26,10 @@ export function removeSavedListing(listingId: string) {
 }
 
 async function removeSaveBackend(listingId: string) {
-    const login = await validateLogin();
-    if (!login) return;
-
     await postAuthorized('Save/RemoveSaveListing', { listingId: listingId });
 }
 
-export function addSavedListing(listingId: string) {
+function addSavedListing(listingId: string) {
     savedListings.push({ listingId: listingId })
     localStorage.setItem('saves', JSON.stringify(savedListings));
 
@@ -26,9 +37,6 @@ export function addSavedListing(listingId: string) {
 }
 
 async function addSaveBackend(listingId: string) {
-    const login = await validateLogin();
-    if (!login) return;
-
     await postAuthorized('Save/SaveListing', { listingId: listingId });
 }
 
@@ -40,13 +48,14 @@ export function isListingSaved(listingId: string): boolean {
     return savedListings.some(sl => sl.listingId === listingId);
 }
 
-export async function fetchSavedListings() {
+export async function fetchSavedListings(user: UserData) {
     savedListings = JSON.parse(localStorage.getItem('saves') ?? "[]");
 
-    const login = await validateLogin();
-    if (!login) return;
-    const user = getActiveUser();
 
-    savedListings = await getAuthorized<SavedListing[]>(`Save/GetSavedListings/${user!.guid}`);
+    savedListings = await getAuthorized<SavedListing[]>(`Save/GetSaves/${user!.identifier}`);
     localStorage.setItem('saves', JSON.stringify(savedListings));
+}
+
+export async function getSavedListingDescriptors(): Promise<ListingDescriptor[]> {
+    return getAuthorized<ListingDescriptor[]>('save/GetSavedListings');
 }

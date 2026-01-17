@@ -1,5 +1,5 @@
 import { useNavigate, useParams } from "react-router-dom"
-import { useEffect, useRef, useState, type FormEvent, type JSX } from "react";
+import { useEffect, useRef, useState, type ChangeEvent, type FormEvent, type JSX } from "react";
 import { getAnonymous } from "../BackendClient";
 import type { ListingDescriptor } from "../types/listingDescriptor";
 import type { QueryResult } from "../types/queryResult";
@@ -92,6 +92,22 @@ export default function SearchResult() {
         })
     };
     
+    const handlePriceRangeChange = (e: ChangeEvent<HTMLInputElement>) => {
+        const selector = e.target.placeholder;
+
+        setQueryFilters(prev => {
+            const prevValues = {...prev};
+
+            if (selector == "Min") {
+                prevValues.minPrice = Number(e.target.value);
+            }
+            else if (selector == "Max") {
+                prevValues.maxPrice = Number(e.target.value);
+            }
+
+            return prevValues;
+        })
+    }
 
     useEffect(() => {
         setQueryFilters(prev => {
@@ -104,7 +120,7 @@ export default function SearchResult() {
     }, [searchPhrase]);
 
     return(
-        <div className="mx-auto max-w-[1920px] mt-24 px-6">
+        <div className="mx-auto max-w-480 mt-24 px-6">
             <div className="flex flex-col lg:flex-row gap-8">
 
                 <aside className="w-full lg:w-64 space-y-8">
@@ -131,12 +147,14 @@ export default function SearchResult() {
                                 className="textinput-slim" 
                                 type="number" 
                                 placeholder="Min"
+                                onChange={handlePriceRangeChange}
                             />
                             <span className="text-neutral-400">-</span>
                             <input 
                                 className="textinput-slim" 
                                 type="number" 
                                 placeholder="Max"
+                                onChange={handlePriceRangeChange}
                             />
                         </div>
                     </div>

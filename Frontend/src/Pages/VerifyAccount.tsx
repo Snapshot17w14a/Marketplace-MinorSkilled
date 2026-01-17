@@ -4,7 +4,7 @@ import { getAuthorized } from "../BackendClient";
 import { FetchError } from "../classes/FetchError";
 import responseCodes from "../types/responseCodes";
 import { useNotify } from "../Components/NotificationProvider";
-import { useFade } from "./AccountPage";
+import { useFade } from "./AccountManagement/AccountPage";
 
 export default function VerifyAccount() {
 
