@@ -18,7 +18,7 @@ namespace Backend.Migrations
                 nullable: false,
                 defaultValue: "CURRENT_TIMESTAMP");
 
-            migrationBuilder.Sql("UPDATE Listings SET CreatedAt = CURRENT_TIMESTAMP WHERE CreatedAt IT NULL");
+            migrationBuilder.Sql("UPDATE Listings SET CreatedAt = CURRENT_TIMESTAMP WHERE CreatedAt IF NULL");
         }
 
         /// <inheritdoc />
